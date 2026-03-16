@@ -43,10 +43,13 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8">
-      <div className="mb-6 space-y-1">
-        <h1 className="text-[22px] font-bold tracking-tight text-gray-900">
-          Sign in
+    <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mb-6 space-y-1.5">
+        <p className="text-[12px] font-bold uppercase tracking-[.12em] text-blue-700">
+          Welcome back
+        </p>
+        <h1 className="text-[24px] font-bold tracking-tight text-gray-900">
+          Sign in to your account
         </h1>
         <p className="text-[14px] text-gray-500">
           Access saved properties, searches, and alerts.
@@ -87,7 +90,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-blue-700 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800 disabled:opacity-60"
+          className="w-full rounded-lg bg-blue-700 py-2.5 text-[14px] font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-800 disabled:opacity-60"
         >
           {loading ? "Signing in..." : "Continue"}
         </button>
@@ -106,15 +109,15 @@ function LoginForm() {
         <div className="flex items-center justify-between text-[13.5px]">
           <Link
             href="/account/forgot-password"
-            className="text-gray-700 hover:text-gray-900 hover:underline"
+            className="text-gray-500 transition-colors hover:text-blue-700"
           >
             Forgot password?
           </Link>
           <Link
             href="/account/signup"
-            className="text-gray-700 hover:text-gray-900 hover:underline"
+            className="font-medium text-blue-700 transition-colors hover:text-blue-800"
           >
-            Create account
+            Create account →
           </Link>
         </div>
 

@@ -57,7 +57,7 @@ export default function RequestAccessPage() {
   return (
     <div className="bg-white">
       {/* Page hero */}
-      <section className="border-b border-gray-200 bg-white py-14">
+      <section className="border-b border-gray-200 bg-white py-10 sm:py-14">
         <div className="mx-auto max-w-[1200px] px-5">
           <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             For agents
@@ -78,7 +78,7 @@ export default function RequestAccessPage() {
       </section>
 
       {/* Body */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
             {/* Form card */}

@@ -66,9 +66,12 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8">
-        <div className="mb-5 space-y-1">
-          <h1 className="text-[22px] font-bold tracking-tight text-gray-900">
+      <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="mb-5 space-y-1.5">
+          <p className="text-[12px] font-bold uppercase tracking-[.12em] text-emerald-600">
+            Success
+          </p>
+          <h1 className="text-[24px] font-bold tracking-tight text-gray-900">
             Account created
           </h1>
         </div>
@@ -87,7 +90,7 @@ export default function SignupPage() {
 
         <Link
           href="/account/login"
-          className="mt-5 block w-full rounded-lg bg-blue-700 py-2.5 text-center text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+          className="mt-5 block w-full rounded-lg bg-blue-700 py-2.5 text-center text-[14px] font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-800"
         >
           Sign in →
         </Link>
@@ -96,13 +99,16 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8">
-      <div className="mb-6 space-y-1">
-        <h1 className="text-[22px] font-bold tracking-tight text-gray-900">
-          Create account
+    <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mb-6 space-y-1.5">
+        <p className="text-[12px] font-bold uppercase tracking-[.12em] text-blue-700">
+          Get started
+        </p>
+        <h1 className="text-[24px] font-bold tracking-tight text-gray-900">
+          Create your account
         </h1>
         <p className="text-[14px] text-gray-500">
-          Start saving properties, searches, and alerts.
+          Start saving properties, searches, and alerts — completely free.
         </p>
       </div>
 
@@ -175,7 +181,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-blue-700 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800 disabled:opacity-60"
+          className="w-full rounded-lg bg-blue-700 py-2.5 text-[14px] font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-800 disabled:opacity-60"
         >
           {loading ? "Creating..." : "Create account"}
         </button>
@@ -196,13 +202,13 @@ export default function SignupPage() {
           Google sign-up skips email verification.
         </p>
 
-        <p className="text-[13.5px] text-gray-500">
+        <p className="text-center text-[13.5px] text-gray-500">
           Already have an account?{" "}
           <Link
             href="/account/login"
-            className="font-medium text-gray-900 hover:underline"
+            className="font-medium text-blue-700 transition-colors hover:text-blue-800"
           >
-            Sign in
+            Sign in →
           </Link>
         </p>
       </form>

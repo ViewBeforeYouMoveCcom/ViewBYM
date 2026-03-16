@@ -11,27 +11,27 @@ export default function ContactPage() {
     <div className="bg-white font-sans">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="border-b border-gray-200 bg-white py-14">
+      <section className="bg-[#1A3A6C] py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.12em] text-blue-300">
             Get in touch
           </p>
-          <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
-            We'd love to hear from you.
+          <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-white">
+            We&apos;d love to hear from you.
           </h1>
-          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
-            Whether you're a buyer, tenant, or agent — send us a message and we'll respond promptly.
+          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-white/70">
+            Whether you&apos;re a buyer, tenant, or agent — send us a message and we&apos;ll respond promptly.
           </p>
           <div className="flex flex-wrap gap-2.5">
             <Link
               href="/faq"
-              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-400"
+              className="rounded-lg bg-white px-5 py-2.5 text-[14px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
             >
               Visit FAQs
             </Link>
             <Link
               href="/browse"
-              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
+              className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
             >
               Browse properties
             </Link>
@@ -40,13 +40,13 @@ export default function ContactPage() {
       </section>
 
       {/* ── FORMS ────────────────────────────────────────────── */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="grid gap-6 lg:grid-cols-2">
 
             {/* Buyer / tenant */}
-            <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-md">
-              <CardContent className="space-y-5 p-6">
+            <Card className="flex flex-col rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-md">
+              <CardContent className="flex flex-1 flex-col space-y-5 p-6">
                 <div>
                   <h2 className="text-[18px] font-bold text-gray-900">
                     Buyer or tenant enquiry
@@ -76,15 +76,17 @@ export default function ContactPage() {
                   <Textarea id="buyer-message" rows={4} placeholder="Tell us how we can help." />
                 </FormField>
 
-                <Button className="w-full rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800">
-                  Send enquiry
-                </Button>
+                <div className="mt-auto pt-2">
+                  <Button className="w-full rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-blue-800">
+                    Send enquiry
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
             {/* Agent / partner */}
-            <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-md">
-              <CardContent className="space-y-5 p-6">
+            <Card className="flex flex-col rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-md">
+              <CardContent className="flex flex-1 flex-col space-y-5 p-6">
                 <div>
                   <h2 className="text-[18px] font-bold text-gray-900">
                     Agent or partner enquiry
@@ -114,12 +116,11 @@ export default function ContactPage() {
                   />
                 </FormField>
 
-                <Button
-                  variant="secondary"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-400"
-                >
-                  Request a callback
-                </Button>
+                <div className="mt-auto pt-2">
+                  <Button className="w-full rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-blue-800">
+                    Request a callback
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

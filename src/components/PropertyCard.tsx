@@ -13,10 +13,91 @@ const statusVariant: Record<string, "success" | "warning" | "error" | "default">
   "Let agreed": "warning",
 };
 
-export default function PropertyCard({ property }: { property: Property }) {
+interface PropertyCardProps {
+  property: Property;
+  compact?: boolean;
+}
+
+export default function PropertyCard({ property, compact = false }: PropertyCardProps) {
   const thumbs = property.images?.length ? property.images : [property.image];
   const chipTags = property.tags?.length ? property.tags : [];
 
+  /* ── Compact / vertical card (used on homepage grid) ── */
+  if (compact) {
+    return (
+      <Card className="group overflow-hidden rounded-xl border border-[#E5E7EB] bg-white transition-all hover:shadow-lg">
+        {/* Image */}
+        <div className="relative h-52 w-full overflow-hidden bg-[#F9FAFB]">
+          <Image
+            src={property.image}
+            alt={property.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
+          />
+          <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
+            {thumbs.length}/{Math.max(thumbs.length, 1)}
+          </div>
+          {/* Save */}
+          <button
+            type="button"
+            aria-label="Save property"
+            className="absolute right-3 top-3 rounded-full border border-white/20 bg-white/90 p-2 text-gray-700 backdrop-blur-sm hover:bg-white"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 21s-7-4.35-9.33-8.22C.7 9.46 2.25 6.5 5.6 6.5c1.78 0 3.02.92 3.8 1.88.78-.96 2.02-1.88 3.8-1.88 3.35 0 4.9 2.96 2.93 6.28C19 16.65 12 21 12 21Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Info */}
+        <div className="p-4">
+          {/* Badges */}
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            {property.vrEnabled ? <Badge variant="blue">VR</Badge> : null}
+            <Badge variant={statusVariant[property.status] ?? "default"}>
+              {property.status}
+            </Badge>
+            {property.featured ? <Badge variant="amber">Featured</Badge> : null}
+          </div>
+
+          {/* Price */}
+          <p className="text-lg font-bold text-gray-900">{property.price}</p>
+          {property.priceQualifier ? (
+            <p className="text-xs text-[#6B7280]">{property.priceQualifier}</p>
+          ) : null}
+
+          {/* Title + address */}
+          <p className="mt-1.5 text-sm font-semibold text-gray-900 line-clamp-1">{property.title}</p>
+          <p className="text-xs text-[#6B7280] line-clamp-1">
+            {property.address}, {property.location}
+          </p>
+
+          {/* Facts */}
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6B7280]">
+            <span>{property.beds} beds</span>
+            <span>{property.baths} baths</span>
+            <span>{property.areaSqFt} sq ft</span>
+          </div>
+
+          {/* Agent + CTA */}
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <p className="text-xs text-[#6B7280] truncate">
+              <span className="font-medium text-gray-900">{property.agent.name}</span>
+            </p>
+            <Button
+              asChild
+              className="h-8 rounded-lg bg-blue-700 px-3 text-xs font-semibold !text-white hover:bg-blue-800"
+            >
+              <Link href={`/property/${property.id}`}>View details</Link>
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  /* ── Full / horizontal card (used on browse / listing pages) ── */
   return (
     <Card className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
       <div className="grid md:grid-cols-[340px_1fr]">
@@ -152,7 +233,7 @@ export default function PropertyCard({ property }: { property: Property }) {
 
               <Button
                 asChild
-                className="h-10 rounded-[10px] bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"
+                className="h-10 rounded-[10px] bg-blue-700 px-4 text-sm font-semibold !text-white hover:bg-blue-800"
               >
                 <Link href={`/property/${property.id}`}>View details</Link>
               </Button>

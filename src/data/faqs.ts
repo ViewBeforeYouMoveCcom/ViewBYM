@@ -48,4 +48,11 @@ export const faqs: FAQ[] = [
       "VBYM only uses data to deliver the service. We never sell personal data and provide simple privacy controls.",
     audience: "general",
   },
+  {
+    id: "faq-7",
+    question: "Is VBYM free for buyers and tenants?",
+    answer:
+      "Yes, VBYM is completely free for buyers and tenants. You can browse listings, take VR tours, save properties, and set alerts at no cost. Our service is funded by partner agencies.",
+    audience: "buyer",
+  },
 ];

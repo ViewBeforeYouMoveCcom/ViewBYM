@@ -300,7 +300,7 @@ export default function BrowseClient({
           className="h-10 flex-1 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <select
             value={bedsInput}
             onChange={(e) => setBedsInput(e.target.value)}

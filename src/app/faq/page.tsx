@@ -15,28 +15,28 @@ export default function FaqPage() {
     <div className="bg-white font-sans">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="border-b border-gray-200 bg-white py-14">
+      <section className="bg-[#1A3A6C] py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
-            Help & FAQ
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.12em] text-blue-300">
+            Help &amp; FAQ
           </p>
-          <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
+          <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-white">
             Common questions, straight answers.
           </h1>
-          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
-            Clear answers for buyers, tenants, and agents. If you can't find what you
-            need, contact us and we'll get back to you promptly.
+          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-white/70">
+            Clear answers for buyers, tenants, and agents. If you can&apos;t find what you
+            need, contact us and we&apos;ll get back to you promptly.
           </p>
           <div className="flex flex-wrap gap-2.5">
             <Link
               href="/browse"
-              className="rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+              className="rounded-lg bg-white px-5 py-2.5 text-[14px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
             >
               Browse properties
             </Link>
             <Link
               href="/contact"
-              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-400"
+              className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
             >
               Contact us
             </Link>
@@ -45,12 +45,15 @@ export default function FaqPage() {
       </section>
 
       {/* ── CONTENT ──────────────────────────────────────────── */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-10 sm:py-14">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
 
             {/* FAQ accordion */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <p className="mb-5 text-[18px] font-bold tracking-tight text-gray-900">
+                Frequently asked questions
+              </p>
               <Accordion type="single" collapsible className="w-full">
                 {faqs.map((faq) => (
                   <AccordionItem key={faq.id} value={faq.id}>
@@ -95,13 +98,39 @@ export default function FaqPage() {
                 </p>
                 <Button
                   asChild
-                  className="mt-4 w-full rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+                  className="mt-4 w-full rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-blue-800"
                 >
                   <Link href="/contact">Contact us</Link>
                 </Button>
               </div>
 
             </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BANNER ───────────────────────────────────────── */}
+      <section className="bg-[#1A3A6C] py-10 sm:py-14">
+        <div className="mx-auto max-w-[1200px] px-5 text-center">
+          <h2 className="mb-3 text-[clamp(22px,3vw,36px)] font-extrabold leading-[1.15] tracking-tight text-white">
+            Ready to start exploring?
+          </h2>
+          <p className="mb-7 text-[15px] leading-relaxed text-white/70">
+            Browse VR-enabled homes and shortlist with confidence — completely free.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              href="/browse"
+              className="rounded-lg bg-white px-5 py-2.5 text-[14px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
+            >
+              Browse properties
+            </Link>
+            <Link
+              href="/account/signup"
+              className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
+            >
+              Create free account
+            </Link>
           </div>
         </div>
       </section>

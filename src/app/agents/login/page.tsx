@@ -6,9 +6,7 @@ import Link from "next/link";
 
 import FormField from "@/components/FormField";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 
@@ -51,182 +49,171 @@ function AgentLoginForm() {
   }
 
   return (
-    <Card className="w-full rounded-xl border-b border-gray-200 bg-white">
-      <CardContent className="space-y-6 p-6 md:p-7">
-        <div className="space-y-2">
-          <h1 className=" text-2xl font-semibold text-gray-900">
-            Agent sign in
-          </h1>
-          <p className="text-sm text-[#6B7280]">
-            Access your listings, enquiries, and VR tour management.
-          </p>
+    <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mb-6 space-y-1.5">
+        <p className="text-[12px] font-bold uppercase tracking-[.12em] text-blue-700">
+          Agent portal
+        </p>
+        <h1 className="text-[24px] font-bold tracking-tight text-gray-900">
+          Sign in to your portal
+        </h1>
+        <p className="text-[14px] text-gray-500">
+          Access your listings, enquiries, and VR tour management.
+        </p>
+      </div>
+
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <FormField id="email" label="Email">
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@agency.co.uk"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+        </FormField>
+
+        <FormField id="password" label="Password">
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        </FormField>
+
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13.5px] text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-blue-700 py-2.5 text-[14px] font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-800 disabled:opacity-60"
+        >
+          {loading ? "Signing in..." : "Sign in to portal"}
+        </button>
+
+        {/* Divider */}
+        <div className="relative flex items-center gap-3 py-1">
+          <div className="flex-1 border-t border-gray-200" />
+          <span className="text-[12px] text-gray-400">or</span>
+          <div className="flex-1 border-t border-gray-200" />
         </div>
 
-        <form className="space-y-5" onSubmit={onSubmit}>
-          <FormField id="email" label="Email">
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@agency.co.uk"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
-          </FormField>
+        <GoogleSignInButton
+          redirectTo="/account/auth-callback?next=/agents/auth-redirect"
+          label="Continue with Google"
+        />
 
-          <FormField id="password" label="Password">
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </FormField>
-
-          {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="h-11 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+        <div className="flex items-center justify-between text-[13.5px]">
+          <Link
+            href="/account/forgot-password"
+            className="text-gray-500 transition-colors hover:text-blue-700"
           >
-            {loading ? "Signing in..." : "Sign in to portal"}
-          </Button>
+            Forgot password?
+          </Link>
+        </div>
 
-          {/* Divider */}
-          <div className="relative flex items-center gap-3 py-1">
-            <div className="flex-1 border-t border-[#E5E7EB]" />
-            <span className="text-xs text-[#9CA3AF]">or</span>
-            <div className="flex-1 border-t border-[#E5E7EB]" />
-          </div>
-
-          <GoogleSignInButton
-            redirectTo="/account/auth-callback?next=/agents/auth-redirect"
-            label="Continue with Google"
-          />
-
-          <div className="flex items-center justify-between text-sm">
-            <Link
-              href="/account/forgot-password"
-              className="text-gray-900 hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          <div className="border-t border-[#E5E7EB] pt-4 text-sm text-[#6B7280]">
-            New to VBYM?{" "}
-            <Link
-              href="/agents/request-access"
-              className="font-medium text-gray-900 hover:underline"
-            >
-              Request agent access →
-            </Link>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        <div className="border-t border-gray-200 pt-4 text-[13.5px] text-gray-500">
+          New to VBYM?{" "}
+          <Link
+            href="/agents/request-access"
+            className="font-medium text-blue-700 transition-colors hover:text-blue-800"
+          >
+            Request agent access →
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 }
 
 export default function AgentLoginPage() {
   return (
-    <div className="bg-white">
-      {/* Header band */}
-      <section className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto w-full max-w-[1200px] px-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-2">
-              <Badge variant="amber">Agent portal</Badge>
-              <p className="text-sm text-[#6B7280]">
-                Sign in to manage listings, VR tours, and enquiries.
-              </p>
-            </div>
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-gray-50 to-white">
+      {/* Body — vertically centered */}
+      <main className="flex flex-1 items-center justify-center px-5 py-10">
+        <div className="w-full max-w-[840px]">
+          <div className="grid items-start gap-10 lg:grid-cols-[1fr_320px]">
+            {/* Form */}
+            <Suspense
+              fallback={
+                <div className="h-72 w-full max-w-[440px] animate-pulse rounded-2xl border border-gray-200 bg-white" />
+              }
+            >
+              <AgentLoginForm />
+            </Suspense>
 
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-              <Link className="text-gray-900 hover:underline" href="/">
-                Home
-              </Link>
-              <Link className="text-gray-900 hover:underline" href="/for-agents">
-                For agents
-              </Link>
-              <Link className="text-gray-900 hover:underline" href="/contact">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+            {/* Right rail */}
+            <div className="hidden lg:block">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-5 text-[17px] font-bold text-gray-900">
+                  Your agent portal
+                </h2>
 
-      {/* Body */}
-      <section className="mx-auto w-full max-w-[1200px] px-5 py-12">
-        <div className="grid gap-8 lg:grid-cols-[420px_1fr]">
-          {/* Form */}
-          <Suspense
-            fallback={
-              <div className="h-72 animate-pulse rounded-xl border border-[#E5E7EB] bg-white" />
-            }
-          >
-            <AgentLoginForm />
-          </Suspense>
+                <ul className="space-y-4">
+                  {[
+                    {
+                      text: "Publish and manage listings",
+                      accent: "from-blue-500 to-blue-700",
+                      shadow: "shadow-blue-200",
+                    },
+                    {
+                      text: "Attach immersive VR tours",
+                      accent: "from-violet-500 to-indigo-700",
+                      shadow: "shadow-violet-200",
+                    },
+                    {
+                      text: "Receive and respond to enquiries",
+                      accent: "from-emerald-500 to-teal-700",
+                      shadow: "shadow-emerald-200",
+                    },
+                    {
+                      text: "Control distribution — share links, not files",
+                      accent: "from-amber-500 to-orange-600",
+                      shadow: "shadow-amber-200",
+                    },
+                  ].map((benefit) => (
+                    <li key={benefit.text} className="flex items-center gap-3">
+                      <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${benefit.accent} text-[11px] font-bold text-white shadow-sm ${benefit.shadow}`}>
+                        ✓
+                      </span>
+                      <span className="text-[14px] text-gray-600">{benefit.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          {/* Right rail */}
-          <div className="hidden lg:block">
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-              <p className="text-sm font-semibold text-gray-900">
-                Your agent portal
-              </p>
-
-              <ul className="mt-4 grid gap-3 text-sm text-[#6B7280]">
-                <li>• Publish and manage property listings</li>
-                <li>• Attach and preview immersive VR tours</li>
-                <li>• Receive and respond to enquiries</li>
-                <li>• Control distribution — share links, not files</li>
-              </ul>
-
-              <div className="mt-5 rounded-xl border border-[#E5E7EB] bg-white p-4">
-                <p className="text-sm font-semibold text-gray-900">
+              {/* Need access? */}
+              <div className="mt-4 rounded-2xl bg-[#1A3A6C] p-5">
+                <p className="text-[13px] font-bold text-white">
                   Need access?
                 </p>
-                <p className="mt-1 text-sm text-[#6B7280]">
-                  Agent accounts are approved by the VBYM team.{" "}
-                  <Link
-                    href="/agents/request-access"
-                    className="text-gray-900 underline"
-                  >
-                    Request access here.
-                  </Link>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-white/65">
+                  Agent accounts are approved by the VBYM team.
                 </p>
+                <Link
+                  href="/agents/request-access"
+                  className="mt-3 inline-flex text-[13px] font-semibold text-blue-300 transition-colors hover:text-white"
+                >
+                  Request access here →
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* Footer micro */}
-      <footer className="border-t border-[#E5E7EB] bg-white">
-        <div className="mx-auto w-full max-w-[1200px] px-5 py-6 text-xs text-[#6B7280]">
-          <span>
-            By using VBYM you agree to our{" "}
-            <Link className="underline" href="/legal/terms">
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link className="underline" href="/legal/privacy">
-              Privacy Policy
-            </Link>
-            .
-          </span>
-        </div>
-      </footer>
+
+
     </div>
   );
 }

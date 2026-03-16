@@ -8,27 +8,27 @@ export default function HowVrWorksPage() {
     <div className="bg-white font-sans">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="border-b border-gray-200 bg-white py-14">
+      <section className="bg-[#1A3A6C] py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.12em] text-blue-300">
             VR Technology
           </p>
-          <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
+          <h1 className="mb-3.5 max-w-[640px] text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-white">
             Tour homes before you leave the sofa.
           </h1>
-          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
+          <p className="mb-7 max-w-[520px] text-[15px] leading-relaxed text-white/70">
             Full 360° immersive tours on any device. No headset required — just your browser.
           </p>
           <div className="flex flex-wrap gap-2.5">
             <Link
               href="/browse?vr=1"
-              className="rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+              className="rounded-lg bg-white px-5 py-2.5 text-[14px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
             >
               Browse VR listings
             </Link>
             <Link
               href="/faq"
-              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-400"
+              className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
             >
               FAQs
             </Link>
@@ -37,42 +37,62 @@ export default function HowVrWorksPage() {
       </section>
 
       {/* ── 3-FEATURE STRIP ──────────────────────────────────── */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="grid gap-5 md:grid-cols-3">
-            {[
-              {
-                emoji: "🖥️",
-                title: "No headset required",
-                text: "Works on desktop, tablet, and mobile. Headsets enhance the experience but aren't needed to explore.",
-              },
-              {
-                emoji: "◉",
-                title: "True 360° exploration",
-                text: "Pause and look in every direction. Inspect details at your own pace with no time pressure.",
-              },
-              {
-                emoji: "📐",
-                title: "Floor plans in-tour",
-                text: "Dimensions overlay as you walk each room — so you know whether your furniture will actually fit.",
-              },
-            ].map((item) => (
-              <Card key={item.title} className="rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-md">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[22px]">
-                    {item.emoji}
-                  </div>
-                  <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">{item.title}</h3>
-                  <p className="text-[14px] leading-relaxed text-gray-500">{item.text}</p>
-                </CardContent>
-              </Card>
-            ))}
+
+            {/* No headset required */}
+            <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:border-blue-200 hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-200">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8"/>
+                    <path d="M8 21h8M12 17v4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">No headset required</h3>
+                <p className="text-[14px] leading-relaxed text-gray-500">Works on desktop, tablet, and mobile. Headsets enhance the experience but aren't needed to explore.</p>
+              </CardContent>
+            </Card>
+
+            {/* True 360° exploration */}
+            <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:border-violet-200 hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-700 shadow-md shadow-violet-200">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="9" stroke="white" strokeWidth="1.8"/>
+                    <ellipse cx="12" cy="12" rx="4" ry="9" stroke="white" strokeWidth="1.5"/>
+                    <path d="M3 12h18" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                </div>
+                <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">True 360° exploration</h3>
+                <p className="text-[14px] leading-relaxed text-gray-500">Pause and look in every direction. Inspect details at your own pace with no time pressure.</p>
+              </CardContent>
+            </Card>
+
+            {/* Floor plans in-tour */}
+            <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:border-emerald-200 hover:shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-md shadow-emerald-200">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3v18h18" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M3 21h8V11h10" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M11 11V7h10v14" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="7" cy="16" r="1.2" fill="white"/>
+                    <circle cx="16" cy="14" r="1.2" fill="white"/>
+                  </svg>
+                </div>
+                <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">Floor plans in-tour</h3>
+                <p className="text-[14px] leading-relaxed text-gray-500">Dimensions overlay as you walk each room — so you know whether your furniture will actually fit.</p>
+              </CardContent>
+            </Card>
+
           </div>
         </div>
       </section>
 
       {/* ── CONTROLS GUIDE ───────────────────────────────────── */}
-      <section className="bg-white py-12">
+      <section className="bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             Controls
@@ -83,9 +103,13 @@ export default function HowVrWorksPage() {
           <div className="grid gap-5 lg:grid-cols-2">
 
             {/* Desktop */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[22px]">
-                🖱️
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-lg">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-200">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2v6l3-3M12 8l-3-3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="3" y="10" width="18" height="12" rx="2" stroke="white" strokeWidth="1.8"/>
+                  <path d="M8 16h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
               </div>
               <h3 className="mb-3 text-[15px] font-bold text-gray-900">Desktop</h3>
               <ul className="flex flex-col gap-2.5 text-[14px] text-gray-500">
@@ -109,26 +133,29 @@ export default function HowVrWorksPage() {
             </div>
 
             {/* Mobile */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[22px]">
-                📱
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-violet-200 hover:shadow-lg">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-700 shadow-md shadow-violet-200">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="5" y="2" width="14" height="20" rx="3" stroke="white" strokeWidth="1.8"/>
+                  <path d="M10 18h4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
               </div>
-              <h3 className="mb-3 text-[15px] font-bold text-gray-900">Mobile & tablet</h3>
+              <h3 className="mb-3 text-[15px] font-bold text-gray-900">Mobile &amp; tablet</h3>
               <ul className="flex flex-col gap-2.5 text-[14px] text-gray-500">
                 <li className="flex gap-2">
-                  <span className="mt-0.5 shrink-0 text-blue-700">•</span>
+                  <span className="mt-0.5 shrink-0 text-violet-600">•</span>
                   Swipe to look around in every direction
                 </li>
                 <li className="flex gap-2">
-                  <span className="mt-0.5 shrink-0 text-blue-700">•</span>
+                  <span className="mt-0.5 shrink-0 text-violet-600">•</span>
                   Tap pause to examine a room closely
                 </li>
                 <li className="flex gap-2">
-                  <span className="mt-0.5 shrink-0 text-blue-700">•</span>
+                  <span className="mt-0.5 shrink-0 text-violet-600">•</span>
                   Rotate your device for a wider perspective
                 </li>
                 <li className="flex gap-2">
-                  <span className="mt-0.5 shrink-0 text-blue-700">•</span>
+                  <span className="mt-0.5 shrink-0 text-violet-600">•</span>
                   Save listings and revisit on any device later
                 </li>
               </ul>
@@ -139,13 +166,13 @@ export default function HowVrWorksPage() {
       </section>
 
       {/* ── WHAT VR-FIRST MEANS ──────────────────────────────── */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             VR-first
           </p>
           <h2 className="mb-8 text-[clamp(20px,2.5vw,30px)] font-bold tracking-tight text-gray-900">
-            What "VR-first" actually means
+            What &quot;VR-first&quot; actually means
           </h2>
           <div className="grid gap-6 lg:grid-cols-2">
 
@@ -198,7 +225,7 @@ export default function HowVrWorksPage() {
       </section>
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
-      <section className="bg-[#1A3A6C] py-14">
+      <section className="bg-[#1A3A6C] py-10 sm:py-14">
         <div className="mx-auto max-w-[1200px] px-5 text-center">
           <h2 className="mb-3 text-[clamp(22px,3vw,36px)] font-extrabold leading-[1.15] tracking-tight text-white">
             Ready to explore in VR?
@@ -215,7 +242,7 @@ export default function HowVrWorksPage() {
             </Link>
             <Link
               href="/faq"
-              className="rounded-lg border border-white/25 bg-transparent px-5 py-2.5 text-[14px] font-semibold text-white/85 transition-colors hover:bg-white/10"
+              className="rounded-lg border border-white/25 bg-transparent px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:bg-white/10"
             >
               Visit FAQs
             </Link>

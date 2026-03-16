@@ -142,7 +142,7 @@ export default function HeaderNav() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : !authLoading ? (
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="h-9 rounded-lg px-4 text-[13.5px] font-semibold text-gray-600 transition-colors hover:text-gray-900">
@@ -160,7 +160,7 @@ export default function HeaderNav() {
               </DropdownMenu>
               <Link
                 href="/account/signup"
-                className="flex h-9 items-center rounded-lg bg-blue-700 px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-blue-800"
+                className="flex h-9 items-center rounded-lg bg-blue-700 px-4 text-[13.5px] font-semibold !text-white transition-colors hover:bg-blue-800"
               >
                 Sign up free
               </Link>
@@ -201,6 +201,32 @@ export default function HeaderNav() {
                 {item.label}
               </Link>
             ))}
+            {!user && (
+              <>
+                <div className="my-1 border-t border-gray-100" />
+                <Link
+                  href="/account/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Buyer / Tenant sign in
+                </Link>
+                <Link
+                  href="/agents/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Agent / Admin sign in
+                </Link>
+                <Link
+                  href="/account/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="mx-3 mt-1 rounded-lg bg-blue-700 px-4 py-2.5 text-center text-[14px] font-semibold !text-white transition-colors hover:bg-blue-800"
+                >
+                  Sign up free
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
