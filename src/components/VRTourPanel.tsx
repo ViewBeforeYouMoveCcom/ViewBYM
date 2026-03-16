@@ -31,7 +31,7 @@ export default function VRTourPanel({ vrEnabled, embedUrl, iframeHtml }: Props) 
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-5">
           <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] p-10 text-center">
-            <p className="text-sm font-medium text-[#0F172A]">VR tour not yet available</p>
+            <p className="text-sm font-medium text-gray-900">VR tour not yet available</p>
             <p className="mt-1 text-sm text-[#6B7280]">
               The agent has not added an Immersive VR tour to this listing yet.
             </p>
@@ -70,7 +70,7 @@ export default function VRTourPanel({ vrEnabled, embedUrl, iframeHtml }: Props) 
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 flex-1">
-                <p className="text-sm font-medium text-[#0F172A]">Tip</p>
+                <p className="text-sm font-medium text-gray-900">Tip</p>
                 <p className="mt-1 text-sm text-[#6B7280]">
                   You can pause at any point and look around in full 360°. Best experienced on
                   desktop or tablet.
@@ -99,7 +99,7 @@ export default function VRTourPanel({ vrEnabled, embedUrl, iframeHtml }: Props) 
         ) : (
           // VR is enabled on the listing but no source URL has been set yet
           <div className="rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] p-10 text-center">
-            <p className="text-sm font-medium text-[#0F172A]">VR tour being prepared</p>
+            <p className="text-sm font-medium text-gray-900">VR tour being prepared</p>
             <p className="mt-1 text-sm text-[#6B7280]">
               The agent is setting up the Immersive VR tour. Check back shortly.
             </p>

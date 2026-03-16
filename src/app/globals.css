@@ -2,13 +2,12 @@
 
 :root {
   --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-foreground: #111827;
   --color-deep-indigo: #1d2a4d;
-  --color-teal: #14b8a6;
   --color-amber: #fbbf24;
   --color-border: #e5e7eb;
   --color-muted: #6b7280;
-  --color-muted-bg: #f9fafb;
+  --color-muted-bg: #f3f4f6;
   --color-success: #22c55e;
   --color-warning: #f97316;
   --color-error: #ef4444;
@@ -26,13 +25,14 @@
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-body);
+  font-family: var(--font-sans), 'Open Sans', sans-serif;
 }
 
 a {
@@ -41,7 +41,11 @@ a {
 }
 
 .font-heading {
-  font-family: var(--font-heading);
+  font-family: var(--font-heading), 'Montserrat', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), 'Montserrat', sans-serif;
 }
 
 .text-muted {
@@ -53,5 +57,5 @@ a {
 }
 
 .card-shadow {
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
 }

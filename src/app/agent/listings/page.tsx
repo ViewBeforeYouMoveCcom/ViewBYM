@@ -73,7 +73,7 @@ export default function AgentListingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+        <h1 className="font-heading text-2xl font-semibold text-gray-900">
           My listings
         </h1>
         <Button
@@ -98,7 +98,7 @@ export default function AgentListingsPage() {
               onClick={() => setTab(t.value)}
               className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                 tab === t.value
-                  ? "border-[#0F172A] bg-[#0F172A] text-white"
+                  ? "border-gray-900 bg-gray-900 text-white"
                   : "border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
               }`}
             >
@@ -128,7 +128,7 @@ export default function AgentListingsPage() {
               <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-[#0F172A]">
+                    <p className="text-sm font-semibold text-gray-900">
                       {property.title || property.address || "Untitled listing"}
                     </p>
                     <Badge variant={statusVariant[property.status]}>

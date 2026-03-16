@@ -7,9 +7,9 @@ export default function AboutPage() {
     <div className="bg-white font-sans">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="border-b border-gray-200 bg-white py-14">
+      <section className="border-b border-gray-200 bg-white py-10 sm:py-14">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-600">
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             About VBYM
           </p>
           <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
@@ -37,7 +37,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── STATS STRIP ──────────────────────────────────────── */}
-      <section className="bg-gray-50 py-10">
+      <section className="bg-gray-50 py-8 sm:py-10">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {[
@@ -47,7 +47,7 @@ export default function AboutPage() {
               { num: "2026", label: "Founded" },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-[32px] font-extrabold leading-none tracking-tight text-gray-900">
+                <div className="text-[24px] sm:text-[32px] font-extrabold leading-none tracking-tight text-gray-900">
                   {s.num}
                 </div>
                 <div className="mt-1.5 text-[13px] text-gray-500">{s.label}</div>
@@ -58,9 +58,9 @@ export default function AboutPage() {
       </section>
 
       {/* ── MISSION CARDS ────────────────────────────────────── */}
-      <section className="bg-white py-12">
+      <section className="bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-600">
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             What we stand for
           </p>
           <h2 className="mb-8 text-[clamp(20px,2.5vw,30px)] font-bold tracking-tight text-gray-900">
@@ -104,15 +104,15 @@ export default function AboutPage() {
       </section>
 
       {/* ── HOW WE FIT IN ────────────────────────────────────── */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-600">
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             Our role
           </p>
           <h2 className="mb-8 text-[clamp(20px,2.5vw,30px)] font-bold tracking-tight text-gray-900">
             How we fit in
           </h2>
-          <div className="rounded-2xl border border-gray-200 bg-white p-8">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-8">
             <div className="grid gap-8 lg:grid-cols-2">
               <div>
                 <h3 className="mb-3 text-[18px] font-bold text-gray-900">
@@ -150,7 +150,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── CTA BANNER ───────────────────────────────────────── */}
-      <section className="bg-[#1A3A6C] py-14">
+      <section className="bg-[#1A3A6C] py-10 sm:py-14">
         <div className="mx-auto max-w-[1200px] px-5 text-center">
           <h2 className="mb-3 text-[clamp(22px,3vw,36px)] font-extrabold leading-[1.15] tracking-tight text-white">
             Ready to find your next home?

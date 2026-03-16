@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function VendorPage() {
   return (
     <div className="space-y-10 py-12">
-      <section className="mx-auto w-full max-w-5xl space-y-4 px-4 md:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-semibold text-[#0F172A]">
+      <section className="mx-auto w-full max-w-[1200px] space-y-4 px-5">
+        <h1 className="font-heading text-3xl font-semibold text-gray-900">
           Immersive VR vendor support
         </h1>
         <p className="text-sm text-[#6B7280]">
@@ -13,11 +13,11 @@ export default function VendorPage() {
         </p>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-4 md:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1200px] px-5">
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardContent className="space-y-2">
-              <h2 className="font-heading text-lg font-semibold text-[#0F172A]">
+              <h2 className="font-heading text-lg font-semibold text-gray-900">
                 What happens
               </h2>
               <p className="text-sm text-[#6B7280]">
@@ -28,7 +28,7 @@ export default function VendorPage() {
           </Card>
           <Card>
             <CardContent className="space-y-2">
-              <h2 className="font-heading text-lg font-semibold text-[#0F172A]">
+              <h2 className="font-heading text-lg font-semibold text-gray-900">
                 Benefits
               </h2>
               <p className="text-sm text-[#6B7280]">
@@ -39,7 +39,7 @@ export default function VendorPage() {
           </Card>
           <Card>
             <CardContent className="space-y-2">
-              <h2 className="font-heading text-lg font-semibold text-[#0F172A]">
+              <h2 className="font-heading text-lg font-semibold text-gray-900">
                 How to prepare
               </h2>
               <p className="text-sm text-[#6B7280]">
@@ -50,7 +50,7 @@ export default function VendorPage() {
           </Card>
           <Card>
             <CardContent className="space-y-2">
-              <h2 className="font-heading text-lg font-semibold text-[#0F172A]">
+              <h2 className="font-heading text-lg font-semibold text-gray-900">
                 Reassurance and privacy
               </h2>
               <p className="text-sm text-[#6B7280]">
@@ -62,11 +62,11 @@ export default function VendorPage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-4 md:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1200px] px-5">
         <Card className="bg-[#F9FAFB]">
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="font-heading text-xl font-semibold text-[#0F172A]">
+              <h2 className="font-heading text-xl font-semibold text-gray-900">
                 Ready to capture an Immersive VR tour?
               </h2>
               <p className="text-sm text-[#6B7280]">

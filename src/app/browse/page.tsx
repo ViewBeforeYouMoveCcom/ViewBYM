@@ -54,13 +54,13 @@ export default async function BrowsePage({
   return (
     <div className="bg-white">
       <section className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[1200px] px-5 py-12">
           <div className="space-y-3">
-            <Badge variant="teal">Browse Immersive VR-enabled properties</Badge>
-            <h1 className="font-heading text-2xl font-semibold text-[#0F172A] md:text-3xl">
-              Browse properties
-            </h1>
-            <p className="text-sm text-[#6B7280]">
+            <Badge variant="blue">Browse Immersive VR-enabled properties</Badge>
+             <h1 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
+                Browse properties
+              </h1>
+            <p className="mt-1 text-[14px] text-gray-500">
               Refine your search, save your shortlist, and tour in Immersive VR when ready.
             </p>
           </div>

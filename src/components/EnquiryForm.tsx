@@ -51,7 +51,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail }: Props)
   if (success) {
     return (
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-        <p className="text-sm font-semibold text-[#0F172A]">Enquiry sent</p>
+        <p className="text-sm font-semibold text-gray-900">Enquiry sent</p>
         <p className="mt-1 text-sm text-[#6B7280]">
           The agent will be in touch shortly.
           {agentEmail && (
@@ -108,7 +108,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail }: Props)
           value={form.message}
           onChange={(e) => set("message", e.target.value)}
           required
-          className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </FormField>
 
@@ -121,7 +121,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail }: Props)
       <Button
         type="submit"
         disabled={loading}
-        className="h-11 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+        className="h-11 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold text-white hover:bg-[#063d75]"
       >
         {loading ? "Sending…" : "Send enquiry"}
       </Button>

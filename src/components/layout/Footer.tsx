@@ -11,7 +11,7 @@ export default function Footer() {
               View Before You Move
             </div>
             <p className="max-w-[260px] text-[13px] leading-relaxed text-gray-500">
-              The UK&apos;s VR-first property portal — helping buyers explore and shortlist with real confidence.
+              The UK&apos;s VR-first property portal helping buyers explore and shortlist with real confidence.
             </p>
           </div>
 

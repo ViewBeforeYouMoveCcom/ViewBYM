@@ -76,7 +76,7 @@ export default function AdminAgenciesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+      <h1 className="font-heading text-2xl font-semibold text-gray-900">
         Agencies
       </h1>
 
@@ -97,7 +97,7 @@ export default function AdminAgenciesPage() {
               <CardContent className="space-y-4 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-[#0F172A]">
+                    <p className="text-sm font-semibold text-gray-900">
                       {agency.name}
                     </p>
                     <Badge variant={statusVariant[agency.status]}>
@@ -112,7 +112,7 @@ export default function AdminAgenciesPage() {
                 {/* Token display after approval */}
                 {tokens[agency.id] && (
                   <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-xs font-semibold text-[#0F172A]">
+                    <p className="text-xs font-semibold text-gray-900">
                       Onboarding token (send to agent):
                     </p>
                     <p className="mt-1 break-all font-mono text-xs text-blue-700">

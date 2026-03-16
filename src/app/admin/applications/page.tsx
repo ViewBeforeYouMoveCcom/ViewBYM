@@ -90,7 +90,7 @@ export default function AdminApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+      <h1 className="font-heading text-2xl font-semibold text-gray-900">
         Agent applications
       </h1>
 
@@ -107,7 +107,7 @@ export default function AdminApplicationsPage() {
               onClick={() => setTab(t.value)}
               className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                 tab === t.value
-                  ? "border-[#0F172A] bg-[#0F172A] text-white"
+                  ? "border-gray-900 bg-gray-900 text-white"
                   : "border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
               }`}
             >
@@ -135,7 +135,7 @@ export default function AdminApplicationsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-[#0F172A]">
+                      <p className="text-sm font-semibold text-gray-900">
                         {app.agency_name}
                       </p>
                       <Badge variant={statusVariant[app.status]}>
@@ -154,7 +154,7 @@ export default function AdminApplicationsPage() {
                 <div className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
                   <div>
                     <span className="text-[#6B7280]">Contact: </span>
-                    <span className="text-[#0F172A]">{app.contact_name}</span>
+                    <span className="text-gray-900">{app.contact_name}</span>
                     {app.contact_role && (
                       <span className="text-[#6B7280]"> · {app.contact_role}</span>
                     )}
@@ -168,7 +168,7 @@ export default function AdminApplicationsPage() {
                   {app.phone && (
                     <div>
                       <span className="text-[#6B7280]">Phone: </span>
-                      <span className="text-[#0F172A]">{app.phone}</span>
+                      <span className="text-gray-900">{app.phone}</span>
                     </div>
                   )}
                   {app.website && (
@@ -196,7 +196,7 @@ export default function AdminApplicationsPage() {
                         setNotes((prev) => ({ ...prev, [app.id]: e.target.value }))
                       }
                       rows={2}
-                      className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Add notes…"
                     />
                     <Button

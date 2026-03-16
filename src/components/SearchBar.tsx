@@ -29,7 +29,7 @@ export default function SearchBar() {
         />
       </div>
       <Button
-        className="h-11 rounded-[10px] bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800"
+        className="h-11 rounded-[10px] bg-[#08519A] px-5 text-sm font-semibold text-white hover:bg-[#063d75]"
         onClick={handleSearch}
       >
         Search

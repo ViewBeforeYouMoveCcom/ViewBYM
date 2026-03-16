@@ -1,22 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
-// app/layout.tsx
-import { Figtree } from "next/font/google";
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
+import { Open_Sans, Montserrat } from "next/font/google";
 
 import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import HeaderNav from "@/components/layout/HeaderNav";
 
-const inter = Inter({
+const openSans = Open_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-heading",
 });
 
@@ -32,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${openSans.variable} ${montserrat.variable}`}>
       <body>
         <div className="flex min-h-screen flex-col">
           <HeaderNav />

@@ -120,7 +120,7 @@ export default function AgentEnquiriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">Enquiries</h1>
+        <h1 className="font-heading text-2xl font-semibold text-gray-900">Enquiries</h1>
         <button
           type="button"
           onClick={() => setShowHandled((v) => !v)}
@@ -154,7 +154,7 @@ export default function AgentEnquiriesPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-[#0F172A]">{enquiry.name}</p>
+                      <p className="text-sm font-semibold text-gray-900">{enquiry.name}</p>
                       {enquiry.handled_at && <Badge variant="success">Handled</Badge>}
                     </div>
                     {enquiry.property && (
@@ -175,7 +175,7 @@ export default function AgentEnquiriesPage() {
                   {enquiry.phone && <span> · {enquiry.phone}</span>}
                 </div>
 
-                <p className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-3 text-sm text-[#0F172A]">
+                <p className="rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-3 text-sm text-gray-900">
                   {enquiry.message}
                 </p>
 
@@ -184,7 +184,7 @@ export default function AgentEnquiriesPage() {
                     href={`mailto:${enquiry.email}?subject=Re: ${encodeURIComponent(
                       enquiry.property?.title || enquiry.property?.address_line1 || "your enquiry"
                     )}`}
-                    className="inline-flex h-9 items-center rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#0F172A] hover:bg-[#F9FAFB]"
+                    className="inline-flex h-9 items-center rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-gray-900 hover:bg-[#F9FAFB]"
                   >
                     Reply by email
                   </a>

@@ -55,7 +55,7 @@ export default function AdminLayout({
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB]">
         <div className="max-w-sm space-y-3 text-center">
-          <p className="text-base font-semibold text-[#0F172A]">Access denied</p>
+          <p className="text-base font-semibold text-gray-900">Access denied</p>
           <p className="text-sm text-[#6B7280]">
             This area is restricted to administrators.
           </p>
@@ -75,7 +75,7 @@ export default function AdminLayout({
           <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
             Admin
           </p>
-          <p className="mt-1 text-sm font-semibold text-[#0F172A]">
+          <p className="mt-1 text-sm font-semibold text-gray-900">
             VBYM Console
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function AdminLayout({
 
       {/* Mobile top bar */}
       <div className="fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 py-3 lg:hidden">
-        <p className="text-sm font-semibold text-[#0F172A]">Admin</p>
+        <p className="text-sm font-semibold text-gray-900">Admin</p>
         <div className="flex gap-2 overflow-x-auto">
           {navItems.map((item) => (
             <Link

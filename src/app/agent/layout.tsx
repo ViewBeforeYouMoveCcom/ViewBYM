@@ -84,7 +84,7 @@ export default function AgentLayout({
           <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
             Agent portal
           </p>
-          <p className="mt-1 text-sm font-semibold text-[#0F172A]">VBYM</p>
+          <p className="mt-1 text-sm font-semibold text-gray-900">VBYM</p>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
@@ -122,7 +122,7 @@ export default function AgentLayout({
 
       {/* Mobile top bar */}
       <div className="fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 py-3 lg:hidden">
-        <p className="text-sm font-semibold text-[#0F172A]">Agent</p>
+        <p className="text-sm font-semibold text-gray-900">Agent</p>
         <div className="flex gap-2 overflow-x-auto">
           {navItems.map((item) => (
             <Link

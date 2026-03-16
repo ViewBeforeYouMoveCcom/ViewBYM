@@ -8,7 +8,7 @@ export default function FiltersPanel() {
         <Label htmlFor="price-range">Price range</Label>
         <select
           id="price-range"
-          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A]"
+          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900"
         >
           <option>Any</option>
           <option>Up to £300k</option>
@@ -21,7 +21,7 @@ export default function FiltersPanel() {
         <Label htmlFor="beds">Beds</Label>
         <select
           id="beds"
-          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A]"
+          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900"
         >
           <option>Any</option>
           <option>1+</option>
@@ -34,7 +34,7 @@ export default function FiltersPanel() {
         <Label htmlFor="property-type">Property type</Label>
         <select
           id="property-type"
-          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A]"
+          className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900"
         >
           <option>Any</option>
           <option>Apartment</option>

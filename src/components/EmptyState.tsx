@@ -25,7 +25,7 @@ export default function EmptyState({
         className
       )}
     >
-      <h3 className="font-heading text-lg font-semibold text-[#0F172A]">
+      <h3 className="font-heading text-lg font-semibold text-gray-900">
         {title}
       </h3>
       <p className="mt-2 max-w-sm text-sm text-[#6B7280]">{description}</p>

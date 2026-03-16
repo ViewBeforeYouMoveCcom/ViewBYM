@@ -263,7 +263,7 @@ export default function EditListingPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+          <h1 className="font-heading text-2xl font-semibold text-gray-900">
             {property?.title || property?.address_line1 || "Edit listing"}
           </h1>
           {property && (
@@ -307,7 +307,7 @@ export default function EditListingPage() {
       {/* Details form */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-[#0F172A]">Property details</h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">Property details</h2>
           <div className="grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
               <FormField id="title" label="Title">
@@ -361,7 +361,7 @@ export default function EditListingPage() {
                 id="market_status"
                 value={form.market_status ?? "available"}
                 onChange={(e) => setField("market_status", e.target.value)}
-                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="available">New / Available</option>
                 <option value="Under offer">Under offer</option>
@@ -389,7 +389,7 @@ export default function EditListingPage() {
                 id="property_type"
                 value={form.property_type ?? "apartment"}
                 onChange={(e) => setField("property_type", e.target.value)}
-                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"].map((t) => (
                   <option key={t} value={t}>{t.replace("_", "-")}</option>
@@ -432,7 +432,7 @@ export default function EditListingPage() {
                   rows={4}
                   value={form.description ?? ""}
                   onChange={(e) => setField("description", e.target.value)}
-                  className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </FormField>
             </div>
@@ -459,7 +459,7 @@ export default function EditListingPage() {
       {/* Photos */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-1 text-sm font-semibold text-[#0F172A]">Property photos</h2>
+          <h2 className="mb-1 text-sm font-semibold text-gray-900">Property photos</h2>
           <p className="mb-4 text-xs text-[#6B7280]">
             Upload images for your listing. JPG, PNG, and WebP up to 10 MB each.
           </p>
@@ -526,22 +526,22 @@ export default function EditListingPage() {
       {/* VR Tour */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-1 text-sm font-semibold text-[#0F172A]">Immersive VR tour</h2>
+          <h2 className="mb-1 text-sm font-semibold text-gray-900">Immersive VR tour</h2>
 
           <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm">
-            <p className="font-medium text-[#0F172A]">Which tool should I use?</p>
+            <p className="font-medium text-gray-900">Which tool should I use?</p>
             <p className="mt-1 text-[#6B7280]">
               We recommend one of these two options — both work out of the box with VBYM:
             </p>
             <ul className="mt-2 space-y-2 text-[#6B7280]">
               <li>
-                <span className="font-medium text-[#0F172A]">Matterport</span>
+                <span className="font-medium text-gray-900">Matterport</span>
                 {" "}—{" "}
                 <a
                   href="https://matterport.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-[#0F172A]"
+                  className="underline hover:text-gray-900"
                 >
                   matterport.com
                 </a>
@@ -552,13 +552,13 @@ export default function EditListingPage() {
                 </code>
               </li>
               <li>
-                <span className="font-medium text-[#0F172A]">Kuula</span>
+                <span className="font-medium text-gray-900">Kuula</span>
                 {" "}—{" "}
                 <a
                   href="https://kuula.co"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-[#0F172A]"
+                  className="underline hover:text-gray-900"
                 >
                   kuula.co
                 </a>
@@ -599,7 +599,7 @@ export default function EditListingPage() {
                 placeholder='<iframe src="..." ...></iframe>'
                 value={vrForm.iframe_html}
                 onChange={(e) => setVrForm((prev) => ({ ...prev, iframe_html: e.target.value }))}
-                className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 font-mono text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 font-mono text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </FormField>
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import BenefitsCarousel from "@/components/BenefitsCarousel";
 
 import { Card, CardContent } from "@/components/ui/card";
 import PropertyCard from "@/components/PropertyCard";
@@ -10,21 +11,22 @@ import { getProperties } from "@/data/properties";
 export default async function HomePage() {
   const properties = await getProperties();
   const featured = properties.filter((p) => p.featured).slice(0, 3);
-  const latest = properties.slice(0, 3);
-  const displayProperties = featured.length ? featured : latest;
+  // Temporary fix: fill 3 slots with featured first, then pad with other properties
+  const remaining = properties.filter((p) => !p.featured);
+  const displayProperties = [...featured, ...remaining].slice(0, 3);
 
   return (
     <div className="bg-white font-sans">
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section className="relative flex min-h-[520px] flex-col justify-between overflow-hidden">
+      <section className="relative flex min-h-[420px] sm:min-h-[520px] flex-col justify-between overflow-hidden">
         {/* Background image + overlay */}
         <div className="absolute inset-0">
           <Image
             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1800&q=85&auto=format&fit=crop"
             alt="Beautiful home"
             fill
-            className="object-cover object-[center_60%]"
+            className="object-cover object-[center_60%] filter blur-sm"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/52 via-black/22 to-black/5" />
@@ -46,15 +48,15 @@ export default async function HomePage() {
         {/* Stats strip */}
         <div className="relative z-10 border-t border-white/10 bg-black/35 backdrop-blur-md">
           <div className="mx-auto max-w-[1200px] px-5">
-            <div className="flex divide-x divide-white/10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 sm:divide-x divide-white/10">
               {[
                 { num: "2,400+", label: "Properties with VR" },
                 { num: "180", label: "Partner agencies" },
                 { num: "68%", label: "Fewer wasted viewings" },
                 { num: "3.2×", label: "Faster to offer" },
               ].map((s) => (
-                <div key={s.label} className="flex-1 px-5 py-3.5">
-                  <div className="text-[20px] font-extrabold leading-none tracking-tight text-white">
+                <div key={s.label} className="px-4 sm:px-5 py-3">
+                  <div className="text-[16px] sm:text-[20px] font-extrabold leading-none tracking-tight text-white">
                     {s.num}
                   </div>
                   <div className="mt-0.5 text-[12px] text-white/75">{s.label}</div>
@@ -70,8 +72,8 @@ export default async function HomePage() {
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-gray-900">
-                Featured properties
+              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
+                Featured Properties
               </h2>
               <p className="mt-1 text-[14px] text-gray-500">
                 Handpicked homes with VR tours ready to explore right now.
@@ -79,7 +81,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/browse"
-              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
+              className="rounded-lg  px-4 py-2.5 text-[14px] font-semibold border border-gray-300 bg-white text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50"
             >
               View all properties
             </Link>
@@ -87,18 +89,18 @@ export default async function HomePage() {
 
           <div className="grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             {displayProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard key={property.id} property={property} compact />
             ))}
           </div>
         </div>
       </section>
 
       {/* ── BROWSE BY AREA ────────────────────────────────────── */}
-      <section className="bg-gray-100 py-12">
+      <section className="bg-gray-100 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-gray-900">
+              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
                 Browse by area
               </h2>
               <p className="mt-1 text-[14px] text-gray-500">
@@ -107,14 +109,14 @@ export default async function HomePage() {
             </div>
             <Link
               href="/areas"
-              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50"
             >
               All areas
             </Link>
           </div>
 
           {/* Mosaic grid */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4" style={{ gridTemplateRows: "180px 160px" }}>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4" style={{ gridAutoRows: "minmax(140px, 1fr)" }}>
             {/* Large tile — London */}
             <Link href="/browse?location=London" className="group relative col-span-2 row-span-2 overflow-hidden rounded-2xl cursor-pointer">
               <Image
@@ -136,9 +138,9 @@ export default async function HomePage() {
             {/* Small tiles */}
             {[
               { name: "Manchester", count: "340 with VR", img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80&auto=format&fit=crop" },
-              { name: "Bristol",    count: "185 with VR", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&auto=format&fit=crop" },
-              { name: "Edinburgh",  count: "210 with VR", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80&auto=format&fit=crop" },
-              { name: "Leeds",      count: "160 with VR", img: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80&auto=format&fit=crop" },
+              { name: "Bristol", count: "185 with VR", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&auto=format&fit=crop" },
+              { name: "Edinburgh", count: "210 with VR", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80&auto=format&fit=crop" },
+              { name: "Leeds", count: "160 with VR", img: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80&auto=format&fit=crop" },
             ].map((area) => (
               <Link key={area.name} href={`/browse?location=${area.name}`} className="group relative overflow-hidden rounded-2xl cursor-pointer">
                 <Image
@@ -161,9 +163,9 @@ export default async function HomePage() {
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <section className="bg-white py-12">
         <div className="mx-auto max-w-[1200px] px-5">
-          <div className="grid items-center gap-14 lg:grid-cols-2">
+          <div className="grid items-stretch gap-8 lg:gap-14 lg:grid-cols-2">
             {/* Image panel */}
-            <div className="relative h-[440px] overflow-hidden rounded-2xl shadow-xl">
+            <div className="relative min-h-[280px] sm:min-h-[360px] overflow-hidden rounded-2xl shadow-xl">
               <Image
                 src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900&q=85&auto=format&fit=crop"
                 alt="Living room VR tour"
@@ -176,14 +178,14 @@ export default async function HomePage() {
                   ◉
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-bold text-gray-900">You're touring 6 Radnor Walk</div>
+                  <div className="text-[13px] font-bold text-gray-900">You&apos;re touring 6 Radnor Walk</div>
                   <div className="mt-0.5 text-[12px] text-gray-500">Living room · Room 1 of 5</div>
                   {/* Progress */}
                   <div className="mt-2 flex gap-1">
                     {[true, true, false, false, false].map((done, i) => (
                       <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full ${done ? "bg-blue-700" : "bg-gray-200"} ${i === 1 ? "opacity-50" : ""}`}
+                        className={`h-1 flex-1 rounded-full ${done ? "bg-[#08519A]" : "bg-gray-200"} ${i === 1 ? "opacity-50" : ""}`}
                       />
                     ))}
                   </div>
@@ -192,15 +194,17 @@ export default async function HomePage() {
             </div>
 
             {/* Steps */}
-            <div>
-              <h2 className="mb-2 text-[clamp(22px,2.8vw,32px)] font-bold tracking-tight text-gray-900 leading-tight">
-                Tour homes before you leave your sofa
-              </h2>
-              <p className="mb-7 text-[15px] leading-relaxed text-gray-500">
-                Walk every room in immersive VR, then decide if it's worth a visit. No more surprises on arrival.
-              </p>
+            <div className="flex flex-col justify-between">
+              <div>
+                <h2 className="mb-2 text-[clamp(22px,2.8vw,32px)] font-bold tracking-tight text-[#08519A] leading-tight">
+                  Tour homes before you leave your sofa
+                </h2>
+                <p className="mb-5 text-[15px] leading-relaxed text-gray-500">
+                  Walk every room in immersive VR, then decide if it&apos;s worth a visit. No more surprises on arrival.
+                </p>
+              </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2.5">
                 {[
                   {
                     n: "1",
@@ -220,9 +224,9 @@ export default async function HomePage() {
                 ].map((step) => (
                   <div
                     key={step.n}
-                    className="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-blue-700 hover:shadow-sm"
+                    className="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-[#08519A] hover:shadow-sm"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[14px] font-bold text-blue-700">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#08519A]/25 bg-[#08519A]/10 text-[14px] font-bold text-[#08519A]">
                       {step.n}
                     </div>
                     <div>
@@ -233,16 +237,16 @@ export default async function HomePage() {
                 ))}
               </div>
 
-              <div className="mt-6 flex gap-2.5">
+              <div className="mt-5 flex gap-2.5">
                 <Link
                   href="/how-vr-works"
-                  className="rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+                  className="rounded-lg bg-[#08519A] px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-[#063d75]"
                 >
                   How VR works
                 </Link>
                 <Link
                   href="/browse?vr=true"
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-500"
+                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50"
                 >
                   Browse VR listings
                 </Link>
@@ -252,58 +256,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── BENEFITS ─────────────────────────────────────────── */}
-      <section className="bg-gray-100 py-12">
+      {/* ── WHY CHOOSE US ────────────────────────────────────── */}
+      <section className="bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
-          <div className="mb-6">
-            <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-gray-900">
+          <div className="mb-8 text-center">
+            <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
               Why buyers choose us
             </h2>
             <p className="mt-1 text-[14px] text-gray-500">
               Every decision we make is about saving you time and helping you choose with confidence.
             </p>
           </div>
-
-          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { icon: "🏡", bg: "bg-blue-50", title: "Clean, simple listings", text: "No banner ads, no noise. Just photos, floor plans, and the details that actually matter to a buyer." },
-              { icon: "◉",  bg: "bg-blue-50", title: "VR on any device", text: "Full VR on a headset, 360° on desktop, guided walkthrough on mobile. Nothing locked behind hardware." },
-              { icon: "📐", bg: "bg-green-50", title: "Floor plans in-tour", text: "Accurate dimensions overlay as you walk each room — so you know if your furniture fits before you visit." },
-              { icon: "🔔", bg: "bg-amber-50", title: "Instant price alerts", text: "Get notified the moment a match is listed or a saved property drops in price." },
-              { icon: "🤝", bg: "bg-blue-50", title: "Contact on your terms", text: "Agents only hear from you when you choose to reach out. No unsolicited follow-up calls." },
-              { icon: "🔒", bg: "bg-green-50", title: "Your data stays yours", text: "We never sell your browsing history or VR viewing data to agents or advertisers." },
-            ].map((b) => (
-              <Card
-                key={b.title}
-                className="rounded-2xl border border-gray-200 bg-white transition-all hover:border-gray-300 hover:shadow-md"
-              >
-                <CardContent className="p-6">
-                  <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-[22px] ${b.bg}`}>
-                    {b.icon}
-                  </div>
-                  <p className="mb-1.5 text-[15px] font-bold text-gray-900">{b.title}</p>
-                  <p className="text-[13.5px] leading-relaxed text-gray-500">{b.text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <BenefitsCarousel />
         </div>
       </section>
 
+
+
       {/* ── FOR AGENTS ───────────────────────────────────────── */}
       <section className="bg-[#1A3A6C]">
-        <div className="mx-auto max-w-[1200px] px-5 py-16">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
+        <div className="mx-auto max-w-[1200px] px-5 py-10 sm:py-16">
+          <div className="grid items-center gap-8 sm:gap-16 lg:grid-cols-2">
             {/* Left copy */}
             <div>
-              <p className="mb-3.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-300">
+              <p className="mb-3.5 text-[12px] font-bold uppercase tracking-[.1em] text-white">
                 For estate agents
               </p>
               <h2 className="mb-3.5 text-[clamp(24px,3vw,38px)] font-bold leading-tight tracking-tight text-white">
                 Fewer wasted viewings.<br />More committed buyers.
               </h2>
               <p className="mb-7 text-[15px] leading-relaxed text-white/75">
-                When a buyer calls to book a viewing, they've already walked the property in VR. Every conversation starts warmer — and closes faster.
+                When a buyer calls to book a viewing, they've already walked the property in VR. Every conversation starts warmer and closes faster.
               </p>
               <div className="flex flex-wrap gap-2.5">
                 <Link
@@ -314,7 +297,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/agents/request-access"
-                  className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
+                  className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
                 >
                   Request access
                 </Link>
@@ -332,7 +315,7 @@ export default async function HomePage() {
                   key={m.num}
                   className="flex items-center gap-5 rounded-xl border border-white/10 bg-white/[.07] px-6 py-5 transition-colors hover:border-blue-300/35"
                 >
-                  <div className="min-w-[88px] text-[30px] font-extrabold leading-none tracking-tight text-blue-300">
+                  <div className="min-w-[70px] sm:min-w-[88px] text-[22px] sm:text-[30px] font-extrabold leading-none tracking-tight text-white">
                     {m.num}
                   </div>
                   <div className="text-[13.5px] leading-snug text-white/75">{m.text}</div>
@@ -344,18 +327,18 @@ export default async function HomePage() {
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────── */}
-      <section className="border-t border-gray-200 bg-gray-50 py-12">
+      <section className="border-t border-gray-200 bg-gray-50 py-8 sm:py-12">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-gray-900">
+              <h2 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
                 Common questions
               </h2>
               <p className="mt-1 text-[14px] text-gray-500">Straight answers, no jargon.</p>
             </div>
             <Link
               href="/faq"
-              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-semibold text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50"
             >
               All FAQs
             </Link>
@@ -380,7 +363,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── FINAL CTA ─────────────────────────────────────────── */}
-      <section className="pb-14 pt-0 bg-gray-50">
+      <section className="pb-14 pt-0 bg-white">
         <div className="mx-auto max-w-[1200px] px-5">
           <div className="relative min-h-[300px] overflow-hidden rounded-2xl">
             {/* Background image */}
@@ -393,7 +376,7 @@ export default async function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#1A3A6C]/90 via-[#1A3A6C]/60 to-transparent" />
 
             {/* Content */}
-            <div className="relative z-10 flex flex-wrap items-center justify-between gap-8 p-12">
+            <div className="relative z-10 flex flex-col items-start gap-6 p-6 sm:p-12">
               <div>
                 <h2 className="mb-2 text-[clamp(22px,3vw,36px)] font-bold leading-tight tracking-tight text-white">
                   Ready to find your next home?
@@ -402,7 +385,7 @@ export default async function HomePage() {
                   No account needed to browse. Create a free account to save listings and set alerts.
                 </p>
               </div>
-              <div className="flex gap-2.5">
+              <div className="flex flex-wrap gap-2.5">
                 <Link
                   href="/browse"
                   className="rounded-lg bg-white px-6 py-3 text-[15px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
@@ -411,7 +394,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="rounded-lg border border-white/25 px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:border-white/45 hover:bg-white/10"
+                  className="rounded-lg border border-white/25 px-6 py-3 text-[15px] font-semibold !text-white transition-colors hover:border-white/45 hover:bg-white/10"
                 >
                   Create free account
                 </Link>

@@ -204,8 +204,8 @@ export default function BrowseClient({
       <div className="mt-8">
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-6 md:p-8">
-            <p className="text-sm font-semibold text-[#0F172A]">Where are you looking?</p>
-            <p className="mt-1 text-sm text-[#6B7280]">
+            <p className="text-sm font-semibold text-gray-900">Where are you looking?</p>
+            <p className="mt-1 text-[14px] text-gray-500">
               Enter a postcode, town, or area to find VR-enabled properties nearby.
             </p>
 
@@ -217,14 +217,14 @@ export default function BrowseClient({
                 onChange={(e) => setLocationInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 autoFocus
-                className="h-12 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-4 text-sm text-[#0F172A] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-12 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-4 text-sm text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-0 focus:border-[#E5E7EB]"
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={bedsInput}
                   onChange={(e) => setBedsInput(e.target.value)}
-                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-0 focus:border-[#E5E7EB]"
                 >
                   {BED_OPTIONS.map((o) => (
                     <option key={o.label}>{o.label}</option>
@@ -234,7 +234,7 @@ export default function BrowseClient({
                 <select
                   value={typeInput}
                   onChange={(e) => setTypeInput(e.target.value)}
-                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-0 focus:border-[#E5E7EB]"
                 >
                   {TYPE_OPTIONS.map((t) => (
                     <option key={t}>{t}</option>
@@ -244,7 +244,7 @@ export default function BrowseClient({
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#E5E7EB] bg-white px-4 py-3">
                 <div>
-                  <p className="text-sm text-[#0F172A]">Immersive VR only</p>
+                  <p className="text-sm text-gray-900">Immersive VR only</p>
                   <p className="text-xs text-[#6B7280]">
                     Only show properties with an Immersive VR tour.
                   </p>
@@ -254,7 +254,7 @@ export default function BrowseClient({
                   role="switch"
                   aria-checked={vrOnly}
                   onClick={() => setVrOnly((v) => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${vrOnly ? "bg-blue-700" : "bg-[#E5E7EB]"}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${vrOnly ? "bg-[#08519A]" : "bg-[#E5E7EB]"}`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${vrOnly ? "translate-x-6" : "translate-x-1"}`}
@@ -264,7 +264,7 @@ export default function BrowseClient({
 
               <Button
                 onClick={handleSearch}
-                className="h-12 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+                className="h-12 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold font-semibold text-white transition-colors hover:bg-[#063d75]"
               >
                 Search properties
               </Button>
@@ -274,7 +274,7 @@ export default function BrowseClient({
               Leave location blank to{" "}
               <button
                 type="button"
-                className="underline hover:text-[#0F172A]"
+                className="underline hover:text-gray-900"
                 onClick={handleSearch}
               >
                 browse all available properties
@@ -297,14 +297,14 @@ export default function BrowseClient({
           value={locationInput}
           onChange={(e) => setLocationInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className="h-10 flex-1 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-10 flex-1 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <select
             value={bedsInput}
             onChange={(e) => setBedsInput(e.target.value)}
-            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-sm text-[#0F172A] focus:outline-none"
+            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-sm text-gray-900 focus:outline-none"
           >
             {BED_OPTIONS.map((o) => (
               <option key={o.label}>{o.label}</option>
@@ -314,7 +314,7 @@ export default function BrowseClient({
           <select
             value={typeInput}
             onChange={(e) => setTypeInput(e.target.value)}
-            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-sm text-[#0F172A] focus:outline-none"
+            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-2 text-sm text-gray-900 focus:outline-none"
           >
             {TYPE_OPTIONS.map((t) => (
               <option key={t}>{t}</option>
@@ -323,7 +323,7 @@ export default function BrowseClient({
 
           <Button
             onClick={handleSearch}
-            className="h-10 rounded-[8px] bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"
+            className="h-10 rounded-[8px] bg-[#08519A] px-4 text-sm font-semibold text-white hover:bg-[#063d75]"
           >
             Search
           </Button>
@@ -331,7 +331,7 @@ export default function BrowseClient({
           <button
             type="button"
             onClick={handleReset}
-            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#6B7280] hover:text-[#0F172A]"
+            className="h-10 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#6B7280] hover:text-gray-900"
           >
             Reset
           </button>
@@ -348,7 +348,7 @@ export default function BrowseClient({
                 {filtered.length} result{filtered.length !== 1 ? "s" : ""}
               </p>
               {location && (
-                <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-medium text-[#0F172A]">
+                <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-medium text-gray-900">
                   {location}
                 </span>
               )}
@@ -360,7 +360,7 @@ export default function BrowseClient({
                 role="switch"
                 aria-checked={vrOnly}
                 onClick={() => setVrOnly((v) => !v)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${vrOnly ? "bg-blue-700" : "bg-[#E5E7EB]"}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${vrOnly ? "bg-[#08519A]" : "bg-[#E5E7EB]"}`}
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${vrOnly ? "translate-x-4" : "translate-x-0.5"}`}
@@ -371,7 +371,7 @@ export default function BrowseClient({
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortKey)}
-                className="ml-2 h-9 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A]"
+                className="ml-2 h-9 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900"
               >
                 <option value="recommended">Recommended</option>
                 <option value="price_asc">Price ↑</option>
@@ -383,7 +383,7 @@ export default function BrowseClient({
                 type="button"
                 onClick={saveSearch}
                 disabled={savingSearch || searchSaved}
-                className="h-9 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#6B7280] hover:text-[#0F172A] disabled:opacity-60"
+                className="h-9 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#6B7280] hover:text-gray-900 disabled:opacity-60"
               >
                 {searchSaved ? "Search saved ✓" : savingSearch ? "Saving…" : "Save search"}
               </button>
@@ -416,14 +416,14 @@ export default function BrowseClient({
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-3">
             <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-              <p className="text-sm font-semibold text-[#0F172A]">Tip</p>
+              <p className="text-sm font-semibold text-gray-900">Tip</p>
               <p className="mt-1 text-sm text-[#6B7280]">
                 Open a listing and launch the Immersive VR tour to understand layout and flow before
                 booking a viewing.
               </p>
             </div>
             <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-              <p className="text-sm font-semibold text-[#0F172A]">Save this search</p>
+              <p className="text-sm font-semibold text-gray-900">Save this search</p>
               <p className="mt-1 text-sm text-[#6B7280]">
                 Click &quot;Save search&quot; to keep these filters for later.
               </p>

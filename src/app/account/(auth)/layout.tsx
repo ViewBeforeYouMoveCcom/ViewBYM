@@ -3,95 +3,54 @@ import type { ReactNode } from "react";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header band */}
-      <header className="border-b border-gray-200 bg-white py-5">
-        <div className="mx-auto w-full max-w-[1200px] px-5">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="font-bold text-gray-900">
-              View Before You Move
-            </Link>
-            <nav className="flex items-center gap-5">
-              <Link
-                href="/"
-                className="text-[13.5px] text-gray-500 hover:text-gray-900"
-              >
-                Home
-              </Link>
-              <Link
-                href="/browse"
-                className="text-[13.5px] text-gray-500 hover:text-gray-900"
-              >
-                Browse
-              </Link>
-              <Link
-                href="/faq"
-                className="text-[13.5px] text-gray-500 hover:text-gray-900"
-              >
-                Help
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+      <main className="flex flex-1 items-center justify-center px-5 py-10">
+        <div className="w-full max-w-[480px]">
 
-      {/* Body */}
-      <main className="py-16">
-        <div className="mx-auto w-full max-w-[1200px] px-5">
-          <div className="grid items-start gap-16 lg:grid-cols-[1fr_400px]">
-            {/* Main — form */}
-            <div>{children}</div>
 
-            {/* Right rail — hidden on mobile */}
-            <div className="hidden lg:block">
-              <h2 className="mb-4 text-[18px] font-bold text-gray-900">
-                Why create an account?
-              </h2>
+          {/* Form card */}
+          {children}
 
-              <ul className="space-y-3">
-                {[
-                  "Save properties and revisit later",
-                  "Save searches and receive alerts",
-                  "Compare listings after VR viewings",
-                  "Keep your shortlist organised",
-                ].map((benefit) => (
-                  <li key={benefit} className="flex items-center gap-3">
-                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-[12px] font-bold text-white">
-                      ✓
-                    </span>
-                    <span className="text-[14px] text-gray-700">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-                <p className="text-[14px] font-semibold text-gray-900">
-                  Privacy note
-                </p>
-                <p className="mt-1 text-[13.5px] text-gray-500">
-                  We only use your details to provide account features and
-                  respond to support requests.
-                </p>
-              </div>
+          {/* Bottom trust indicators */}
+          <div className="mt-8 space-y-4">
+            {/* Trust badges */}
+            <div className="flex items-center justify-center gap-6 text-[12px] text-gray-400">
+              <span className="flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Secure &amp; encrypted
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                GDPR compliant
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                Free forever
+              </span>
             </div>
+
+            {/* Helpful links */}
+            <p className="text-center text-[12px] text-gray-400">
+              Need help?{" "}
+              <Link href="/contact" className="text-gray-500 underline transition-colors hover:text-[#08519A]">
+                Contact support
+              </Link>
+              {" · "}
+              <Link href="/faq" className="text-gray-500 underline transition-colors hover:text-[#08519A]">
+                FAQ
+              </Link>
+            </p>
           </div>
         </div>
       </main>
-
-      {/* Footer micro */}
-      <footer className="border-t border-gray-200 bg-white py-5">
-        <div className="mx-auto w-full max-w-[1200px] px-5 text-[12.5px] text-gray-400">
-          By using VBYM you agree to our{" "}
-          <Link href="/legal/terms" className="underline hover:text-gray-600">
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link href="/legal/privacy" className="underline hover:text-gray-600">
-            Privacy Policy
-          </Link>
-          .
-        </div>
-      </footer>
     </div>
   );
 }

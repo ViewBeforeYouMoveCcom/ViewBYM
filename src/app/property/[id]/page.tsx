@@ -38,20 +38,20 @@ export default async function PropertyDetailPage({
     <div className="bg-white pb-24 lg:pb-0">
       {/* Top header bar */}
       <section className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[1200px] px-5">
           {/* Breadcrumbs */}
           <div className="mb-3 text-sm text-[#6B7280]">
             <Link href="/browse" className="hover:underline">
               Properties
             </Link>{" "}
             <span className="mx-2">/</span>
-            <span className="text-[#0F172A]">{property.location}</span>
+            <span className="text-gray-900">{property.location}</span>
           </div>
 
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               {property.vrEnabled ? (
-                <Badge variant="teal">Immersive VR Enabled</Badge>
+                <Badge variant="blue">Immersive VR Enabled</Badge>
               ) : (
                 <Badge variant="outline">Immersive VR coming soon</Badge>
               )}
@@ -63,16 +63,16 @@ export default async function PropertyDetailPage({
               )}
             </div>
 
-            <h1 className="font-heading text-2xl font-semibold text-[#0F172A] md:text-3xl">
+            <h1 className="font-heading text-2xl font-bold text-gray-900 md:text-3xl">
               {property.title}
             </h1>
 
-            <p className="text-sm text-[#6B7280]">
+            <p className="text-sm text-gray-500">
               {property.address}, {property.location}
             </p>
 
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#6B7280]">
-              <span className="text-xl font-semibold text-[#0F172A]">
+              <span className="text-xl font-semibold text-gray-900">
                 {property.price}
                 {property.listingType === "rent" && (
                   <span className="ml-1 text-sm font-normal text-[#6B7280]">pcm</span>
@@ -92,7 +92,7 @@ export default async function PropertyDetailPage({
       </section>
 
       {/* Main 2-column layout */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1200px] px-5">
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           {/* LEFT: content */}
           <div className="space-y-6">
@@ -119,7 +119,7 @@ export default async function PropertyDetailPage({
                       beds: property.beds,
                       type: property.type,
                     }}
-                    className="rounded-full border border-[#E5E7EB] bg-white px-2 py-2 text-[#0F172A] hover:bg-[#F9FAFB] h-auto"
+                    className="rounded-full border border-[#E5E7EB] bg-white px-2 py-2 text-gray-900 hover:bg-[#F9FAFB] h-auto"
                   />
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default async function PropertyDetailPage({
               <CardContent className="p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-[#0F172A]">
+                    <p className="text-sm font-semibold text-gray-900">
                       {property.agent.name}
                     </p>
                     <p className="text-xs text-[#6B7280]">{property.agent.branch}</p>
@@ -159,7 +159,7 @@ export default async function PropertyDetailPage({
                     {property.agent.phone && (
                       <a
                         href={`tel:${property.agent.phone}`}
-                        className="flex h-10 items-center gap-2 rounded-[10px] border border-[#0F172A] px-5 text-sm font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+                        className="flex h-10 items-center gap-2 rounded-[10px] border border-gray-900 px-5 text-sm font-semibold text-gray-900 hover:bg-[#F9FAFB]"
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.6 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.51 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.09a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -171,7 +171,7 @@ export default async function PropertyDetailPage({
                     {property.agent.email && (
                       <a
                         href={`mailto:${property.agent.email}`}
-                        className="flex h-10 items-center gap-2 rounded-[10px] border border-[#0F172A] px-5 text-sm font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+                        className="flex h-10 items-center gap-2 rounded-[10px] border border-gray-900 px-5 text-sm font-semibold text-gray-900 hover:bg-[#F9FAFB]"
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -260,7 +260,7 @@ export default async function PropertyDetailPage({
               <CardContent className="space-y-6 p-5">
                 {property.description && (
                   <div>
-                    <h2 className="font-heading text-lg font-semibold text-[#0F172A]">
+                    <h2 className=" text-lg font-semibold text-gray-900">
                       Description
                     </h2>
                     <p className="mt-2 text-sm text-[#6B7280]">{property.description}</p>
@@ -269,10 +269,10 @@ export default async function PropertyDetailPage({
 
                 {property.features.length > 0 && (
                   <div>
-                    <h3 className="font-heading text-base font-semibold text-[#0F172A]">
+                    <h3 className=" text-base font-semibold text-gray-900">
                       Key features
                     </h3>
-                    <ul className="mt-3 grid gap-2 text-sm text-[#6B7280] md:grid-cols-2">
+                    <ul className="mt-3 grid gap-2 text-sm text-gray-500 md:grid-cols-2">
                       {property.features.map((feature) => (
                         <li
                           key={feature}
@@ -291,7 +291,7 @@ export default async function PropertyDetailPage({
             {isDbProperty && (
               <Card className="rounded-xl border border-[#E5E7EB]">
                 <CardContent className="p-5">
-                  <h2 className="mb-1 font-heading text-lg font-semibold text-[#0F172A]">
+                  <h2 className="mb-1 font-heading text-lg font-semibold text-gray-900">
                     Send a message
                   </h2>
                   <p className="mb-4 text-sm text-[#6B7280]">
@@ -343,7 +343,7 @@ export default async function PropertyDetailPage({
               <Card className="rounded-xl border border-[#E5E7EB]">
                 <CardContent className="space-y-4 p-5">
                   <div>
-                    <p className="text-sm font-semibold text-[#0F172A]">{property.agent.name}</p>
+                    <p className="text-sm font-semibold text-gray-900">{property.agent.name}</p>
                     <p className="text-xs text-[#6B7280]">{property.agent.branch}</p>
                   </div>
 
@@ -351,7 +351,7 @@ export default async function PropertyDetailPage({
                     {property.agent.phone && (
                       <a
                         href={`tel:${property.agent.phone}`}
-                        className="flex h-11 items-center justify-center gap-2 rounded-[10px] border border-[#0F172A] font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+                        className="flex h-11 items-center justify-center gap-2 rounded-[10px] border border-gray-900 font-semibold text-gray-900 hover:bg-[#F9FAFB]"
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.6 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.51 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.09a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -362,7 +362,7 @@ export default async function PropertyDetailPage({
                     {property.agent.email && (
                       <a
                         href={`mailto:${property.agent.email}`}
-                        className="flex h-11 items-center justify-center gap-2 rounded-[10px] border border-[#0F172A] font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+                        className="flex h-11 items-center justify-center gap-2 rounded-[10px] border border-gray-900 font-semibold text-gray-900 hover:bg-[#F9FAFB]"
                       >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -387,7 +387,7 @@ export default async function PropertyDetailPage({
               </Card>
 
               <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-                <p className="text-sm font-semibold text-[#0F172A]">Tip</p>
+                <p className="text-sm font-semibold text-gray-900">Tip</p>
                 <p className="mt-1 text-sm text-[#6B7280]">
                   Use the Immersive VR tour to confirm layout and flow before booking an in-person
                   viewing.
@@ -400,11 +400,11 @@ export default async function PropertyDetailPage({
 
       {/* Sticky bottom bar (mobile only) */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#E5E7EB] bg-white px-4 py-3 lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-2">
+        <div className="mx-auto flex max-w-[1200px] items-center gap-2">
           {property.agent.phone && (
             <a
               href={`tel:${property.agent.phone}`}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#0F172A] py-3 text-sm font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-gray-900 py-3 text-sm font-semibold text-gray-900 hover:bg-[#F9FAFB]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.6 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.51 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.09a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -416,7 +416,7 @@ export default async function PropertyDetailPage({
           {property.agent.email && (
             <a
               href={`mailto:${property.agent.email}`}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#0F172A] py-3 text-sm font-semibold text-[#0F172A] hover:bg-[#F9FAFB]"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-gray-900 py-3 text-sm font-semibold text-gray-900 hover:bg-[#F9FAFB]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>

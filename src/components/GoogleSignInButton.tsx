@@ -41,7 +41,7 @@ export default function GoogleSignInButton({
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="flex h-11 w-full items-center justify-center gap-3 rounded-[10px] border border-[#E5E7EB] bg-white text-sm font-semibold text-[#0F172A] transition hover:bg-[#F9FAFB] disabled:opacity-60"
+      className="flex h-11 w-full items-center justify-center gap-3 rounded-[10px] border border-[#E5E7EB] bg-white text-sm font-semibold text-gray-900 transition hover:bg-[#F9FAFB] disabled:opacity-60"
     >
       {/* Google "G" logo */}
       <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

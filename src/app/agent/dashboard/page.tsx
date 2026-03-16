@@ -102,7 +102,7 @@ export default function AgentDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+        <h1 className="font-heading text-2xl font-semibold text-gray-900">
           {agency?.name ?? "Dashboard"}
         </h1>
         {agency && (
@@ -114,7 +114,7 @@ export default function AgentDashboardPage() {
       {agency && (
         <div className={`rounded-xl border p-4 text-sm ${
           agency.status === "approved"
-            ? "border-blue-200 bg-blue-50 text-[#0F172A]"
+            ? "border-blue-200 bg-blue-50 text-gray-900"
             : agency.status === "pending"
             ? "border-amber-200 bg-amber-50 text-amber-800"
             : "border-red-200 bg-red-50 text-red-700"
@@ -136,7 +136,7 @@ export default function AgentDashboardPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
                   {tile.label}
                 </p>
-                <p className="mt-2 text-3xl font-semibold text-[#0F172A]">
+                <p className="mt-2 text-3xl font-semibold text-gray-900">
                   {tile.value}
                 </p>
               </CardContent>
@@ -148,7 +148,7 @@ export default function AgentDashboardPage() {
       {/* Quick actions */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="space-y-3 p-5">
-          <p className="text-sm font-semibold text-[#0F172A]">Quick actions</p>
+          <p className="text-sm font-semibold text-gray-900">Quick actions</p>
           <div className="flex flex-wrap gap-3">
             <Button
               asChild

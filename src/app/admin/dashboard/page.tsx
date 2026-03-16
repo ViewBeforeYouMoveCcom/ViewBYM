@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+      <h1 className="font-heading text-2xl font-semibold text-gray-900">
         Dashboard
       </h1>
 
@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
                   {tile.label}
                 </p>
-                <p className={`mt-2 text-3xl font-semibold ${tile.highlight ? "text-amber-700" : "text-[#0F172A]"}`}>
+                <p className={`mt-2 text-3xl font-semibold ${tile.highlight ? "text-amber-700" : "text-gray-900"}`}>
                   {tile.value}
                 </p>
               </CardContent>
@@ -99,12 +99,12 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-5">
-        <p className="text-sm font-semibold text-[#0F172A]">Quick links</p>
+        <p className="text-sm font-semibold text-gray-900">Quick links</p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          <a href="/admin/applications" className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-[#0F172A] hover:bg-[#F9FAFB]">
+          <a href="/admin/applications" className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-gray-900 hover:bg-[#F9FAFB]">
             Review applications →
           </a>
-          <a href="/admin/agencies" className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-[#0F172A] hover:bg-[#F9FAFB]">
+          <a href="/admin/agencies" className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-gray-900 hover:bg-[#F9FAFB]">
             Manage agencies →
           </a>
         </div>

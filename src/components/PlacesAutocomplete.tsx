@@ -41,7 +41,7 @@ export default function PlacesAutocomplete({
 
   const inputClass =
     className ??
-    "h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500";
+    "h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   useEffect(() => {
     if (!mapsLoaded || !inputRef.current) return;

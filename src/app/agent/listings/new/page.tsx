@@ -101,7 +101,7 @@ export default function NewListingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">Add listing</h1>
+        <h1 className="font-heading text-2xl font-semibold text-gray-900">Add listing</h1>
         <p className="mt-1 text-sm text-[#6B7280]">
           Fill in the property details. You can publish once you&apos;re ready.
         </p>
@@ -165,7 +165,7 @@ export default function NewListingPage() {
                   id="market_status"
                   value={form.market_status}
                   onChange={(e) => set("market_status", e.target.value)}
-                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="available">New / Available</option>
                   <option value="Under offer">Under offer</option>
@@ -191,7 +191,7 @@ export default function NewListingPage() {
                   id="property_type"
                   value={form.property_type}
                   onChange={(e) => set("property_type", e.target.value)}
-                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="apartment">Apartment</option>
                   <option value="house">House</option>
@@ -247,7 +247,7 @@ export default function NewListingPage() {
                     placeholder="Describe the property…"
                     value={form.description}
                     onChange={(e) => set("description", e.target.value)}
-                    className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </FormField>
               </div>

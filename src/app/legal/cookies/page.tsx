@@ -27,7 +27,7 @@ export default function CookiesPage() {
       {/* Header */}
       <section className="border-b border-gray-200 bg-white py-10">
         <div className="mx-auto max-w-[1200px] px-5">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-600">
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
             Legal
           </p>
           <h1 className="mb-2 text-[clamp(26px,3vw,40px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">

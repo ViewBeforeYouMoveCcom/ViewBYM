@@ -59,7 +59,7 @@ export default function AgentOnboardingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
+        <h1 className="font-heading text-2xl font-semibold text-gray-900">
           Set up your agency
         </h1>
         <p className="mt-1 text-sm text-[#6B7280]">
@@ -107,7 +107,7 @@ export default function AgentOnboardingPage() {
       </Card>
 
       <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-5">
-        <p className="text-sm font-semibold text-[#0F172A]">What happens next</p>
+        <p className="text-sm font-semibold text-gray-900">What happens next</p>
         <div className="mt-3 space-y-2 text-sm text-[#6B7280]">
           <p>1. Your agency is created with a <strong>pending</strong> status.</p>
           <p>2. The VBYM team reviews your details and approves your account.</p>
