@@ -15,9 +15,9 @@ import {
 import { supabaseClient } from "@/lib/supabaseClient";
 
 const navItems = [
-  { href: "/browse", label: "Browse properties" },
-  { href: "/for-agents", label: "For agents" },
-  { href: "/how-vr-works", label: "How Immersive VR works" },
+  { href: "/browse", label: "Properties" },
+  { href: "/for-agents", label: "Agents" },
+  { href: "/how-vr-works", label: "Working" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];

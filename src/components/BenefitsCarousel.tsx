@@ -84,10 +84,31 @@ const benefits: Benefit[] = [
   },
 ];
 
+function useVisibleCount() {
+  const [count, setCount] = useState(3);
+  useEffect(() => {
+    function update() {
+      if (window.innerWidth < 640) setCount(1);
+      else if (window.innerWidth < 1024) setCount(2);
+      else setCount(3);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return count;
+}
+
 export default function BenefitsCarousel() {
   const [active, setActive] = useState(0);
+  const visible = useVisibleCount();
   const total = benefits.length;
-  const maxSlide = total - 3; // show 3 cards at a time
+  const maxSlide = Math.max(total - visible, 0);
+
+  // Reset active if it exceeds maxSlide after resize
+  useEffect(() => {
+    if (active > maxSlide) setActive(maxSlide);
+  }, [active, maxSlide]);
 
   const next = useCallback(() => {
     setActive((prev) => (prev >= maxSlide ? 0 : prev + 1));
@@ -104,12 +125,12 @@ export default function BenefitsCarousel() {
       {/* Sliding track */}
       <div
         className="flex transition-transform duration-700 ease-in-out"
-        style={{ transform: `translateX(-${active * (100 / 3)}%)` }}
+        style={{ transform: `translateX(-${active * (100 / visible)}%)` }}
       >
         {benefits.map((b, i) => (
           <div
             key={i}
-            className="w-1/3 flex-shrink-0 px-2"
+            className={`flex-shrink-0 px-2 ${visible === 1 ? 'w-full' : visible === 2 ? 'w-1/2' : 'w-1/3'}`}
           >
             <Card
               className="h-full rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-lg"

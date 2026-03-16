@@ -11,8 +11,9 @@ import { getProperties } from "@/data/properties";
 export default async function HomePage() {
   const properties = await getProperties();
   const featured = properties.filter((p) => p.featured).slice(0, 3);
-  const latest = properties.slice(0, 3);
-  const displayProperties = featured.length ? featured : latest;
+  // Temporary fix: fill 3 slots with featured first, then pad with other properties
+  const remaining = properties.filter((p) => !p.featured);
+  const displayProperties = [...featured, ...remaining].slice(0, 3);
 
   return (
     <div className="bg-white font-sans">

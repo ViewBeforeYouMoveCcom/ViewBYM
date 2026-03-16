@@ -6,15 +6,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
       <main className="flex flex-1 items-center justify-center px-5 py-10">
         <div className="w-full max-w-[480px]">
-          {/* Decorative top accent */}
-          <div className="mb-8 flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#08519A] shadow-lg shadow-blue-900/20">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 10.182V22h18V10.182L12 2 3 10.182Z" />
-                <path d="M9 22V14h6v8" />
-              </svg>
-            </div>
-          </div>
+
 
           {/* Form card */}
           {children}

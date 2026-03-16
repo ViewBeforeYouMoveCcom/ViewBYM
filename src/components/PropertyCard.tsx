@@ -223,27 +223,28 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
   </div>
 
   {/* Buttons */}
-  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full sm:w-auto">
+  <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:gap-3 sm:w-auto">
     <a
       href={`tel:${property.agent.phone}`}
-      className="flex-1 h-10 text-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg"
+      className="flex items-center justify-center h-10 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg sm:flex-1"
     >
       Call
     </a>
 
     <a
       href={`mailto:${property.agent.email}`}
-      className="flex-1 h-10 text-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg"
+      className="flex items-center justify-center h-10 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg sm:flex-1"
     >
       Email
     </a>
 
     <Button
       asChild
-      className="flex-1 h-10 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold !text-white hover:bg-[#063d75] text-center"
+      className="flex items-center justify-center h-10 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold !text-white hover:bg-[#063d75] sm:flex-1"
     >
       <Link href={`/property/${property.id}`}>View details</Link>
     </Button>
+    
     
             </div>
           </div>
