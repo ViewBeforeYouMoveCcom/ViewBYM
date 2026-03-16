@@ -1,0 +1,11 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="520" rx="24" fill="#F9FAFB"/>
+  <rect x="80" y="110" width="640" height="300" rx="20" fill="#E5E7EB"/>
+  <rect x="120" y="150" width="220" height="40" rx="10" fill="#D1D5DB"/>
+  <rect x="120" y="210" width="360" height="24" rx="8" fill="#D1D5DB"/>
+  <rect x="120" y="248" width="280" height="24" rx="8" fill="#D1D5DB"/>
+  <rect x="120" y="286" width="200" height="24" rx="8" fill="#D1D5DB"/>
+  <circle cx="620" cy="240" r="60" fill="#CBD5F5"/>
+  <path d="M600 255L615 270L640 230" stroke="#1D2A4D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="120" y="360" fill="#6B7280" font-size="20" font-family="Inter, sans-serif">Immersive VR-ready property preview</text>
+</svg>
