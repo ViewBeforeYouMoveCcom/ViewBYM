@@ -60,6 +60,7 @@ const CHEVRON_SVG =
 
 export default function SearchWidget() {
   const [activeTab, setActiveTab] = useState<Tab>("buy");
+  const [vrOnly, setVrOnly] = useState(false);
   const router = useRouter();
 
   const handleTabClick = (tab: Tab) => {
@@ -74,42 +75,47 @@ export default function SearchWidget() {
   const footerLinks = FOOTER_LINKS[activeTab];
 
   return (
-    <div className="max-w-[700px] overflow-hidden rounded-2xl bg-white shadow-2xl">
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-gray-50">
+    <div className="max-w-[700px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+      {/* ── Tabs ───────────────────────────────────────────── */}
+      <div className="flex gap-1 border-b border-gray-200 px-2 pt-1">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => handleTabClick(tab.id)}
-            className={`flex-1 border-b-2 px-4 py-3 text-[13.5px] font-semibold transition-colors ${
+            className={`relative px-5 py-3 text-[13.5px] font-semibold tracking-wide transition-colors ${
               activeTab === tab.id
-                ? "border-blue-700 bg-white text-blue-700"
-                : "border-transparent text-gray-500 hover:text-gray-800 hover:bg-white/60"
+                ? "text-[#08519A]"
+                : "text-gray-500 hover:text-gray-800"
             }`}
           >
             {tab.label}
+            {/* active indicator line */}
+            {activeTab === tab.id && (
+              <span className="absolute bottom-0 left-2 right-2 h-[2.5px] rounded-full bg-[#08519A]" />
+            )}
           </button>
         ))}
       </div>
 
-      {/* Input row */}
+      {/* ── Input row ──────────────────────────────────────── */}
       <form
         action={activeTab === "sold" ? "/sold-prices" : "/browse"}
         method="GET"
-        className="flex items-stretch border-b border-gray-200"
+        className="flex items-center gap-2.5 px-4 py-4"
       >
         {/* Hidden params */}
         {activeTab === "buy"  && <input type="hidden" name="listing_type" value="sale" />}
         {activeTab === "rent" && <input type="hidden" name="listing_type" value="rent" />}
         {activeTab === "new"  && <input type="hidden" name="listing_type" value="sale" />}
         {activeTab === "new"  && <input type="hidden" name="type" value="new" />}
+        {vrOnly && <input type="hidden" name="vr" value="1" />}
 
         {/* Location */}
-        <div className="relative flex-1 border-r border-gray-200">
+        <div className="relative min-w-0 flex-[1.1]">
           <svg
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-            width="17" height="17" viewBox="0 0 24 24" fill="none"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            width="15" height="15" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2.2"
           >
             <circle cx="11" cy="11" r="8" />
@@ -122,14 +128,14 @@ export default function SearchWidget() {
                 ? "Enter street, postcode or area…"
                 : "City, postcode or area…"
             }
-            className="h-[52px] w-full border-none bg-transparent pl-10 pr-4 text-[15px] text-gray-900 placeholder-gray-400 outline-none"
+            className="h-[46px] w-full rounded-xl border border-gray-300 bg-gray-50 pl-9 pr-3 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none"
           />
         </div>
 
         {/* Price */}
         <select
           name="price_max"
-          className="hidden h-[52px] border-r border-gray-200 bg-transparent px-3.5 pr-9 text-[14px] font-medium text-gray-800 outline-none md:block"
+          className="hidden h-[46px] min-w-[130px] flex-1 cursor-pointer rounded-xl border border-gray-300 bg-gray-50 px-3.5 pr-8 text-[13.5px] font-medium text-gray-800 outline-none md:block"
           style={{
             backgroundImage: CHEVRON_SVG,
             backgroundRepeat: "no-repeat",
@@ -146,7 +152,7 @@ export default function SearchWidget() {
         {activeTab !== "sold" && (
           <select
             name="beds"
-            className="hidden h-[52px] border-r border-gray-200 bg-transparent px-3.5 pr-9 text-[14px] font-medium text-gray-800 outline-none md:block"
+            className="hidden h-[46px] min-w-[120px] flex-1 cursor-pointer rounded-xl border border-gray-300 bg-gray-50 px-3.5 pr-8 text-[13.5px] font-medium text-gray-800 outline-none md:block"
             style={{
               backgroundImage: CHEVRON_SVG,
               backgroundRepeat: "no-repeat",
@@ -162,34 +168,53 @@ export default function SearchWidget() {
           </select>
         )}
 
+        {/* Search button */}
         <button
           type="submit"
-          className="whitespace-nowrap bg-blue-700 px-6 text-[15px] font-bold text-white transition-colors hover:bg-blue-800"
+          className="h-[46px] shrink-0 rounded-xl bg-[#08519A] px-7 text-[14px] font-bold text-white transition-colors hover:bg-[#063d75]"
         >
           Search
         </button>
       </form>
 
-      {/* Footer row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 px-4 py-2.5">
-        <div className="flex flex-wrap gap-4">
+      {/* ── Footer row ─────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 px-5 py-2.5">
+        <div className="flex flex-wrap gap-5">
           {footerLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-[12.5px] font-medium text-gray-500 transition-colors hover:text-blue-700"
+              className="text-[12.5px] font-medium text-gray-500 transition-colors hover:text-[#08519A]"
             >
               {l.label}
             </Link>
           ))}
         </div>
+
+        {/* VR listings toggle */}
         {activeTab !== "sold" && (
-          <Link
-            href={`/browse?vr=1${activeTab === "rent" ? "&listing_type=rent" : activeTab === "new" ? "&listing_type=sale&type=new" : "&listing_type=sale"}`}
-            className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[12.5px] font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white"
-          >
-            ◉ VR listings only
-          </Link>
+          <label className="flex cursor-pointer items-center gap-2.5 select-none">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={vrOnly}
+              onClick={() => setVrOnly((v) => !v)}
+              className={`relative inline-flex h-[22px] w-[40px] shrink-0 items-center rounded-full border-2 transition-colors duration-200 ${
+                vrOnly
+                  ? "border-[#08519A] bg-[#08519A]"
+                  : "border-gray-300 bg-gray-200"
+              }`}
+            >
+              <span
+                className={`inline-block h-[16px] w-[16px] rounded-full bg-white shadow transition-transform duration-200 ${
+                  vrOnly ? "translate-x-[19px]" : "translate-x-[2px]"
+                }`}
+              />
+            </button>
+            <span className="text-[12.5px] font-medium text-gray-500">
+              VR listings only
+            </span>
+          </label>
         )}
       </div>
     </div>

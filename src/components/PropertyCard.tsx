@@ -87,7 +87,7 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
             </p>
             <Button
               asChild
-              className="h-8 rounded-lg bg-blue-700 px-3 text-xs font-semibold !text-white hover:bg-blue-800"
+              className="h-8 rounded-lg bg-[#08519A] px-3 text-xs font-semibold !text-white hover:bg-[#063d75]"
             >
               <Link href={`/property/${property.id}`}>View details</Link>
             </Button>
@@ -215,28 +215,36 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
           ) : null}
 
           {/* Agent + Actions */}
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-[#6B7280]">
-              <span className="font-medium text-gray-900">{property.agent.name}</span>
-              <span className="text-[#6B7280]"> · {property.agent.branch}</span>
-            </div>
+<div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  {/* Agent info */}
+  <div className="text-sm text-[#6B7280]">
+    <span className="font-medium text-gray-900">{property.agent.name}</span>
+    <span className="text-[#6B7280]"> · {property.agent.branch}</span>
+  </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-3 text-sm text-gray-900">
-                <a className="hover:underline" href={`tel:${property.agent.phone}`}>
-                  Call
-                </a>
-                <a className="hover:underline" href={`mailto:${property.agent.email}`}>
-                  Email
-                </a>
-              </div>
+  {/* Buttons */}
+  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full sm:w-auto">
+    <a
+      href={`tel:${property.agent.phone}`}
+      className="flex-1 h-10 text-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg"
+    >
+      Call
+    </a>
 
-              <Button
-                asChild
-                className="h-10 rounded-[10px] bg-blue-700 px-4 text-sm font-semibold !text-white hover:bg-blue-800"
-              >
-                <Link href={`/property/${property.id}`}>View details</Link>
-              </Button>
+    <a
+      href={`mailto:${property.agent.email}`}
+      className="flex-1 h-10 text-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-500 hover:bg-blue-50 rounded-lg"
+    >
+      Email
+    </a>
+
+    <Button
+      asChild
+      className="flex-1 h-10 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold !text-white hover:bg-[#063d75] text-center"
+    >
+      <Link href={`/property/${property.id}`}>View details</Link>
+    </Button>
+    
             </div>
           </div>
         </div>

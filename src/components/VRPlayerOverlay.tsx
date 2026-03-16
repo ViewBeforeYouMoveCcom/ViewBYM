@@ -22,7 +22,7 @@ export default function VRPlayerOverlay({ embedUrl, iframeHtml }: Props) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="h-11 rounded-[10px] bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800">
+        <Button className="h-11 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold text-white hover:bg-[#063d75]">
           Launch Immersive VR tour
         </Button>
       </DialogTrigger>

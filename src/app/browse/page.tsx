@@ -57,7 +57,7 @@ export default async function BrowsePage({
         <div className="mx-auto w-full max-w-[1200px] px-5 py-12">
           <div className="space-y-3">
             <Badge variant="blue">Browse Immersive VR-enabled properties</Badge>
-             <h1 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-gray-900">
+             <h1 className="text-[clamp(20px,2.5vw,28px)] font-bold tracking-tight text-[#08519A]">
                 Browse properties
               </h1>
             <p className="mt-1 text-[14px] text-gray-500">

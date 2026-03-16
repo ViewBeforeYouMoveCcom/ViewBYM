@@ -254,7 +254,7 @@ export default function BrowseClient({
                   role="switch"
                   aria-checked={vrOnly}
                   onClick={() => setVrOnly((v) => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${vrOnly ? "bg-blue-700" : "bg-[#E5E7EB]"}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${vrOnly ? "bg-[#08519A]" : "bg-[#E5E7EB]"}`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${vrOnly ? "translate-x-6" : "translate-x-1"}`}
@@ -264,7 +264,7 @@ export default function BrowseClient({
 
               <Button
                 onClick={handleSearch}
-                className="h-12 w-full rounded-[10px] bg-blue-700 text-sm font-semibold font-semibold text-white transition-colors hover:bg-blue-800"
+                className="h-12 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold font-semibold text-white transition-colors hover:bg-[#063d75]"
               >
                 Search properties
               </Button>
@@ -323,7 +323,7 @@ export default function BrowseClient({
 
           <Button
             onClick={handleSearch}
-            className="h-10 rounded-[8px] bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800"
+            className="h-10 rounded-[8px] bg-[#08519A] px-4 text-sm font-semibold text-white hover:bg-[#063d75]"
           >
             Search
           </Button>
@@ -360,7 +360,7 @@ export default function BrowseClient({
                 role="switch"
                 aria-checked={vrOnly}
                 onClick={() => setVrOnly((v) => !v)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${vrOnly ? "bg-blue-700" : "bg-[#E5E7EB]"}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${vrOnly ? "bg-[#08519A]" : "bg-[#E5E7EB]"}`}
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${vrOnly ? "translate-x-4" : "translate-x-0.5"}`}

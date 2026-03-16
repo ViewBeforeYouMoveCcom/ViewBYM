@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-// app/layout.tsx
-import { Figtree } from "next/font/google";
+import { Open_Sans, Montserrat } from "next/font/google";
 
 import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import HeaderNav from "@/components/layout/HeaderNav";
 
-const figtree = Figtree({
+const openSans = Open_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-heading",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={figtree.variable}>
+    <html lang="en" className={`${openSans.variable} ${montserrat.variable}`}>
       <body>
         <div className="flex min-h-screen flex-col">
           <HeaderNav />
