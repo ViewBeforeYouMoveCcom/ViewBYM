@@ -16,26 +16,36 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [emailMsg, setEmailMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [passwordMsg, setPasswordMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [profileMsg, setProfileMsg] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     supabaseClient.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setEmail(user.email ?? "");
-        supabaseClient
-          .from("profiles")
-          .select("full_name, phone")
-          .eq("id", user.id)
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              setFullName(data.full_name ?? "");
-              setPhone(data.phone ?? "");
-            }
-          });
-      }
+      if (!user) return;
+      setEmail(user.email ?? "");
+
+      // Use maybeSingle() so a missing profile row returns null without error
+      supabaseClient
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setFullName(data.full_name ?? "");
+            setPhone(data.phone ?? "");
+          }
+        });
     });
   }, []);
 
@@ -43,24 +53,34 @@ export default function SettingsPage() {
     e.preventDefault();
     setEmailLoading(true);
     setEmailMsg(null);
-    const { error } = await supabaseClient.auth.updateUser({ email: email.trim() });
+    const { error } = await supabaseClient.auth.updateUser({
+      email: email.trim(),
+    });
     setEmailLoading(false);
     if (error) {
       setEmailMsg({ type: "error", text: error.message });
     } else {
-      setEmailMsg({ type: "success", text: "Confirmation sent to your new email address." });
+      setEmailMsg({
+        type: "success",
+        text: "Confirmation sent to your new email address.",
+      });
     }
   }
 
   async function onPasswordSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (newPassword.length < 8) {
-      setPasswordMsg({ type: "error", text: "Password must be at least 8 characters." });
+      setPasswordMsg({
+        type: "error",
+        text: "Password must be at least 8 characters.",
+      });
       return;
     }
     setPasswordLoading(true);
     setPasswordMsg(null);
-    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+    const { error } = await supabaseClient.auth.updateUser({
+      password: newPassword,
+    });
     setPasswordLoading(false);
     if (error) {
       setPasswordMsg({ type: "error", text: error.message });
@@ -74,18 +94,31 @@ export default function SettingsPage() {
     e.preventDefault();
     setProfileLoading(true);
     setProfileMsg(null);
-    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
     if (!user) return;
-    const { error } = await supabaseClient
-      .from("profiles")
-      .update({ full_name: fullName.trim() || null, phone: phone.trim() || null })
-      .eq("id", user.id);
+
+    // Upsert handles both the case where the profile row already exists
+    // and the case where it was never created (e.g. users who signed up
+    // before migration 003 ran and the auto-create trigger was added).
+    const { error } = await supabaseClient.from("profiles").upsert(
+      {
+        id: user.id,
+        full_name: fullName.trim() || null,
+        phone: phone.trim() || null,
+      },
+      { onConflict: "id" }
+    );
+
     setProfileLoading(false);
+
     if (error) {
       setProfileMsg({ type: "error", text: error.message });
     } else {
       setProfileMsg({ type: "success", text: "Profile updated." });
-      // Notify HeaderNav to update the displayed name immediately
+      // Let HeaderNav pick up the name change immediately
       window.dispatchEvent(
         new CustomEvent("vbym:profile-updated", {
           detail: { full_name: fullName.trim() || null },
@@ -94,7 +127,11 @@ export default function SettingsPage() {
     }
   }
 
-  function Msg({ msg }: { msg: { type: "success" | "error"; text: string } | null }) {
+  function Msg({
+    msg,
+  }: {
+    msg: { type: "success" | "error"; text: string } | null;
+  }) {
     if (!msg) return null;
     return (
       <div

@@ -10,6 +10,7 @@ const navItems = [
   { href: "/agent/dashboard", label: "Dashboard" },
   { href: "/agent/listings", label: "My listings" },
   { href: "/agent/enquiries", label: "Enquiries" },
+  { href: "/agent/profile", label: "Profile" },
 ];
 
 export default function AgentLayout({

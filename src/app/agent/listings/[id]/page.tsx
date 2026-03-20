@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import FormField from "@/components/FormField";
@@ -12,9 +13,13 @@ import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 type PropStatus = "draft" | "published" | "archived";
+type SubmissionStatus =
+  | "not_submitted"
+  | "queued"
+  | "processing"
+  | "ready"
+  | "rejected";
 
-// Reflects the real deployed schema — no price_display, price_qualifier,
-// area_sqft, listing_type, or features columns.
 interface Property {
   id: string;
   title: string | null;
@@ -22,13 +27,16 @@ interface Property {
   address_line2: string | null;
   city: string | null;
   postcode: string | null;
-  price: number | null;           // numeric(12,2) GBP
+  listing_type: string;
+  price: number | null;
+  price_qualifier: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
   property_type: string;
   market_status: string;
   tenure: string | null;
   description: string | null;
+  features: string[];
   status: PropStatus;
 }
 
@@ -37,7 +45,9 @@ interface VrTour {
   embed_url: string | null;
   iframe_html: string | null;
   provider: string | null;
-  is_enabled: boolean;  // real schema column (not is_active)
+  is_enabled: boolean;
+  submission_status: SubmissionStatus | null;
+  submitted_at: string | null;
 }
 
 interface MediaItem {
@@ -47,29 +57,55 @@ interface MediaItem {
   sort_order: number;
 }
 
-const statusVariant: Record<PropStatus, "default" | "success" | "warning" | "error" | "amber"> = {
+const statusVariant: Record<
+  PropStatus,
+  "default" | "success" | "warning" | "error" | "amber"
+> = {
   draft: "default",
   published: "success",
   archived: "warning",
 };
 
+const vrSubmissionVariant: Record<
+  SubmissionStatus,
+  "default" | "success" | "warning" | "error" | "amber"
+> = {
+  not_submitted: "default",
+  queued: "amber",
+  processing: "warning",
+  ready: "success",
+  rejected: "error",
+};
+
+const PRICE_QUALIFIERS = [
+  { value: "", label: "None" },
+  { value: "Guide price", label: "Guide price" },
+  { value: "Offers over", label: "Offers over" },
+  { value: "Offers in excess of", label: "Offers in excess of" },
+  { value: "Fixed price", label: "Fixed price" },
+  { value: "From", label: "From" },
+  { value: "Price on application", label: "Price on application" },
+];
+
 export default function EditListingPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+
   const [property, setProperty] = useState<Property | null>(null);
   const [vr, setVr] = useState<VrTour | null>(null);
   const [photos, setPhotos] = useState<MediaItem[]>([]);
   const [form, setForm] = useState<Partial<Property>>({});
-  const [vrForm, setVrForm] = useState({ embed_url: "", iframe_html: "", provider: "" });
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureInput, setFeatureInput] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [savingVr, setSavingVr] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [agencyId, setAgencyId] = useState<string | null>(null);
-  const [showVrPreview, setShowVrPreview] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,31 +113,34 @@ export default function EditListingPage() {
       const { data: prop } = await supabaseClient
         .from("properties")
         .select(
-          "id, title, address_line1, address_line2, city, postcode, price, " +
-          "bedrooms, bathrooms, property_type, market_status, tenure, description, status, agency_id"
+          "id, title, address_line1, address_line2, city, postcode, " +
+            "listing_type, price, price_qualifier, bedrooms, bathrooms, " +
+            "property_type, market_status, tenure, description, features, status, agency_id"
         )
         .eq("id", id)
         .single();
 
-      if (!prop) { router.push("/agent/listings"); return; }
+      if (!prop) {
+        router.push("/agent/listings");
+        return;
+      }
+
       setProperty(prop as unknown as Property);
       setForm(prop as unknown as Property);
-      setAgencyId((prop as unknown as Property & { agency_id: string }).agency_id ?? null);
+      setFeatures((prop as unknown as Property).features ?? []);
+      setAgencyId(
+        (prop as unknown as Property & { agency_id: string }).agency_id ?? null
+      );
 
       const { data: vrData } = await supabaseClient
         .from("property_vr")
-        .select("id, embed_url, iframe_html, provider, is_enabled")
+        .select(
+          "id, embed_url, iframe_html, provider, is_enabled, submission_status, submitted_at"
+        )
         .eq("property_id", id)
-        .single();
+        .maybeSingle();
 
-      if (vrData) {
-        setVr(vrData as VrTour);
-        setVrForm({
-          embed_url: vrData.embed_url ?? "",
-          iframe_html: vrData.iframe_html ?? "",
-          provider: vrData.provider ?? "",
-        });
-      }
+      if (vrData) setVr(vrData as unknown as VrTour);
 
       const { data: mediaData } = await supabaseClient
         .from("property_media")
@@ -122,6 +161,26 @@ export default function EditListingPage() {
     setSaved(false);
   }
 
+  function addFeature() {
+    const trimmed = featureInput.trim();
+    if (!trimmed || features.includes(trimmed)) return;
+    setFeatures((prev) => [...prev, trimmed]);
+    setFeatureInput("");
+    setSaved(false);
+  }
+
+  function removeFeature(feature: string) {
+    setFeatures((prev) => prev.filter((f) => f !== feature));
+    setSaved(false);
+  }
+
+  function onFeatureKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addFeature();
+    }
+  }
+
   async function saveDetails() {
     setSaving(true);
     setError(null);
@@ -133,53 +192,32 @@ export default function EditListingPage() {
         address_line2: form.address_line2 ?? null,
         city: form.city ?? null,
         postcode: form.postcode ?? null,
-        price: form.price ?? null,               // numeric(12,2) GBP
+        listing_type: form.listing_type ?? "sale",
+        price: form.price ?? null,
+        price_qualifier: form.price_qualifier ?? null,
         bedrooms: form.bedrooms ?? null,
         bathrooms: form.bathrooms ?? null,
         property_type: form.property_type,
         market_status: form.market_status ?? "available",
         tenure: form.tenure ?? null,
         description: form.description ?? null,
+        features: features,
       })
       .eq("id", id);
+
     setSaving(false);
-    if (updateError) { setError(updateError.message); return; }
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
 
   async function changeStatus(status: PropStatus) {
     await supabaseClient.from("properties").update({ status }).eq("id", id);
-    setProperty((prev) => prev ? { ...prev, status } : prev);
+    setProperty((prev) => (prev ? { ...prev, status } : prev));
     setForm((prev) => ({ ...prev, status }));
-  }
-
-  async function saveVr() {
-    setSavingVr(true);
-    if (vr) {
-      await supabaseClient
-        .from("property_vr")
-        .update({
-          embed_url: vrForm.embed_url || null,
-          iframe_html: vrForm.iframe_html || null,
-          provider: vrForm.provider || null,
-        })
-        .eq("id", vr.id);
-    } else {
-      const { data } = await supabaseClient
-        .from("property_vr")
-        .insert({
-          property_id: id,
-          embed_url: vrForm.embed_url || null,
-          iframe_html: vrForm.iframe_html || null,
-          provider: vrForm.provider || null,
-          is_enabled: true,  // real schema column (not is_active)
-        })
-        .select("id, embed_url, iframe_html, provider, is_enabled")
-        .single();
-      if (data) setVr(data as VrTour);
-    }
-    setSavingVr(false);
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -209,15 +247,13 @@ export default function EditListingPage() {
         .from("property-media")
         .getPublicUrl(storagePath);
 
-      const publicUrl = urlData.publicUrl;
-
       const { data: mediaRow, error: insertErr } = await supabaseClient
         .from("property_media")
         .insert({
           property_id: id,
           type: "photo",
           storage_path: storagePath,
-          public_url: publicUrl,
+          public_url: urlData.publicUrl,
           sort_order: photos.length + uploadedItems.length,
         })
         .select("id, storage_path, public_url, sort_order")
@@ -242,10 +278,7 @@ export default function EditListingPage() {
       .from("property-media")
       .remove([photo.storage_path]);
 
-    await supabaseClient
-      .from("property_media")
-      .delete()
-      .eq("id", photo.id);
+    await supabaseClient.from("property_media").delete().eq("id", photo.id);
 
     setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
   }
@@ -259,8 +292,12 @@ export default function EditListingPage() {
     );
   }
 
+  const vrStatus: SubmissionStatus =
+    vr?.submission_status ?? "not_submitted";
+
   return (
     <div className="space-y-6">
+      {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-heading text-2xl font-semibold text-[#0F172A]">
@@ -273,7 +310,6 @@ export default function EditListingPage() {
           )}
         </div>
 
-        {/* Status actions */}
         <div className="flex gap-2">
           {property?.status === "draft" && (
             <Button
@@ -304,10 +340,12 @@ export default function EditListingPage() {
         </div>
       </div>
 
-      {/* Details form */}
+      {/* Property details form */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-[#0F172A]">Property details</h2>
+          <h2 className="mb-4 text-sm font-semibold text-[#0F172A]">
+            Property details
+          </h2>
           <div className="grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
               <FormField id="title" label="Title">
@@ -320,7 +358,6 @@ export default function EditListingPage() {
               </FormField>
             </div>
 
-            {/* Address — Google Places Autocomplete */}
             <div className="md:col-span-2">
               <FormField id="address_line1" label="Address">
                 <PlacesAutocomplete
@@ -356,6 +393,20 @@ export default function EditListingPage() {
               />
             </FormField>
 
+            {/* Listing type */}
+            <FormField id="listing_type" label="Listing type">
+              <select
+                id="listing_type"
+                value={form.listing_type ?? "sale"}
+                onChange={(e) => setField("listing_type", e.target.value)}
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="sale">For sale</option>
+                <option value="rent">To let</option>
+              </select>
+            </FormField>
+
+            {/* Availability */}
             <FormField id="market_status" label="Availability">
               <select
                 id="market_status"
@@ -370,6 +421,7 @@ export default function EditListingPage() {
               </select>
             </FormField>
 
+            {/* Price */}
             <FormField id="price" label="Price (£)">
               <Input
                 id="price"
@@ -379,11 +431,31 @@ export default function EditListingPage() {
                 placeholder="625000"
                 value={form.price ?? ""}
                 onChange={(e) =>
-                  setField("price", e.target.value ? parseFloat(e.target.value) : null)
+                  setField(
+                    "price",
+                    e.target.value ? parseFloat(e.target.value) : null
+                  )
                 }
               />
             </FormField>
 
+            {/* Price qualifier */}
+            <FormField id="price_qualifier" label="Price qualifier">
+              <select
+                id="price_qualifier"
+                value={form.price_qualifier ?? ""}
+                onChange={(e) => setField("price_qualifier", e.target.value)}
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {PRICE_QUALIFIERS.map((q) => (
+                  <option key={q.value} value={q.value}>
+                    {q.label}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            {/* Property type */}
             <FormField id="property_type" label="Property type">
               <select
                 id="property_type"
@@ -391,8 +463,23 @@ export default function EditListingPage() {
                 onChange={(e) => setField("property_type", e.target.value)}
                 className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"].map((t) => (
-                  <option key={t} value={t}>{t.replace("_", "-")}</option>
+                {[
+                  "apartment",
+                  "house",
+                  "townhouse",
+                  "studio",
+                  "detached",
+                  "semi_detached",
+                  "terraced",
+                  "bungalow",
+                  "cottage",
+                  "penthouse",
+                  "loft",
+                  "other",
+                ].map((t) => (
+                  <option key={t} value={t}>
+                    {t.replace("_", "-")}
+                  </option>
                 ))}
               </select>
             </FormField>
@@ -403,7 +490,12 @@ export default function EditListingPage() {
                 type="number"
                 min="0"
                 value={form.bedrooms ?? ""}
-                onChange={(e) => setField("bedrooms", e.target.value ? parseInt(e.target.value) : null)}
+                onChange={(e) =>
+                  setField(
+                    "bedrooms",
+                    e.target.value ? parseInt(e.target.value) : null
+                  )
+                }
               />
             </FormField>
 
@@ -413,7 +505,12 @@ export default function EditListingPage() {
                 type="number"
                 min="0"
                 value={form.bathrooms ?? ""}
-                onChange={(e) => setField("bathrooms", e.target.value ? parseInt(e.target.value) : null)}
+                onChange={(e) =>
+                  setField(
+                    "bathrooms",
+                    e.target.value ? parseInt(e.target.value) : null
+                  )
+                }
               />
             </FormField>
 
@@ -434,6 +531,54 @@ export default function EditListingPage() {
                   onChange={(e) => setField("description", e.target.value)}
                   className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </FormField>
+            </div>
+
+            {/* Key features */}
+            <div className="md:col-span-2">
+              <FormField id="features" label="Key features">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      id="features"
+                      placeholder="e.g. Private garden, then press Enter"
+                      value={featureInput}
+                      onChange={(e) => setFeatureInput(e.target.value)}
+                      onKeyDown={onFeatureKeyDown}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="h-11 shrink-0 rounded-[10px] px-4 text-sm"
+                      onClick={addFeature}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {features.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {features.map((f) => (
+                        <span
+                          key={f}
+                          className="flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-1 text-[13px] text-[#0F172A]"
+                        >
+                          {f}
+                          <button
+                            type="button"
+                            onClick={() => removeFeature(f)}
+                            className="text-[#6B7280] hover:text-red-500"
+                            aria-label={`Remove ${f}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[12px] text-[#6B7280]">
+                    Shown to buyers as key selling points on the listing page.
+                  </p>
+                </div>
               </FormField>
             </div>
           </div>
@@ -459,7 +604,9 @@ export default function EditListingPage() {
       {/* Photos */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-1 text-sm font-semibold text-[#0F172A]">Property photos</h2>
+          <h2 className="mb-1 text-sm font-semibold text-[#0F172A]">
+            Property photos
+          </h2>
           <p className="mb-4 text-xs text-[#6B7280]">
             Upload images for your listing. JPG, PNG, and WebP up to 10 MB each.
           </p>
@@ -512,7 +659,11 @@ export default function EditListingPage() {
               className="h-10 rounded-[10px] text-sm"
               onClick={() => fileInputRef.current?.click()}
             >
-              {uploading ? "Uploading…" : photos.length > 0 ? "Add more photos" : "Upload photos"}
+              {uploading
+                ? "Uploading…"
+                : photos.length > 0
+                ? "Add more photos"
+                : "Upload photos"}
             </Button>
             {photos.length > 0 && (
               <p className="text-xs text-[#6B7280]">
@@ -523,134 +674,86 @@ export default function EditListingPage() {
         </CardContent>
       </Card>
 
-      {/* VR Tour */}
+      {/* VR Tour — updated section links to vr-upload / vr-status workflow */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
-          <h2 className="mb-1 text-sm font-semibold text-[#0F172A]">Immersive VR tour</h2>
-
-          <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm">
-            <p className="font-medium text-[#0F172A]">Which tool should I use?</p>
-            <p className="mt-1 text-[#6B7280]">
-              We recommend one of these two options — both work out of the box with VBYM:
-            </p>
-            <ul className="mt-2 space-y-2 text-[#6B7280]">
-              <li>
-                <span className="font-medium text-[#0F172A]">Matterport</span>
-                {" "}—{" "}
-                <a
-                  href="https://matterport.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-[#0F172A]"
-                >
-                  matterport.com
-                </a>
-                . Industry standard for 3D walkthroughs. Free tier includes 3 active spaces.
-                Copy the share URL:{" "}
-                <code className="rounded bg-white px-1 py-0.5 font-mono text-xs">
-                  https://my.matterport.com/show/?m=XXXXX
-                </code>
-              </li>
-              <li>
-                <span className="font-medium text-[#0F172A]">Kuula</span>
-                {" "}—{" "}
-                <a
-                  href="https://kuula.co"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-[#0F172A]"
-                >
-                  kuula.co
-                </a>
-                . More affordable, great for 360° photo tours. Share URL:{" "}
-                <code className="rounded bg-white px-1 py-0.5 font-mono text-xs">
-                  https://kuula.co/share/XXXXX
-                </code>
-              </li>
-            </ul>
-            <p className="mt-2 text-xs text-[#6B7280]">
-              Paste the share URL into the field below — no embed code needed.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <FormField id="provider" label="Provider (optional)">
-              <Input
-                id="provider"
-                placeholder="Matterport / Kuula / Custom"
-                value={vrForm.provider}
-                onChange={(e) => setVrForm((prev) => ({ ...prev, provider: e.target.value }))}
-              />
-            </FormField>
-
-            <FormField id="embed_url" label="Embed URL">
-              <Input
-                id="embed_url"
-                placeholder="https://my.matterport.com/show/?m=..."
-                value={vrForm.embed_url}
-                onChange={(e) => setVrForm((prev) => ({ ...prev, embed_url: e.target.value }))}
-              />
-            </FormField>
-
-            <FormField id="iframe_html" label="iframe HTML (alternative)">
-              <textarea
-                id="iframe_html"
-                rows={3}
-                placeholder='<iframe src="..." ...></iframe>'
-                value={vrForm.iframe_html}
-                onChange={(e) => setVrForm((prev) => ({ ...prev, iframe_html: e.target.value }))}
-                className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 font-mono text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </FormField>
-
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={saveVr}
-                disabled={savingVr}
-                className="h-10 rounded-[10px] bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800"
-              >
-                {savingVr ? "Saving…" : "Save VR tour"}
-              </Button>
-
-              {(vrForm.embed_url || vrForm.iframe_html) && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-10 rounded-[10px] px-5 text-sm"
-                  onClick={() => setShowVrPreview((v) => !v)}
-                >
-                  {showVrPreview ? "Hide preview" : "Preview tour"}
-                </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-semibold text-[#0F172A]">
+                Immersive VR tour
+              </h2>
+              <p className="mt-0.5 text-xs text-[#6B7280]">
+                Submit your 360° material for VBYM to process and publish.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {vr && (
+                <Badge variant={vrSubmissionVariant[vrStatus]}>
+                  {vrStatus.replace("_", " ")}
+                </Badge>
               )}
             </div>
           </div>
 
-          {showVrPreview && (vrForm.embed_url || vrForm.iframe_html) && (
-            <div className="mt-5">
-              <p className="mb-2 text-xs text-[#6B7280]">
-                Live preview — this is exactly how buyers will see the tour.
-              </p>
-              <div className="overflow-hidden rounded-xl border border-[#E5E7EB]">
-                {vrForm.iframe_html ? (
-                  <div
-                    className="min-h-[420px] w-full md:min-h-[540px]"
-                    dangerouslySetInnerHTML={{ __html: vrForm.iframe_html }}
-                  />
-                ) : (
-                  <iframe
-                    src={vrForm.embed_url}
-                    className="h-[420px] w-full md:h-[540px]"
-                    allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
-                    allowFullScreen
-                    title="VR tour preview"
-                  />
-                )}
-              </div>
-              <p className="mt-2 text-xs text-[#6B7280]">
-                If the tour doesn&apos;t load, make sure the URL is correct and the Space is published on your provider.
-              </p>
+          {/* Status summary */}
+          {vrStatus === "not_submitted" && (
+            <div className="mb-4 rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
+              No VR material has been submitted for this listing yet.
             </div>
           )}
+          {vrStatus === "queued" && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              Submission received — in the processing queue.
+            </div>
+          )}
+          {vrStatus === "processing" && (
+            <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+              Processing in progress. We&apos;ll update the status when
+              complete.
+            </div>
+          )}
+          {vrStatus === "ready" && (
+            <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+              VR tour is live on your listing.
+              {vr?.embed_url && (
+                <>
+                  {" "}
+                  <a
+                    href={vr.embed_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    Preview tour
+                  </a>
+                </>
+              )}
+            </div>
+          )}
+          {vrStatus === "rejected" && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              Submission rejected. Review feedback and resubmit.
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/agent/listings/${id}/vr-upload`}
+              className="inline-flex h-10 items-center rounded-[10px] bg-blue-700 px-5 text-[13.5px] font-semibold text-white hover:bg-blue-800"
+            >
+              {vrStatus === "not_submitted"
+                ? "Submit VR material"
+                : vrStatus === "rejected"
+                ? "Resubmit"
+                : "Update submission"}
+            </Link>
+            <Link
+              href={`/agent/listings/${id}/vr-status`}
+              className="inline-flex h-10 items-center rounded-[10px] border border-[#E5E7EB] bg-white px-5 text-[13.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB]"
+            >
+              View status
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 
 const navItems = [
+  { href: "/account", label: "Dashboard" },
   { href: "/account/saved-properties", label: "Saved properties" },
   { href: "/account/saved-searches", label: "Saved searches" },
   { href: "/account/alerts", label: "Alerts" },
@@ -33,7 +34,13 @@ export default function AccountLayout({
                   key={item.href}
                   href={item.href}
                   className={`block rounded-xl px-3 py-2.5 text-[14px] transition-colors ${
-                    pathname === item.href
+                    // Dashboard ("/account") only active on exact match to avoid
+                    // highlighting it on every sub-page.
+                    item.href === "/account"
+                      ? pathname === "/account"
+                        ? "bg-blue-50 font-semibold text-blue-700"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                      : pathname === item.href
                       ? "bg-blue-50 font-semibold text-blue-700"
                       : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                   }`}
