@@ -1,0 +1,5 @@
+import { Button, type ButtonProps } from "@/components/ui/button";
+
+export default function PrimaryButton(props: ButtonProps) {
+  return <Button {...props} />;
+}
