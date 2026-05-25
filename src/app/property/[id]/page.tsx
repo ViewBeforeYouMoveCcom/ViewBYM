@@ -28,6 +28,7 @@ export default async function PropertyDetailPage({
   const gallery = property.images?.length ? property.images : [property.image];
   const isDbProperty = property.isDbProperty === true;
   const statusStyle = STATUS_STYLES[property.status] ?? "bg-gray-100 text-gray-600 border-gray-200";
+  const mapQuery = encodeURIComponent([property.address, property.city].filter(Boolean).join(", "));
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -109,6 +110,19 @@ export default async function PropertyDetailPage({
               </div>
             )}
 
+            {/* Walkthrough video */}
+            {property.videoUrl && (
+              <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+                <h2 className="mb-4 text-[15px] font-bold text-gray-900">Walkthrough video</h2>
+                <video
+                  src={property.videoUrl}
+                  controls
+                  preload="metadata"
+                  className="aspect-video w-full rounded-xl bg-black"
+                />
+              </div>
+            )}
+
             {/* Photos gallery */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <h2 className="mb-4 text-[15px] font-bold text-gray-900">Gallery</h2>
@@ -122,19 +136,34 @@ export default async function PropertyDetailPage({
                   All images ({gallery.length})
                 </button>
 
-                {property.features.some((f) => f.toLowerCase().includes('floor')) && (
-                  <button className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]">
+                {property.floorplanUrl && (
+                  <a
+                    href={property.floorplanUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
+                  >
                     Floor plan
-                  </button>
+                  </a>
                 )}
 
-                <button className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
+                >
                   Map
-                </button>
+                </a>
 
-                <button className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]">
+                <a
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${mapQuery}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
+                >
                   Street View
-                </button>
+                </a>
 
                 {property.vrEnabled && (
                   <a

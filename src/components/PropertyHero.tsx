@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import SavePropertyButton from "@/components/SavePropertyButton";
@@ -27,18 +27,18 @@ export default function PropertyHero({
   gallery, title, address, city, status, statusStyle, vrEnabled, videoUrl, floorplanUrl, listingType, property,
 }: Props) {
   const [current, setCurrent] = useState(0);
-  const [backHref, setBackHref] = useState("/browse");
+  const [backHref] = useState(() => {
+    if (typeof window === "undefined") return "/browse";
+    try {
+      return sessionStorage.getItem("vbym_last_search") ?? "/browse";
+    } catch {
+      return "/browse";
+    }
+  });
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showFloorplan, setShowFloorplan] = useState(false);
-
-  // Restore the search the user came from (set by BrowseClient on property click)
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("vbym_last_search");
-      if (saved) setBackHref(saved);
-    } catch {}
-  }, []);
+  const isFloorplanPdf = /\.pdf(?:$|\?)/i.test(floorplanUrl ?? "");
 
   return (
     <div className="relative bg-gray-900">
@@ -107,7 +107,11 @@ export default function PropertyHero({
               </button>
             </div>
             <div className="relative w-full overflow-hidden rounded-xl bg-white">
-              <Image src={floorplanUrl} alt={`${title} floor plan`} width={900} height={600} className="w-full h-auto object-contain" unoptimized />
+              {isFloorplanPdf ? (
+                <iframe src={floorplanUrl} title={`${title} floor plan`} className="h-[80vh] w-full" />
+              ) : (
+                <Image src={floorplanUrl} alt={`${title} floor plan`} width={900} height={600} className="w-full h-auto object-contain" unoptimized />
+              )}
             </div>
           </div>
         </div>

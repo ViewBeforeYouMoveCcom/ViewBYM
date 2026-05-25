@@ -14,8 +14,6 @@ import { supabaseClient } from "@/lib/supabaseClient";
 
 type PropStatus = "draft" | "published" | "archived";
 
-// Reflects the real deployed schema — no price_display, price_qualifier,
-// area_sqft, listing_type, or features columns.
 interface Property {
   id: string;
   title: string | null;
@@ -30,6 +28,7 @@ interface Property {
   market_status: string;
   tenure: string | null;
   description: string | null;
+  features: string[] | null;
   status: PropStatus;
 }
 
@@ -67,7 +66,7 @@ export default function EditListingPage() {
         .from("properties")
         .select(
           "id, title, address_line1, address_line2, city, postcode, price, " +
-          "bedrooms, bathrooms, property_type, market_status, tenure, description, status, agency_id"
+          "bedrooms, bathrooms, property_type, market_status, tenure, description, features, status, agency_id"
         )
         .eq("id", id)
         .single();
@@ -84,13 +83,14 @@ export default function EditListingPage() {
         .eq("type", "photo")
         .order("sort_order", { ascending: true });
 
-      setPhotos((mediaData ?? []) as MediaItem[]);
+      const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
+      setPhotos(((mediaData ?? []) as MediaItem[]).filter((item) => !isVideoUrl(item.public_url)));
       setLoading(false);
     }
     load();
   }, [id, router]);
 
-  function setField(field: string, value: string | number | null) {
+  function setField(field: string, value: string | number | string[] | null) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError(null);
     setSaved(false);
@@ -114,6 +114,7 @@ export default function EditListingPage() {
         market_status: form.market_status ?? "available",
         tenure: form.tenure ?? null,
         description: form.description ?? null,
+        features: form.features ?? [],
       })
       .eq("id", id);
     setSaving(false);
@@ -378,6 +379,28 @@ export default function EditListingPage() {
                   rows={4}
                   value={form.description ?? ""}
                   onChange={(e) => setField("description", e.target.value)}
+                  className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </FormField>
+            </div>
+
+            <div className="md:col-span-2">
+              <FormField id="features" label="Key features">
+                <textarea
+                  id="features"
+                  rows={4}
+                  value={(form.features ?? []).join("\n")}
+                  onChange={(e) =>
+                    setField(
+                      "features",
+                      e.target.value
+                        .split("\n")
+                        .map((feature) => feature.trim())
+                        .filter(Boolean)
+                        .slice(0, 10)
+                    )
+                  }
+                  placeholder="One feature per line"
                   className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </FormField>

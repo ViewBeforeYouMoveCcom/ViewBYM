@@ -14,8 +14,9 @@ type PropStatus = "draft" | "published" | "archived";
 interface Property {
   id: string;
   title: string;
-  address: string;
-  price_display: string | null;
+  address_line1: string | null;
+  city: string | null;
+  price: number | null;
   bedrooms: number | null;
   status: PropStatus;
   created_at: string;
@@ -38,7 +39,6 @@ export default function AgentListingsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [tab, setTab] = useState<PropStatus | "all">("all");
   const [loading, setLoading] = useState(true);
-  const [agencyId, setAgencyId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -53,11 +53,10 @@ export default function AgentListingsPage() {
         .single();
 
       if (!membership) { setLoading(false); return; }
-      setAgencyId(membership.agency_id);
 
       const { data } = await supabaseClient
         .from("properties")
-        .select("id, title, address, price_display, bedrooms, status, created_at")
+        .select("id, title, address_line1, city, price, bedrooms, status, created_at")
         .eq("agency_id", membership.agency_id)
         .order("created_at", { ascending: false });
 
@@ -69,6 +68,15 @@ export default function AgentListingsPage() {
 
   const filtered =
     tab === "all" ? properties : properties.filter((p) => p.status === tab);
+
+  const formatPrice = (price: number | null) =>
+    price
+      ? new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency: "GBP",
+          maximumFractionDigits: 0,
+        }).format(price)
+      : null;
 
   return (
     <div className="space-y-6">
@@ -129,14 +137,18 @@ export default function AgentListingsPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900">
-                      {property.title || property.address || "Untitled listing"}
+                      {property.title || property.address_line1 || "Untitled listing"}
                     </p>
                     <Badge variant={statusVariant[property.status]}>
                       {property.status}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#6B7280]">
-                    {[property.address, property.price_display, property.bedrooms ? `${property.bedrooms} bed` : null]
+                    {[
+                      [property.address_line1, property.city].filter(Boolean).join(", "),
+                      formatPrice(property.price),
+                      property.bedrooms ? `${property.bedrooms} bed` : null,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>

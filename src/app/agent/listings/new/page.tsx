@@ -82,6 +82,11 @@ interface MediaFile {
   url?: string;
 }
 
+interface UploadedFile {
+  path: string;
+  url: string;
+}
+
 export default function NewListingPage() {
   const router = useRouter();
 
@@ -162,6 +167,7 @@ export default function NewListingPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setVrFile({ file, preview: URL.createObjectURL(file), uploading: false });
+    setError(null);
     e.target.value = "";
   }
 
@@ -174,24 +180,25 @@ export default function NewListingPage() {
   }
 
   // ── Upload helpers ───────────────────────────────────────────────────────
-  async function uploadFile(file: File, path: string): Promise<string | null> {
+  async function uploadFile(file: File, path: string): Promise<UploadedFile> {
     const { error: upErr } = await supabaseClient.storage
       .from("property-media")
       .upload(path, file, { upsert: false });
-    if (upErr) { console.error("Upload failed:", upErr.message); return null; }
-    return supabaseClient.storage.from("property-media").getPublicUrl(path).data.publicUrl;
+    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+    const url = supabaseClient.storage.from("property-media").getPublicUrl(path).data.publicUrl;
+    return { path, url };
   }
 
-  async function uploadPhotos(propertyId: string): Promise<string[]> {
-    const urls: string[] = [];
+  async function uploadPhotos(propertyId: string): Promise<UploadedFile[]> {
+    const uploads: UploadedFile[] = [];
     for (let i = 0; i < photos.length; i++) {
       setPhotos((p) => p.map((x, idx) => idx === i ? { ...x, uploading: true } : x));
       const ext = photos[i].file.name.split(".").pop() ?? "jpg";
-      const url = await uploadFile(photos[i].file, `${propertyId}/photos/${Date.now()}-${i}.${ext}`);
-      setPhotos((p) => p.map((x, idx) => idx === i ? { ...x, uploading: false, url: url ?? undefined } : x));
-      if (url) urls.push(url);
+      const upload = await uploadFile(photos[i].file, `${propertyId}/photos/${Date.now()}-${i}.${ext}`);
+      setPhotos((p) => p.map((x, idx) => idx === i ? { ...x, uploading: false, url: upload.url } : x));
+      uploads.push(upload);
     }
-    return urls;
+    return uploads;
   }
 
   // ── Submit ───────────────────────────────────────────────────────────────
@@ -200,6 +207,7 @@ export default function NewListingPage() {
     if (!isValid) return;
     setSaving(true); setError(null);
 
+    try {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { setError("Session expired."); setSaving(false); return; }
 
@@ -208,6 +216,9 @@ export default function NewListingPage() {
     if (!membership) { setError("No agency found."); setSaving(false); return; }
 
     const priceNumeric = form.price ? parseFloat(form.price.replace(/[^0-9.]/g, "")) : null;
+    const submittedFeatures = Array.from(
+      new Set([...features, featureInput.trim()].filter(Boolean))
+    ).slice(0, 10);
 
     const { data: inserted, error: insertError } = await supabaseClient
       .from("properties")
@@ -227,7 +238,7 @@ export default function NewListingPage() {
         market_status: form.market_status,
         tenure: form.tenure.trim() || null,
         description: form.description.trim() || null,
-        features: features.length > 0 ? features : null,
+        features: submittedFeatures,
         status: publish ? "published" : "draft",
         created_by: user.id,
         slug: generateSlug(form.title, form.address),
@@ -251,60 +262,82 @@ export default function NewListingPage() {
     }
 
     // Upload photos
-    const photoUrls = await uploadPhotos(propertyId);
-    if (photoUrls.length > 0) {
-      await supabaseClient.from("property_media").insert(
-        photoUrls.map((url, i) => ({ property_id: propertyId, public_url: url, sort_order: i, type: "photo" }))
+    const photoUploads = await uploadPhotos(propertyId);
+    if (photoUploads.length > 0) {
+      const { error: mediaError } = await supabaseClient.from("property_media").insert(
+        photoUploads.map((upload, i) => ({
+          property_id: propertyId,
+          storage_path: upload.path,
+          public_url: upload.url,
+          sort_order: i,
+          type: "photo",
+        }))
       );
+      if (mediaError) throw new Error(`Photo save failed: ${mediaError.message}`);
     }
 
     // Upload walkthrough video
     if (video) {
       setVideo((v) => v ? { ...v, uploading: true } : v);
       const ext = video.file.name.split(".").pop() ?? "mp4";
-      const videoUrl = await uploadFile(video.file, `${propertyId}/video/walkthrough.${ext}`);
-      setVideo((v) => v ? { ...v, uploading: false } : v);
-      if (videoUrl) {
-        await supabaseClient.from("properties").update({ video_url: videoUrl }).eq("id", propertyId);
-      }
+      const videoUpload = await uploadFile(video.file, `${propertyId}/video/walkthrough.${ext}`);
+      setVideo((v) => v ? { ...v, uploading: false, url: videoUpload.url } : v);
+      const { error: videoError } = await supabaseClient.from("property_media").insert({
+        property_id: propertyId,
+        storage_path: videoUpload.path,
+        public_url: videoUpload.url,
+        type: "photo",
+        sort_order: 0,
+      });
+      if (videoError) throw new Error(`Walkthrough video save failed: ${videoError.message}`);
     }
 
-    // VR — upload to private "property-vr" bucket, store path only, never a public URL
+    // VR — save the 360 video path in DB so the listing can show it on the website.
     if (vrFile) {
       setVrFile((v) => v ? { ...v, uploading: true } : v);
       const ext = vrFile.file.name.split(".").pop() ?? "mp4";
-      const vrPath = `${propertyId}/tour.${ext}`;
-      const { error: vrUpErr } = await supabaseClient.storage
-        .from("property-vr")
-        .upload(vrPath, vrFile.file, { upsert: false });
-      setVrFile((v) => v ? { ...v, uploading: false } : v);
-      if (!vrUpErr) {
-        await supabaseClient.from("property_vr").insert({
+      const vrUpload = await uploadFile(vrFile.file, `${propertyId}/vr/tour.${ext}`);
+      setVrFile((v) => v ? { ...v, uploading: false, url: vrUpload.url } : v);
+
+      const { error: vrSaveError } = await supabaseClient
+        .from("property_vr")
+        .upsert({
           property_id: propertyId,
-          video_url: vrPath,
+          video_path: `property-media/${vrUpload.path}`,
           is_enabled: true,
-        });
-      }
+          submission_status: "ready",
+          submitted_at: new Date().toISOString(),
+        }, { onConflict: "property_id" });
+
+      if (vrSaveError) throw new Error(`VR save failed: ${vrSaveError.message}`);
     }
 
     // Floor plan PDF
     if (floorplan) {
       setFloorplan((f) => f ? { ...f, uploading: true } : f);
       const ext = floorplan.file.name.split(".").pop() ?? "pdf";
-      const floorplanUrl = await uploadFile(floorplan.file, `${propertyId}/floorplan/floorplan.${ext}`);
-      setFloorplan((f) => f ? { ...f, uploading: false, url: floorplanUrl ?? undefined } : f);
-      if (floorplanUrl) {
-        await supabaseClient.from("property_media").insert({
-          property_id: propertyId,
-          public_url: floorplanUrl,
-          type: "floorplan",
-          sort_order: 0,
-        });
-      }
+      const floorplanUpload = await uploadFile(floorplan.file, `${propertyId}/floorplan/floorplan.${ext}`);
+      setFloorplan((f) => f ? { ...f, uploading: false, url: floorplanUpload.url } : f);
+      const { error: floorplanError } = await supabaseClient.from("property_media").insert({
+        property_id: propertyId,
+        storage_path: floorplanUpload.path,
+        public_url: floorplanUpload.url,
+        type: "floorplan",
+        sort_order: 0,
+      });
+      if (floorplanError) throw new Error(`Floor plan save failed: ${floorplanError.message}`);
     }
 
     setSaving(false);
     router.push(`/agent/listings/${propertyId}`);
+    } catch (err) {
+      setSaving(false);
+      setPhotos((p) => p.map((photo) => ({ ...photo, uploading: false })));
+      setVideo((v) => v ? { ...v, uploading: false } : v);
+      setVrFile((v) => v ? { ...v, uploading: false } : v);
+      setFloorplan((f) => f ? { ...f, uploading: false } : f);
+      setError(err instanceof Error ? err.message : "Could not save listing media.");
+    }
   }
 
   const missingFields = [
@@ -507,7 +540,7 @@ export default function NewListingPage() {
         {/* ── 5. VR / 360° Tour ────────────────────────────────── */}
         <Section
           title={<>VR / 360° Tour <span className="text-red-500">*</span></> as unknown as string}
-          sub="Upload an equirectangular 360° video. Played natively in-browser — no third-party tool needed."
+          sub="Upload a 360° video. Played natively in-browser — no third-party tool needed."
         >
           {vrFile ? (
             <div className="space-y-3">
@@ -542,7 +575,7 @@ export default function NewListingPage() {
               </div>
               <div>
                 <p className="text-[14px] font-semibold text-gray-800">Upload 360° VR video</p>
-                <p className="mt-1 text-[12px] text-gray-400">Equirectangular MP4 or WebM · up to 2 GB</p>
+                <p className="mt-1 text-[12px] text-gray-400">MP4 or WebM · up to 2 GB</p>
                 <p className="mt-0.5 text-[11.5px] text-gray-400">Works on desktop, mobile &amp; VR headsets — processed entirely on our platform</p>
               </div>
               <input ref={vrFileRef} type="file" accept="video/mp4,video/webm,video/*" className="hidden" onChange={onVrFileChange} />
