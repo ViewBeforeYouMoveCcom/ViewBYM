@@ -190,33 +190,24 @@ export default function PropertyHero({
           </button>
 
           {/* Floorplan */}
-          {floorplanUrl ? (
-            <button
-              onClick={() => setShowFloorplan(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-white/20 transition-colors"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              Floorplan
-            </button>
-          ) : (
-            <button
-              disabled
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[12.5px] font-semibold text-white/40 cursor-not-allowed"
-              title="Floorplan not yet available"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              Floorplan
-            </button>
-          )}
+          <button
+            onClick={() => floorplanUrl && setShowFloorplan(true)}
+            className={`flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-white/20 transition-colors cursor-pointer ${!floorplanUrl ? 'opacity-60' : ''}`}
+            title={floorplanUrl ? "View Floorplan" : "Floorplan not available"}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Floorplan
+          </button>
 
           {/* Map */}
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + (city ? ', ' + city : ''))}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white no-underline transition-colors visited:text-white hover:bg-white/20 hover:text-white focus:text-white active:text-white cursor-pointer"
+            style={{ color: "#fff" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             Map
           </a>
 
@@ -225,9 +216,10 @@ export default function PropertyHero({
             href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(address + (city ? ', ' + city : ''))}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white no-underline transition-colors visited:text-white hover:bg-white/20 hover:text-white focus:text-white active:text-white cursor-pointer"
+            style={{ color: "#fff" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
             Street View
           </a>
 

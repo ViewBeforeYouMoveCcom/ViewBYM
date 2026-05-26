@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,9 @@ export default function AgentListingsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [tab, setTab] = useState<PropStatus | "all">("all");
   const [loading, setLoading] = useState(true);
+  const [agencyId, setAgencyId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -53,6 +57,7 @@ export default function AgentListingsPage() {
         .single();
 
       if (!membership) { setLoading(false); return; }
+      setAgencyId(membership.agency_id);
 
       const { data } = await supabaseClient
         .from("properties")
@@ -65,6 +70,47 @@ export default function AgentListingsPage() {
     }
     load();
   }, []);
+
+  async function deleteListing(property: Property) {
+    if (!agencyId || deletingId) return;
+
+    const confirmed = window.confirm(
+      `Delete "${property.title || property.address_line1 || "this listing"}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(property.id);
+    setDeleteError(null);
+
+    const { data: mediaRows } = await supabaseClient
+      .from("property_media")
+      .select("storage_path")
+      .eq("property_id", property.id);
+
+    const storagePaths =
+      mediaRows
+        ?.map((row) => row.storage_path)
+        .filter((path): path is string => Boolean(path)) ?? [];
+
+    if (storagePaths.length > 0) {
+      await supabaseClient.storage.from("property-media").remove(storagePaths);
+    }
+
+    const { error } = await supabaseClient
+      .from("properties")
+      .delete()
+      .eq("id", property.id)
+      .eq("agency_id", agencyId);
+
+    setDeletingId(null);
+
+    if (error) {
+      setDeleteError(error.message);
+      return;
+    }
+
+    setProperties((prev) => prev.filter((item) => item.id !== property.id));
+  }
 
   const filtered =
     tab === "all" ? properties : properties.filter((p) => p.status === tab);
@@ -116,6 +162,12 @@ export default function AgentListingsPage() {
         })}
       </div>
 
+      {deleteError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {deleteError}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -153,13 +205,25 @@ export default function AgentListingsPage() {
                       .join(" · ")}
                   </p>
                 </div>
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="h-9 rounded-[10px] text-sm"
-                >
-                  <Link href={`/agent/listings/${property.id}`}>Edit</Link>
-                </Button>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    className="h-9 rounded-[10px] text-sm"
+                  >
+                    <Link href={`/agent/listings/${property.id}`}>Edit</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={deletingId === property.id}
+                    onClick={() => deleteListing(property)}
+                    className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    {deletingId === property.id ? "Deleting" : "Delete"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
