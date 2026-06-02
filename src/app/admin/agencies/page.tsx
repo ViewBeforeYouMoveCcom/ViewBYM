@@ -31,10 +31,18 @@ const PLAN_COLOURS: Record<Plan, string> = {
   paid: "bg-amber-100 text-amber-700",
 };
 
+async function sendNotification(type: string, agency: Agency) {
+  if (!agency.email) return;
+  await fetch("/api/admin/notify-application", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, agentEmail: agency.email, agencyName: agency.name }),
+  });
+}
+
 export default function AdminAgenciesPage() {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tokens, setTokens] = useState<Record<string, string>>({});
   const [working, setWorking] = useState<Record<string, boolean>>({});
   const [emailSent, setEmailSent] = useState<Record<string, boolean>>({});
 
@@ -50,56 +58,58 @@ export default function AdminAgenciesPage() {
     setLoading(false);
   }
 
-  async function sendApprovalEmail(agency: Agency) {
-    if (!agency.email) return;
-    setWorking((prev) => ({ ...prev, [`email_${agency.id}`]: true }));
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    await fetch("/api/admin/send-approval-email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({
-        agencyId: agency.id,
-        agencyName: agency.name,
-        contactEmail: agency.email,
-      }),
-    });
-
-    setEmailSent((prev) => ({ ...prev, [agency.id]: true }));
-    setWorking((prev) => ({ ...prev, [`email_${agency.id}`]: false }));
-  }
-
   async function approve(agency: Agency) {
     setWorking((prev) => ({ ...prev, [agency.id]: true }));
-    const { data, error } = await supabaseClient.rpc("admin_approve_agency", {
-      p_agency_id: agency.id,
-    });
+    const { error } = await supabaseClient.from("agencies").update({ status: "approved" }).eq("id", agency.id);
     setWorking((prev) => ({ ...prev, [agency.id]: false }));
-
     if (error) { alert(`Error: ${error.message}`); return; }
-
-    const rows = data as { agency_id: string; token: string }[] | null;
-    const token = rows?.[0]?.token ?? null;
-    if (token) setTokens((prev) => ({ ...prev, [agency.id]: token }));
     setAgencies((prev) => prev.map((a) => a.id === agency.id ? { ...a, status: "approved" } : a));
-
-    // Auto-send email if email on file
-    if (agency.email) sendApprovalEmail({ ...agency, status: "approved" });
+    await sendNotification("agency_approved", agency);
+    setEmailSent((prev) => ({ ...prev, [agency.id]: true }));
   }
 
-  async function updateStatus(agencyId: string, status: AgencyStatus) {
-    setWorking((prev) => ({ ...prev, [agencyId]: true }));
-    await supabaseClient.from("agencies").update({ status }).eq("id", agencyId);
-    setWorking((prev) => ({ ...prev, [agencyId]: false }));
-    setAgencies((prev) => prev.map((a) => a.id === agencyId ? { ...a, status } : a));
+  async function updateStatus(agency: Agency, status: AgencyStatus) {
+    setWorking((prev) => ({ ...prev, [agency.id]: true }));
+    const { error } = await supabaseClient.from("agencies").update({ status }).eq("id", agency.id);
+    setWorking((prev) => ({ ...prev, [agency.id]: false }));
+    if (error) { alert(`Error: ${error.message}`); return; }
+    setAgencies((prev) => prev.map((a) => a.id === agency.id ? { ...a, status } : a));
+    if (status === "approved") await sendNotification("agency_approved", agency);
+  }
+
+  async function resendEmail(agency: Agency) {
+    setWorking((prev) => ({ ...prev, [`email_${agency.id}`]: true }));
+    await sendNotification("agency_approved", agency);
+    setWorking((prev) => ({ ...prev, [`email_${agency.id}`]: false }));
+    setEmailSent((prev) => ({ ...prev, [agency.id]: true }));
   }
 
   async function updatePlan(agencyId: string, plan: Plan) {
     await supabaseClient.from("agencies").update({ plan }).eq("id", agencyId);
     setAgencies((prev) => prev.map((a) => a.id === agencyId ? { ...a, plan } : a));
+  }
+
+  async function deleteAgency(agencyId: string) {
+    if (!confirm("Delete this agency? This will remove all associated data (properties, members, and user accounts). This cannot be undone.")) return;
+    setWorking((prev) => ({ ...prev, [agencyId]: true }));
+    
+    // Get the agency creator user_id and email before deleting
+    const { data: agencyData } = await supabaseClient
+      .from("agencies")
+      .select("created_by, email")
+      .eq("id", agencyId)
+      .single();
+    
+    const { error } = await supabaseClient.from("agencies").delete().eq("id", agencyId);
+    
+    // Also delete from agent_applications so they can re-apply
+    if (agencyData?.email) {
+      await supabaseClient.from("agent_applications").delete().eq("business_email", agencyData.email);
+    }
+
+    setWorking((prev) => ({ ...prev, [agencyId]: false }));
+    if (error) { alert(`Error: ${error.message}`); return; }
+    setAgencies((prev) => prev.filter((a) => a.id !== agencyId));
   }
 
   return (
@@ -110,15 +120,8 @@ export default function AdminAgenciesPage() {
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse rounded-xl border border-[#E5E7EB] bg-white p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-4 w-40 rounded-full bg-gray-200" />
-                  <div className="h-5 w-16 rounded-full bg-gray-100" />
-                  <div className="h-5 w-12 rounded-full bg-gray-100" />
-                </div>
-                <div className="h-3 w-20 rounded-full bg-gray-100" />
-              </div>
-              <div className="mt-5 flex gap-2">
+              <div className="h-4 w-40 rounded-full bg-gray-200" />
+              <div className="mt-4 flex gap-2">
                 <div className="h-9 w-36 rounded-lg bg-gray-100" />
                 <div className="h-9 w-20 rounded-lg bg-gray-100" />
               </div>
@@ -139,7 +142,6 @@ export default function AdminAgenciesPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900">{agency.name}</p>
                     <Badge variant={statusVariant[agency.status]}>{agency.status}</Badge>
-                    {/* Plan badge */}
                     <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-bold uppercase tracking-wide ${PLAN_COLOURS[agency.plan] ?? PLAN_COLOURS.free}`}>
                       {agency.plan}
                     </span>
@@ -149,20 +151,8 @@ export default function AdminAgenciesPage() {
                   </p>
                 </div>
 
-                {/* Email */}
                 {agency.email && (
                   <p className="text-xs text-gray-400">Contact: {agency.email}</p>
-                )}
-
-                {/* Token after approval */}
-                {tokens[agency.id] && (
-                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-xs font-semibold text-gray-900">Onboarding token:</p>
-                    <p className="mt-1 break-all font-mono text-xs text-blue-700">{tokens[agency.id]}</p>
-                    <p className="mt-2 text-xs text-[#6B7280]">
-                      Agent redeems at <strong>/agent/onboarding</strong>. Store it safely.
-                    </p>
-                  </div>
                 )}
 
                 {/* Plan selector */}
@@ -182,18 +172,19 @@ export default function AdminAgenciesPage() {
                 <div className="flex flex-wrap gap-2">
                   {agency.status === "pending" && (
                     <Button
-                      className="h-9 rounded-[10px] bg-blue-700 text-sm text-white hover:bg-blue-800"
+                      className="h-9 rounded-[10px] text-sm text-white"
+                      style={{ backgroundColor: "#08519A" }}
                       onClick={() => approve(agency)}
                       disabled={working[agency.id]}
                     >
-                      Approve &amp; notify
+                      {working[agency.id] ? "Approving…" : "Approve & notify"}
                     </Button>
                   )}
                   {agency.status === "approved" && agency.email && (
                     <Button
                       variant="secondary"
                       className="h-9 rounded-[10px] text-sm"
-                      onClick={() => sendApprovalEmail(agency)}
+                      onClick={() => resendEmail(agency)}
                       disabled={working[`email_${agency.id}`]}
                     >
                       {emailSent[agency.id] ? "Email sent ✓" : working[`email_${agency.id}`] ? "Sending…" : "Re-send approval email"}
@@ -203,7 +194,7 @@ export default function AdminAgenciesPage() {
                     <Button
                       variant="secondary"
                       className="h-9 rounded-[10px] text-sm"
-                      onClick={() => updateStatus(agency.id, "suspended")}
+                      onClick={() => updateStatus(agency, "suspended")}
                       disabled={working[agency.id]}
                     >
                       Suspend
@@ -211,8 +202,9 @@ export default function AdminAgenciesPage() {
                   )}
                   {agency.status === "suspended" && (
                     <Button
-                      className="h-9 rounded-[10px] bg-blue-700 text-sm text-white hover:bg-blue-800"
-                      onClick={() => updateStatus(agency.id, "approved")}
+                      className="h-9 rounded-[10px] text-sm text-white"
+                      style={{ backgroundColor: "#08519A" }}
+                      onClick={() => updateStatus(agency, "approved")}
                       disabled={working[agency.id]}
                     >
                       Reinstate
@@ -222,12 +214,20 @@ export default function AdminAgenciesPage() {
                     <Button
                       variant="secondary"
                       className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
-                      onClick={() => updateStatus(agency.id, "rejected")}
+                      onClick={() => updateStatus(agency, "rejected")}
                       disabled={working[agency.id]}
                     >
                       Reject
                     </Button>
                   )}
+                  <Button
+                    variant="secondary"
+                    className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
+                    onClick={() => deleteAgency(agency.id)}
+                    disabled={working[agency.id]}
+                  >
+                    Delete agency
+                  </Button>
                 </div>
               </CardContent>
             </Card>

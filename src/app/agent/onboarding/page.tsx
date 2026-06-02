@@ -53,6 +53,11 @@ export default function AgentOnboardingPage() {
       return;
     }
 
+    // Fallback: manually insert agency_members in case the DB trigger didn't fire
+    await supabaseClient
+      .from("agency_members")
+      .upsert({ agency_id: agency.id, user_id: user.id, member_role: "owner" }, { onConflict: "agency_id,user_id" });
+
     router.push("/agent/dashboard");
   }
 

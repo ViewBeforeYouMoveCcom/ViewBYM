@@ -51,6 +51,18 @@ export default function RequestAccessPage() {
       return;
     }
 
+    // Notify admin of new request
+    await fetch("/api/admin/notify-application", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "request_access",
+        agentEmail: form.businessEmail.trim(),
+        agentName: form.contactName.trim(),
+        agencyName: form.agencyName.trim(),
+      }),
+    });
+
     setSuccess(true);
   }
 

@@ -54,9 +54,9 @@ begin
     raise exception 'Unauthorized';
   end if;
 
-  update public.agencies
+  update public.agencies as a
   set status = 'approved', updated_at = now()
-  where id = p_agency_id;
+  where a.id = p_agency_id;
 
   -- Generate a simple token for the admin to share with the agent
   -- TODO: In a future phase, this should create a proper invite record

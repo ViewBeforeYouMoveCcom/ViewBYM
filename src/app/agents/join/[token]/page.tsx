@@ -113,7 +113,7 @@ export default function AgentJoinPage() {
     await supabaseClient.from("agency_members").insert({
       agency_id: agency.id,
       user_id: user.id,
-      member_role: "owner",
+      role: "owner",
     });
 
     // Update profile name

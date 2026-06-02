@@ -323,7 +323,7 @@ export const getPropertiesFiltered = async (params: {
 
     return results;
   } catch (err) {
-    console.error("[properties] Filtered fetch error:", err);
+    console.error("[properties] Filtered fetch failed:", err);
     return [];
   }
 };
