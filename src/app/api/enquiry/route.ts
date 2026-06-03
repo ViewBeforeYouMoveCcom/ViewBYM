@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { createSupabaseServiceClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -10,18 +10,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const supabase = createSupabaseServiceClient();
-  const { error: dbError } = await supabase.from("enquiries").insert({
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
+
+  const enquiry = {
     property_id: propertyId,
     agency_id: agencyId,
     name: name.trim(),
     email: email.trim(),
     phone: phone?.trim() || null,
     message: message.trim(),
-  });
+  };
+
+  let { error: dbError } = await supabase.from("enquiries").insert(enquiry);
+
+  if (dbError?.message.includes("agency_id")) {
+    const enquiryWithoutAgency = {
+      property_id: enquiry.property_id,
+      name: enquiry.name,
+      email: enquiry.email,
+      phone: enquiry.phone,
+      message: enquiry.message,
+    };
+    const retry = await supabase.from("enquiries").insert(enquiryWithoutAgency);
+    dbError = retry.error;
+  }
 
   if (dbError) {
-    return NextResponse.json({ error: "Could not save enquiry" }, { status: 500 });
+    return NextResponse.json({ error: dbError.message }, { status: 500 });
   }
 
   // Send emails if Resend is configured

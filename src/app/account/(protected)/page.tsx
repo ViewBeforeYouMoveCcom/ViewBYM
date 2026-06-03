@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { supabaseClient } from "@/lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
 
 interface DashboardData {
   email: string;
@@ -36,6 +37,24 @@ const quickLinks = [
   },
 ];
 
+function getAuthDisplayName(user: User) {
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const candidates = [
+    metadata.full_name,
+    metadata.name,
+    metadata.display_name,
+    metadata.user_name,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return null;
+}
+
 export default function AccountDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -66,7 +85,7 @@ export default function AccountDashboardPage() {
 
       setData({
         email: user.email ?? "",
-        fullName: profile?.full_name ?? null,
+        fullName: profile?.full_name?.trim() || getAuthDisplayName(user),
         savedPropertiesCount: savedCount ?? 0,
         savedSearchesCount: searchCount ?? 0,
       });
