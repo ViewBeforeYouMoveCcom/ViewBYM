@@ -205,13 +205,17 @@ export default function NewListingPage() {
     const { data: membership } = await retryTransient(async () =>
       await supabaseClient
         .from("agency_members")
-        .select("agency_id")
+        .select("agency_id, agencies(status)")
         .eq("user_id", user.id)
         .limit(1)
         .single()
     );
 
     if (!membership) throw new Error("No agency found associated with your account.");
+    const agencyStatus = (membership as unknown as { agencies?: { status?: string } }).agencies?.status;
+    if (agencyStatus !== "approved") {
+      throw new Error("Your agent request must be approved before you can list properties.");
+    }
     const currentAgencyId = membership.agency_id;
 
     const priceNumeric = form.price ? parseFloat(form.price.replace(/[^0-9.]/g, "")) : null;

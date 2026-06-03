@@ -38,7 +38,7 @@ export default function RequestAccessPage() {
         branch_location: form.agencyLocation.trim() || null,
         contact_name: form.contactName.trim(),
         contact_role: form.contactRole.trim() || null,
-        business_email: form.businessEmail.trim(),
+        business_email: form.businessEmail.trim().toLowerCase(),
         phone: form.phone.trim() || null,
         website: form.website.trim() || null,
         status: "new",
@@ -47,7 +47,7 @@ export default function RequestAccessPage() {
     setLoading(false);
 
     if (insertError) {
-      setError("Something went wrong. Please try again or contact us directly.");
+      setError(insertError.message || "Something went wrong. Please try again or contact us directly.");
       return;
     }
 
@@ -66,7 +66,7 @@ export default function RequestAccessPage() {
             Request agent access.
           </h1>
           <p className="mb-5 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
-            Share your details and we'll contact you with onboarding steps. Access is managed to keep tour quality and presentation consistent.
+            Share your details and we&apos;ll contact you with onboarding steps. Access is managed to keep tour quality and presentation consistent.
           </p>
           <Link
             href="/for-agents"
@@ -94,7 +94,7 @@ export default function RequestAccessPage() {
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
                   <p className="text-[15px] font-semibold text-blue-700">Request received</p>
                   <p className="mt-1.5 text-[14px] leading-relaxed text-blue-700/80">
-                    We've received your details and will be in touch shortly with next steps.
+                    We&apos;ve received your details and will be in touch shortly with next steps.
                     In the meantime, you can{" "}
                     <Link href="/account/signup" className="underline">
                       create an account

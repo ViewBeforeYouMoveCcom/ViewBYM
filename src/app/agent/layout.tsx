@@ -28,13 +28,6 @@ export default function AgentLayout({
         router.replace("/account/login?redirect=/agent/dashboard");
         return;
       }
-
-      // If on onboarding page, skip membership check
-      if (pathname === "/agent/onboarding") {
-        setStatus("ok");
-        return;
-      }
-
       const { data: memberships } = await supabaseClient
         .from("agency_members")
         .select("agency_id, agencies(status)")
@@ -44,6 +37,10 @@ export default function AgentLayout({
       // User already has an agency — let them through
       if (memberships && memberships.length > 0) {
         const agencyStatus = (memberships[0] as unknown as { agencies: { status: string } }).agencies?.status;
+        if (pathname === "/agent/onboarding") {
+          router.replace("/agent/dashboard");
+          return;
+        }
         if (agencyStatus !== "approved") {
           setStatus("pending");
           return;
@@ -53,20 +50,18 @@ export default function AgentLayout({
       }
 
       // No agency — check if they have an approved application
-      const { data: application } = await supabaseClient
-        .from("agent_applications")
-        .select("status")
-        .eq("business_email", user.email ?? "")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      const { data: applicationStatus } = await supabaseClient.rpc("agent_my_application_status");
 
-      if (!application || application.status !== "approved") {
+      if (applicationStatus !== "approved") {
         router.replace("/agents/auth-redirect");
         return;
       }
 
       // Approved application but no agency yet — go to onboarding
+      if (pathname === "/agent/onboarding") {
+        setStatus("ok");
+        return;
+      }
       setStatus("onboarding");
       router.replace("/agent/onboarding");
     }
@@ -97,7 +92,7 @@ export default function AgentLayout({
                 Application under review
               </h1>
               <p className="mt-1 text-sm text-[#6B7280]">
-                Your agency profile has been submitted. You'll be able to access the dashboard once approved.
+                Your agency profile has been submitted. You&apos;ll be able to access the dashboard once approved.
               </p>
             </div>
 
@@ -107,7 +102,7 @@ export default function AgentLayout({
               </p>
               <p className="mt-2 text-sm text-amber-800">
                 Our team is reviewing your agency details. This typically takes 1–2 business days.
-                You'll receive an email notification once your account is approved.
+                You&apos;ll receive an email notification once your account is approved.
               </p>
             </div>
 

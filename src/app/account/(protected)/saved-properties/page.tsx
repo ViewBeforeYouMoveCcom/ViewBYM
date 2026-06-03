@@ -34,7 +34,7 @@ export default function SavedPropertiesPage() {
           .select(`
             property_id,
             properties(
-              id, title, address, city, price_display,
+              id, title, address_line1, city, price,
               bedrooms, property_type
             )
           `)
@@ -51,11 +51,20 @@ export default function SavedPropertiesPage() {
         ).flatMap((row) => {
           const p = row.properties;
           if (!p) return [];
+          const price =
+            p.price == null
+              ? "Price on request"
+              : new Intl.NumberFormat("en-GB", {
+                  style: "currency",
+                  currency: "GBP",
+                  maximumFractionDigits: 0,
+                }).format(Number(p.price));
+
           return [{
             id: p.id as string,
-            title: (p.title ?? p.address) as string,
-            location: (p.city ?? p.address) as string,
-            price: (p.price_display ?? "Price on request") as string,
+            title: (p.title ?? p.address_line1 ?? "Untitled listing") as string,
+            location: (p.city ?? p.address_line1 ?? "") as string,
+            price,
             beds: (p.bedrooms ?? 0) as number,
             type: p.property_type as string,
           }];

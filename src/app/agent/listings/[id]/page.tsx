@@ -439,7 +439,7 @@ export default function EditListingPage() {
         <div className="flex gap-2">
           {property?.status === "draft" && (
             <Button
-              className="h-9 rounded-[10px] bg-blue-700 text-sm text-white hover:bg-blue-800"
+              className="h-9 rounded-[10px] bg-[#08519A] text-sm !text-white hover:bg-[#063d75]"
               onClick={() => changeStatus("published")}
             >
               Publish
@@ -632,7 +632,7 @@ export default function EditListingPage() {
             <Button
               onClick={saveDetails}
               disabled={saving}
-              className="h-11 rounded-[10px] bg-blue-700 px-6 text-sm font-semibold text-white hover:bg-blue-800"
+              className="h-11 rounded-[10px] bg-[#08519A] px-6 text-sm font-semibold !text-white hover:bg-[#063d75]"
             >
               {saved ? "Saved!" : saving ? "Saving…" : "Save details"}
             </Button>
@@ -812,7 +812,7 @@ export default function EditListingPage() {
           </p>
           <Link
             href={`/agent/listings/${id}/vr-upload`}
-            className="inline-flex h-10 items-center rounded-[10px] bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800"
+            className="inline-flex h-10 items-center rounded-[10px] bg-[#08519A] px-5 text-sm font-semibold !text-white hover:bg-[#063d75]"
           >
             Manage VR submission →
           </Link>

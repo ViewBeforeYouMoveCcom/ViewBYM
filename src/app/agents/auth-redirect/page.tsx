@@ -31,20 +31,14 @@ export default function AgentsAuthRedirect() {
       }
 
       // No agency — check application status
-      const { data: application } = await supabaseClient
-        .from("agent_applications")
-        .select("status")
-        .eq("business_email", user.email)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      const { data: applicationStatus } = await supabaseClient.rpc("agent_my_application_status");
 
-      if (application?.status === "approved") {
+      if (applicationStatus === "approved") {
         router.replace("/agent/onboarding");
         return;
       }
 
-      if (application?.status === "rejected") {
+      if (applicationStatus === "rejected") {
         setStatus("rejected");
         return;
       }
@@ -103,8 +97,8 @@ export default function AgentsAuthRedirect() {
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              <Link href="/contact" className="flex w-full items-center justify-center rounded-xl py-3 text-sm font-bold text-white" style={{ backgroundColor: "#08519A" }}>
-                Contact us
+              <Link href="/agents/request-access" className="flex w-full items-center justify-center rounded-xl py-3 text-sm font-bold text-white" style={{ backgroundColor: "#08519A" }}>
+                Request agent access
               </Link>
               <button onClick={async () => { await supabaseClient.auth.signOut(); router.push("/"); }} className="text-sm text-gray-500 hover:text-gray-700">
                 Sign out

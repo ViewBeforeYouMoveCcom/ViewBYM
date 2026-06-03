@@ -31,6 +31,13 @@ export default function AgentOnboardingPage() {
       setLoading(false);
       return;
     }
+    const { data: applicationStatus } = await supabaseClient.rpc("agent_my_application_status");
+
+    if (applicationStatus !== "approved") {
+      setError("Your agent access request must be approved before onboarding.");
+      setLoading(false);
+      return;
+    }
 
     // Create agency.
     // Setting created_by triggers the add_creator_as_agency_owner DB trigger which
@@ -40,7 +47,7 @@ export default function AgentOnboardingPage() {
       .insert({
         name: form.name.trim(),
         website: form.website.trim() || null,
-        status: "pending",
+        status: "approved",
         created_by: user.id,
       })
       .select("id")

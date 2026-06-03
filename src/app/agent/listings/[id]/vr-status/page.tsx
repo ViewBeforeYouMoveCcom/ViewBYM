@@ -201,7 +201,7 @@ export default function VrStatusPage() {
             {(status === "not_submitted" || status === "rejected") && (
               <Link
                 href={`/agent/listings/${id}/vr-upload`}
-                className="inline-flex h-10 items-center rounded-[10px] bg-blue-700 px-5 text-[13.5px] font-semibold text-white hover:bg-blue-800"
+                className="inline-flex h-10 items-center rounded-[10px] bg-[#08519A] px-5 text-[13.5px] font-semibold text-white hover:bg-[#063d75]"
               >
                 {status === "rejected" ? "Resubmit" : "Submit VR material"}
               </Link>
@@ -209,7 +209,7 @@ export default function VrStatusPage() {
             {status === "ready" && (
               <Link
                 href={`/property/${id}`}
-                className="inline-flex h-10 items-center rounded-[10px] bg-blue-700 px-5 text-[13.5px] font-semibold text-white hover:bg-blue-800"
+                className="inline-flex h-10 items-center rounded-[10px] bg-[#08519A] px-5 text-[13.5px] font-semibold text-white hover:bg-[#063d75]"
               >
                 View live listing
               </Link>

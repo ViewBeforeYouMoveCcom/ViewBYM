@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,22 +44,20 @@ export default function AdminApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
-    const response = await fetch("/api/admin/applications");
-    
-    if (!response.ok) {
-      console.error("Error loading applications:", response.statusText);
+    setLoadError(null);
+    const { data, error } = await supabaseClient.rpc("admin_list_agent_applications");
+
+    if (error) {
+      console.error("Error loading applications:", error.message);
+      setLoadError(error.message);
       setLoading(false);
       return;
     }
-    
-    const data = await response.json();
+
     setApplications(data ?? []);
     const initialNotes: Record<string, string> = {};
     (data ?? []).forEach((a: Application) => {
@@ -67,27 +65,47 @@ export default function AdminApplicationsPage() {
     });
     setNotes(initialNotes);
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      load();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function updateStatus(id: string, status: AppStatus) {
     setSaving((prev) => ({ ...prev, [id]: true }));
-    await supabaseClient
-      .from("agent_applications")
-      .update({ status, notes: notes[id] ?? null })
-      .eq("id", id);
+    const { data, error } = await supabaseClient.rpc("admin_set_agent_application_status", {
+      p_application_id: id,
+      p_status: status,
+      p_notes: notes[id] ?? null,
+    });
     setSaving((prev) => ({ ...prev, [id]: false }));
+    if (error) {
+      console.error("Error updating application:", error.message);
+      return;
+    }
     setApplications((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status } : a))
+      prev.map((a) => (a.id === id ? ((data as Application) ?? { ...a, status }) : a))
     );
   }
 
   async function saveNotes(id: string) {
     setSaving((prev) => ({ ...prev, [`notes_${id}`]: true }));
-    await supabaseClient
-      .from("agent_applications")
-      .update({ notes: notes[id] ?? null })
-      .eq("id", id);
+    const { data, error } = await supabaseClient.rpc("admin_set_agent_application_notes", {
+      p_application_id: id,
+      p_notes: notes[id] ?? null,
+    });
     setSaving((prev) => ({ ...prev, [`notes_${id}`]: false }));
+    if (error) {
+      console.error("Error saving application notes:", error.message);
+      return;
+    }
+    setApplications((prev) =>
+      prev.map((a) => (a.id === id ? ((data as Application) ?? a) : a))
+    );
   }
 
   const filtered =
@@ -122,7 +140,11 @@ export default function AdminApplicationsPage() {
         })}
       </div>
 
-      {loading ? (
+      {loadError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Could not load applications: {loadError}
+        </div>
+      ) : loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse rounded-xl border border-[#E5E7EB] bg-white p-5 space-y-4">
