@@ -77,7 +77,7 @@ export default function MyEnquiriesPage() {
           </p>
           <Link
             href="/browse"
-            className="mt-4 inline-block rounded-lg bg-[#08519A] px-5 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#063d75]"
+            className="mt-4 inline-block rounded-lg bg-[#08519A] px-5 py-2.5 text-[13.5px] font-semibold !text-white hover:bg-[#063d75]"
           >
             Browse properties
           </Link>

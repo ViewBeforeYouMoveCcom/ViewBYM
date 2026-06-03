@@ -19,7 +19,8 @@ export default function AgentJoinPage() {
   // Signup fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [surname, setSurname] = useState("");
 
   // Agency fields
   const [agencyName, setAgencyName] = useState("");
@@ -53,10 +54,12 @@ export default function AgentJoinPage() {
     setLoading(true);
     setError(null);
 
+    const fullName = `${firstName.trim()} ${surname.trim()}`.trim();
+
     const { error: signUpError } = await supabaseClient.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: fullName.trim() } },
+      options: { data: { full_name: fullName } },
     });
 
     if (signUpError) {
@@ -117,9 +120,10 @@ export default function AgentJoinPage() {
     });
 
     // Update profile name
+    const fullName = `${firstName.trim()} ${surname.trim()}`.trim();
     await supabaseClient
       .from("profiles")
-      .update({ full_name: fullName.trim(), role: "agent" })
+      .update({ full_name: fullName, role: "agent" })
       .eq("id", user.id);
 
     // Mark invite as used
@@ -197,10 +201,16 @@ export default function AgentJoinPage() {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
-          <Field label="Full name">
-            <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
-              placeholder="Jane Smith" className={inputCls} />
-          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="First name">
+              <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Jane" className={inputCls} />
+            </Field>
+            <Field label="Surname">
+              <input type="text" required value={surname} onChange={(e) => setSurname(e.target.value)}
+                placeholder="Smith" className={inputCls} />
+            </Field>
+          </div>
           <Field label="Email address">
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="jane@agency.co.uk" autoComplete="email" className={inputCls} />

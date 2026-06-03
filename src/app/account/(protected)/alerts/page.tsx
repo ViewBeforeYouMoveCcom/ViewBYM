@@ -73,7 +73,7 @@ export default function AlertsPage() {
           <button
             type="button"
             onClick={save}
-            className="rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800"
+            className="rounded-lg bg-[#08519A] px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-[#063d75]"
           >
             {saved ? "Saved!" : "Save preferences"}
           </button>

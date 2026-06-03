@@ -103,7 +103,7 @@ export default function AgentOnboardingPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+              className="h-11 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold text-white hover:bg-[#063d75]"
             >
               {loading ? "Creating…" : "Create agency"}
             </Button>
@@ -120,7 +120,7 @@ export default function AgentOnboardingPage() {
             { step: "3", title: "Start listing with immersive VR", body: "Once approved, you can create property listings and submit 360° footage for your full VR tours." },
           ].map(({ step, title, body }) => (
             <div key={step} className="flex gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-700 text-[11px] font-bold text-white">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
                 {step}
               </div>
               <div>

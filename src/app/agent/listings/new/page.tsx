@@ -655,7 +655,7 @@ export default function NewListingPage() {
                 <div key={photo.tempId} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E5E7EB] bg-gray-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={photo.preview} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-                  {i === 0 && <div className="absolute left-1.5 top-1.5 rounded-full bg-blue-700 px-2 py-0.5 text-[10px] font-bold text-white">Cover</div>}
+                  {i === 0 && <div className="absolute left-1.5 top-1.5 rounded-full bg-[#08519A] px-2 py-0.5 text-[10px] font-bold text-white">Cover</div>}
                   {photo.uploading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-blue-700">
                       <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
@@ -836,7 +836,7 @@ export default function NewListingPage() {
             {saving ? "Saving…" : "Save as draft"}
           </Button>
           <Button type="button" disabled={saving || !isValid}
-            className="h-11 rounded-[10px] bg-blue-700 px-6 text-[14px] font-semibold !text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-11 rounded-[10px] bg-[#08519A] px-6 text-[14px] font-semibold !text-white hover:bg-[#063d75] disabled:cursor-not-allowed disabled:opacity-40"
             onClick={(e) => onSubmit(e as unknown as React.FormEvent, true)}>
             {saving ? "Publishing…" : "Save & publish"}
           </Button>

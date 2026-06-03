@@ -51,13 +51,18 @@ export default function AdminApplicationsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabaseClient
-      .from("agent_applications")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setApplications((data as Application[]) ?? []);
+    const response = await fetch("/api/admin/applications");
+    
+    if (!response.ok) {
+      console.error("Error loading applications:", response.statusText);
+      setLoading(false);
+      return;
+    }
+    
+    const data = await response.json();
+    setApplications(data ?? []);
     const initialNotes: Record<string, string> = {};
-    (data as Application[] ?? []).forEach((a) => {
+    (data ?? []).forEach((a: Application) => {
       initialNotes[a.id] = a.notes ?? "";
     });
     setNotes(initialNotes);
@@ -246,7 +251,7 @@ export default function AdminApplicationsPage() {
                   )}
                   {app.status !== "approved" && (
                     <Button
-                      className="h-9 rounded-[10px] bg-blue-700 text-sm text-white hover:bg-blue-800"
+                      className="h-9 rounded-[10px] bg-[#08519A] text-sm text-white hover:bg-[#063d75]"
                       onClick={() => updateStatus(app.id, "approved")}
                       disabled={saving[app.id]}
                     >

@@ -85,7 +85,7 @@ export default function VendorPage() {
                 key={step}
                 className="rounded-2xl border border-gray-200 bg-white p-6"
               >
-                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-700 text-[13px] font-bold text-white">
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-[#08519A] text-[13px] font-bold text-white">
                   {step}
                 </div>
                 <h3 className="mb-2 text-[15px] font-bold text-gray-900">{title}</h3>

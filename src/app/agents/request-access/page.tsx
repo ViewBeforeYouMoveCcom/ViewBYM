@@ -51,18 +51,6 @@ export default function RequestAccessPage() {
       return;
     }
 
-    // Notify admin of new request
-    await fetch("/api/admin/notify-application", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "request_access",
-        agentEmail: form.businessEmail.trim(),
-        agentName: form.contactName.trim(),
-        agencyName: form.agencyName.trim(),
-      }),
-    });
-
     setSuccess(true);
   }
 
@@ -200,7 +188,7 @@ export default function RequestAccessPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-blue-800 disabled:opacity-60 sm:w-auto"
+                      className="rounded-lg bg-[#08519A] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#063d75] disabled:opacity-60 sm:w-auto"
                     >
                       {loading ? "Submitting…" : "Submit request"}
                     </button>

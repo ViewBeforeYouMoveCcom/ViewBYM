@@ -99,12 +99,12 @@ export default function AgentsAuthRedirect() {
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Agent access required</h1>
               <p className="mt-2 text-sm text-gray-500">
-                You need to request agent access first. Once approved by our team, you can create your agency and start listing.
+                Please contact our team to request agent access.
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              <Link href="/agents/request-access" className="flex w-full items-center justify-center rounded-xl py-3 text-sm font-bold text-white" style={{ backgroundColor: "#08519A" }}>
-                Request agent access
+              <Link href="/contact" className="flex w-full items-center justify-center rounded-xl py-3 text-sm font-bold text-white" style={{ backgroundColor: "#08519A" }}>
+                Contact us
               </Link>
               <button onClick={async () => { await supabaseClient.auth.signOut(); router.push("/"); }} className="text-sm text-gray-500 hover:text-gray-700">
                 Sign out

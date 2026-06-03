@@ -154,7 +154,7 @@ export default function AgentDashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Button
               asChild
-              className="h-10 rounded-[10px] bg-blue-700 text-sm font-semibold !text-white hover:bg-blue-800"
+              className="h-10 rounded-[10px] bg-[#08519A] text-sm font-semibold !text-white hover:bg-[#063d75]"
               disabled={agency?.status !== "approved"}
             >
               <Link href="/agent/listings/new">Add listing</Link>

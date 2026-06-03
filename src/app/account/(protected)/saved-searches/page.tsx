@@ -127,7 +127,7 @@ export default function SavedSearchesPage() {
         </h1>
         <Link
           href="/browse"
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13.5px] font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+          className="rounded-lg bg-[#08519A] px-4 py-2 text-[13.5px] font-semibold !text-white hover:bg-[#063d75] transition-colors"
         >
           Browse to save a search
         </Link>
@@ -160,7 +160,7 @@ export default function SavedSearchesPage() {
                   <div className="flex items-center gap-2">
                     <Link
                       href={browseUrl}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-[13.5px] font-semibold text-gray-700 hover:border-gray-400 transition-colors"
+                      className="rounded-lg bg-[#08519A] px-4 py-2 text-[13.5px] font-semibold !text-white hover:bg-[#063d75] transition-colors"
                     >
                       Browse
                     </Link>

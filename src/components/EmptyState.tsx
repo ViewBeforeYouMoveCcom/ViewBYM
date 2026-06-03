@@ -31,7 +31,7 @@ export default function EmptyState({
       {actionLabel && actionHref ? (
         <Link
           href={actionHref}
-          className="mt-5 inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-blue-800"
+          className="mt-5 inline-flex items-center rounded-lg bg-[#08519A] px-5 py-2.5 text-[14px] font-semibold !text-white transition-colors hover:bg-[#063d75]"
         >
           {actionLabel}
         </Link>

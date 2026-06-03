@@ -218,7 +218,7 @@ export default function AgentProfilePage() {
             <Button
               type="submit"
               disabled={saving}
-              className="h-11 rounded-[10px] bg-blue-700 px-6 text-sm font-semibold text-white hover:bg-blue-800"
+              className="h-11 rounded-[10px] bg-[#08519A] px-6 text-sm font-semibold text-white hover:bg-[#063d75]"
             >
               {saved ? "Saved!" : saving ? "Saving…" : "Save changes"}
             </Button>

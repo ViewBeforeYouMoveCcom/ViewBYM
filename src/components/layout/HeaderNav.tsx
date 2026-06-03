@@ -97,6 +97,11 @@ export default function HeaderNav() {
     ? displayName.split(" ")[0]
     : user?.email?.split("@")[0] ?? "Account";
 
+  // Truncate label for mobile screens if too long
+  const truncateLabel = (text: string, maxLength: number = 10) => {
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  };
+
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
@@ -178,11 +183,12 @@ export default function HeaderNav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-9 items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 text-[13.5px] font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:shadow-sm">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
                     {label.charAt(0).toUpperCase()}
                   </span>
-                  {label}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-400">
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="inline truncate max-w-[80px] sm:hidden">{truncateLabel(label, 8)}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 text-gray-400">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
