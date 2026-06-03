@@ -31,7 +31,13 @@ export default function GoogleSignInButton({
       : `${window.location.origin}${redirectTo}`;
     await supabaseClient.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: absoluteRedirect },
+      options: {
+        redirectTo: absoluteRedirect,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account",
+        },
+      },
     });
     // No need to setLoading(false) — the page will navigate away
   }

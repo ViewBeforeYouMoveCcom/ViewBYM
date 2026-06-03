@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import BenefitsCarousel from "@/components/BenefitsCarousel";
 import HideWhenAuthed from "@/components/HideWhenAuthed";
+import OAuthCodeHandler from "@/components/OAuthCodeHandler";
 
 import { Card, CardContent } from "@/components/ui/card";
 import PropertyCard from "@/components/PropertyCard";
@@ -18,6 +20,9 @@ export default async function HomePage() {
 
   return (
     <div className="bg-white font-sans">
+      <Suspense fallback={null}>
+        <OAuthCodeHandler />
+      </Suspense>
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative flex min-h-[420px] sm:min-h-[520px] flex-col justify-between overflow-hidden">

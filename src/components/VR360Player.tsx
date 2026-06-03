@@ -24,8 +24,20 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
+  const rendererSettings = [
+    "antialias: true",
+    "colorManagement: true",
+    "physicallyCorrectLights: false",
+    "maxCanvasWidth: 4096",
+    "maxCanvasHeight: 2048",
+    "logarithmicDepthBuffer: false",
+    "alpha: false",
+    "precision: highp",
+    "sortObjects: false",
+  ].join("; ");
+
   const html = videoUrl
-    ? /* 360° video */ `<!DOCTYPE html>
+    ? `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -38,8 +50,13 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
   </style>
 </head>
 <body>
-  <a-scene embedded renderer="antialias: true; colorManagement: true" vr-mode-ui="enabled: true" loading-screen="enabled: false">
-    <a-assets>
+  <a-scene
+    embedded
+    renderer="${rendererSettings}"
+    vr-mode-ui="enabled: true"
+    loading-screen="enabled: false"
+  >
+    <a-assets timeout="60000">
       <video id="v360"
         src="${escapeAttr(videoUrl)}"
         autoplay loop muted playsinline preload="auto"
@@ -47,12 +64,17 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
         webkit-playsinline>
       </video>
     </a-assets>
-    <a-videosphere src="#v360" rotation="0 -90 0"></a-videosphere>
+    <a-videosphere
+      src="#v360"
+      rotation="0 -90 0"
+      segments-height="64"
+      segments-width="64">
+    </a-videosphere>
     <a-camera look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-camera>
   </a-scene>
 </body>
 </html>`
-    : /* 360° photo */ `<!DOCTYPE html>
+    : `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -65,8 +87,18 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
   </style>
 </head>
 <body>
-  <a-scene embedded renderer="antialias: true; colorManagement: true" vr-mode-ui="enabled: true" loading-screen="enabled: false">
-    <a-sky src="${escapeAttr(imageUrl ?? "")}" rotation="0 -90 0"></a-sky>
+  <a-scene
+    embedded
+    renderer="${rendererSettings}"
+    vr-mode-ui="enabled: true"
+    loading-screen="enabled: false"
+  >
+    <a-sky
+      src="${escapeAttr(imageUrl ?? "")}"
+      rotation="0 -90 0"
+      segments-height="64"
+      segments-width="64">
+    </a-sky>
     <a-camera look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-camera>
   </a-scene>
 </body>
