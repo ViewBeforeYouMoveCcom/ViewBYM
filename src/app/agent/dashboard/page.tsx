@@ -20,6 +20,8 @@ interface Stats {
   published: number;
   draft: number;
   enquiries: number;
+  newEnquiries: number;
+  handledEnquiries: number;
 }
 
 const statusVariant: Record<AgencyStatus, "default" | "success" | "warning" | "error" | "amber"> = {
@@ -65,6 +67,8 @@ export default function AgentDashboardPage() {
         { count: published },
         { count: draft },
         { count: enquiries },
+        { count: newEnquiries },
+        { count: handledEnquiries },
       ] = await Promise.all([
         supabaseClient
           .from("properties")
@@ -80,12 +84,24 @@ export default function AgentDashboardPage() {
           .from("enquiries")
           .select("properties!inner(agency_id)", { count: "exact", head: true })
           .eq("properties.agency_id", agencyData.id),
+        supabaseClient
+          .from("enquiries")
+          .select("properties!inner(agency_id)", { count: "exact", head: true })
+          .eq("properties.agency_id", agencyData.id)
+          .is("handled_at", null),
+        supabaseClient
+          .from("enquiries")
+          .select("properties!inner(agency_id)", { count: "exact", head: true })
+          .eq("properties.agency_id", agencyData.id)
+          .not("handled_at", "is", null),
       ]);
 
       setStats({
         published: published ?? 0,
         draft: draft ?? 0,
         enquiries: enquiries ?? 0,
+        newEnquiries: newEnquiries ?? 0,
+        handledEnquiries: handledEnquiries ?? 0,
       });
       setLoading(false);
     }
@@ -127,11 +143,13 @@ export default function AgentDashboardPage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
             { label: "Published listings", value: stats.published },
             { label: "Draft listings", value: stats.draft },
             { label: "Total enquiries", value: stats.enquiries },
+            { label: "New enquiries", value: stats.newEnquiries },
+            { label: "Handled / replied", value: stats.handledEnquiries },
           ].map((tile) => (
             <Card key={tile.label} className="rounded-xl border border-[#E5E7EB]">
               <CardContent className="p-5">
@@ -154,7 +172,7 @@ export default function AgentDashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Button
               asChild
-              className="h-10 rounded-[10px] bg-blue-700 text-sm font-semibold !text-white hover:bg-blue-800"
+              className="h-10 rounded-[10px] bg-[#08519A] text-sm font-semibold !text-white hover:bg-[#063d75]"
               disabled={agency?.status !== "approved"}
             >
               <Link href="/agent/listings/new">Add listing</Link>

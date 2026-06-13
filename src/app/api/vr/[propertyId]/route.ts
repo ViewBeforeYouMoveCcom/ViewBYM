@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServiceClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 const SIGNED_URL_TTL = 60 * 60 * 2; // 2 hours in seconds
 
@@ -29,25 +29,38 @@ export async function GET(
     return NextResponse.json({ error: "Invalid property" }, { status: 400 });
   }
 
-  const supabase = createSupabaseServiceClient();
+  const supabase = await createSupabaseServerClient();
 
   // Look up the VR record — platform-hosted video only, no embed/iframe
   const { data: vr, error } = await supabase
     .from("property_vr")
-    .select("video_url, is_enabled")
+    .select("video_path, is_enabled")
     .eq("property_id", propertyId)
     .eq("is_enabled", true)
     .maybeSingle();
 
-  if (error || !vr || !vr.video_url) {
+  if (error || !vr || !vr.video_path) {
     return NextResponse.json({ error: "VR not available" }, { status: 404 });
   }
 
-  // video_url may be a full URL (legacy) or a bucket-relative storage path.
-  let storagePath: string | null = null;
-  const v = vr.video_url as string;
-  const match = v.match(/property-vr\/(.+)$/);
-  storagePath = match?.[1] ?? (v.startsWith("http") ? null : v);
+  // video_path may be a public URL, property-media path, or property-vr path.
+  const v = vr.video_path as string;
+
+  if (v.startsWith("http")) {
+    return NextResponse.json({ signedUrl: v, expiresIn: SIGNED_URL_TTL });
+  }
+
+  const propertyMediaMatch = v.match(/^property-media\/(.+)$/);
+  if (propertyMediaMatch?.[1]) {
+    const publicUrl = supabase.storage
+      .from("property-media")
+      .getPublicUrl(propertyMediaMatch[1]).data.publicUrl;
+
+    return NextResponse.json({ signedUrl: publicUrl, expiresIn: SIGNED_URL_TTL });
+  }
+
+  const propertyVrMatch = v.match(/^property-vr\/(.+)$/);
+  const storagePath = propertyVrMatch?.[1] ?? v;
 
   if (!storagePath) {
     return NextResponse.json({ error: "VR file not found" }, { status: 404 });

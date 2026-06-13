@@ -80,15 +80,25 @@ type DbProperty = {
     email: string | null;
   } | null;
   property_media: Array<{ public_url: string; sort_order: number; type: string }> | null;
-  property_vr: Array<{ is_enabled: boolean }> | null;
+  property_vr: Array<{ is_enabled: boolean }> | { is_enabled: boolean } | null;
 };
 
 function mapDbProperty(row: DbProperty): Property {
   const allMedia = (row.property_media ?? []).sort((a, b) => a.sort_order - b.sort_order);
-  const photos = allMedia.filter((m) => m.type === "photo" || m.type == null).map((m) => m.public_url).filter(Boolean);
+  const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
+  const photos = allMedia
+    .filter((m) => (m.type === "photo" || m.type == null) && !isVideoUrl(m.public_url))
+    .map((m) => m.public_url)
+    .filter(Boolean);
   const floorplanUrl = allMedia.find((m) => m.type === "floorplan")?.public_url ?? undefined;
+  const videoUrl = allMedia.find((m) => isVideoUrl(m.public_url))?.public_url ?? undefined;
 
-  const vrEnabled = !!(row.property_vr ?? []).find((v) => v.is_enabled);
+  const vrRecords = Array.isArray(row.property_vr)
+    ? row.property_vr
+    : row.property_vr
+      ? [row.property_vr]
+      : [];
+  const vrEnabled = vrRecords.some((v) => v.is_enabled);
 
   const typeDisplay = (row.property_type ?? "")
     .replace(/_/g, " ")
@@ -135,6 +145,7 @@ function mapDbProperty(row: DbProperty): Property {
     featured: row.featured ?? false,
     image: photos[0] ?? "/images/property-placeholder.svg",
     images: photos.length > 0 ? photos : ["/images/property-placeholder.svg"],
+    videoUrl,
     floorplanUrl,
     snippet: row.description ? row.description.slice(0, 160) : undefined,
     tags,
@@ -312,7 +323,7 @@ export const getPropertiesFiltered = async (params: {
 
     return results;
   } catch (err) {
-    console.error("[properties] Filtered fetch error:", err);
+    console.error("[properties] Filtered fetch failed:", err);
     return [];
   }
 };

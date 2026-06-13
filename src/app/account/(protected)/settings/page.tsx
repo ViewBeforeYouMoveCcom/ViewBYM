@@ -6,6 +6,23 @@ import FormField from "@/components/FormField";
 import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 
+type FormMessage = { type: "success" | "error"; text: string } | null;
+
+function Msg({ msg }: { msg: FormMessage }) {
+  if (!msg) return null;
+  return (
+    <div
+      className={`rounded-xl border p-3 text-[13.5px] ${
+        msg.type === "success"
+          ? "border-blue-200 bg-blue-50 text-blue-700"
+          : "border-red-200 bg-red-50 text-red-700"
+      }`}
+    >
+      {msg.text}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -16,9 +33,9 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [emailMsg, setEmailMsg] = useState<FormMessage>(null);
+  const [passwordMsg, setPasswordMsg] = useState<FormMessage>(null);
+  const [profileMsg, setProfileMsg] = useState<FormMessage>(null);
 
   useEffect(() => {
     supabaseClient.auth.getUser().then(({ data: { user } }) => {
@@ -78,8 +95,10 @@ export default function SettingsPage() {
     if (!user) return;
     const { error } = await supabaseClient
       .from("profiles")
-      .update({ full_name: fullName.trim() || null, phone: phone.trim() || null })
-      .eq("id", user.id);
+      .upsert(
+        { id: user.id, full_name: fullName.trim() || null, phone: phone.trim() || null },
+        { onConflict: "id" }
+      );
     setProfileLoading(false);
     if (error) {
       setProfileMsg({ type: "error", text: error.message });
@@ -92,21 +111,6 @@ export default function SettingsPage() {
         })
       );
     }
-  }
-
-  function Msg({ msg }: { msg: { type: "success" | "error"; text: string } | null }) {
-    if (!msg) return null;
-    return (
-      <div
-        className={`rounded-xl border p-3 text-[13.5px] ${
-          msg.type === "success"
-            ? "border-blue-200 bg-blue-50 text-blue-700"
-            : "border-red-200 bg-red-50 text-red-700"
-        }`}
-      >
-        {msg.text}
-      </div>
-    );
   }
 
   return (

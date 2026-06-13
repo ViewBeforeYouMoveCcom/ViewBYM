@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,9 @@ type PropStatus = "draft" | "published" | "archived";
 interface Property {
   id: string;
   title: string;
-  address: string;
-  price_display: string | null;
+  address_line1: string | null;
+  city: string | null;
+  price: number | null;
   bedrooms: number | null;
   status: PropStatus;
   created_at: string;
@@ -39,6 +41,8 @@ export default function AgentListingsPage() {
   const [tab, setTab] = useState<PropStatus | "all">("all");
   const [loading, setLoading] = useState(true);
   const [agencyId, setAgencyId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -57,7 +61,7 @@ export default function AgentListingsPage() {
 
       const { data } = await supabaseClient
         .from("properties")
-        .select("id, title, address, price_display, bedrooms, status, created_at")
+        .select("id, title, address_line1, city, price, bedrooms, status, created_at")
         .eq("agency_id", membership.agency_id)
         .order("created_at", { ascending: false });
 
@@ -67,8 +71,58 @@ export default function AgentListingsPage() {
     load();
   }, []);
 
+  async function deleteListing(property: Property) {
+    if (!agencyId || deletingId) return;
+
+    const confirmed = window.confirm(
+      `Delete "${property.title || property.address_line1 || "this listing"}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(property.id);
+    setDeleteError(null);
+
+    const { data: mediaRows } = await supabaseClient
+      .from("property_media")
+      .select("storage_path")
+      .eq("property_id", property.id);
+
+    const storagePaths =
+      mediaRows
+        ?.map((row) => row.storage_path)
+        .filter((path): path is string => Boolean(path)) ?? [];
+
+    if (storagePaths.length > 0) {
+      await supabaseClient.storage.from("property-media").remove(storagePaths);
+    }
+
+    const { error } = await supabaseClient
+      .from("properties")
+      .delete()
+      .eq("id", property.id)
+      .eq("agency_id", agencyId);
+
+    setDeletingId(null);
+
+    if (error) {
+      setDeleteError(error.message);
+      return;
+    }
+
+    setProperties((prev) => prev.filter((item) => item.id !== property.id));
+  }
+
   const filtered =
     tab === "all" ? properties : properties.filter((p) => p.status === tab);
+
+  const formatPrice = (price: number | null) =>
+    price
+      ? new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency: "GBP",
+          maximumFractionDigits: 0,
+        }).format(price)
+      : null;
 
   return (
     <div className="space-y-6">
@@ -78,7 +132,7 @@ export default function AgentListingsPage() {
         </h1>
         <Button
           asChild
-          className="h-10 rounded-[10px] bg-blue-700 text-sm font-semibold !text-white hover:bg-blue-800"
+          className="h-10 rounded-[10px] bg-[#08519A] text-sm font-semibold !text-white hover:bg-[#063d75]"
         >
           <Link href="/agent/listings/new">+ Add listing</Link>
         </Button>
@@ -108,6 +162,12 @@ export default function AgentListingsPage() {
         })}
       </div>
 
+      {deleteError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {deleteError}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -129,25 +189,41 @@ export default function AgentListingsPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900">
-                      {property.title || property.address || "Untitled listing"}
+                      {property.title || property.address_line1 || "Untitled listing"}
                     </p>
                     <Badge variant={statusVariant[property.status]}>
                       {property.status}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#6B7280]">
-                    {[property.address, property.price_display, property.bedrooms ? `${property.bedrooms} bed` : null]
+                    {[
+                      [property.address_line1, property.city].filter(Boolean).join(", "),
+                      formatPrice(property.price),
+                      property.bedrooms ? `${property.bedrooms} bed` : null,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
                 </div>
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="h-9 rounded-[10px] text-sm"
-                >
-                  <Link href={`/agent/listings/${property.id}`}>Edit</Link>
-                </Button>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    className="h-9 rounded-[10px] text-sm"
+                  >
+                    <Link href={`/agent/listings/${property.id}`}>Edit</Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={deletingId === property.id}
+                    onClick={() => deleteListing(property)}
+                    className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    {deletingId === property.id ? "Deleting" : "Delete"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

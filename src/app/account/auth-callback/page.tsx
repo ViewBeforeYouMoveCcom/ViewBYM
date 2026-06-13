@@ -24,6 +24,16 @@ function AuthCallbackHandler() {
     // • reads #access_token hash (Supabase implicit flow) → creates session
     // • reads ?code= query param (PKCE flow) → exchanges for session
     // onAuthStateChange fires as soon as either path establishes a session.
+
+    // Handle PKCE code exchange manually if code is present
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) {
+      supabaseClient.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) { router.replace(fallback); return; }
+        router.replace(next);
+      });
+      return;
+    }
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {

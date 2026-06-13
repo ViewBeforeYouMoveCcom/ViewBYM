@@ -38,6 +38,21 @@ export default function VrUploadPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(e.target.files ?? []);
+
+    if (selectedFiles.some((file) => !file.type.startsWith("video/"))) {
+      setFiles([]);
+      setError("VR upload must be a video file.");
+      e.target.value = "";
+      return;
+    }
+
+    setFiles(selectedFiles);
+    setError(null);
+    e.target.value = "";
+  }
+
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabaseClient.auth.getUser();
@@ -91,7 +106,7 @@ export default function VrUploadPage() {
         const storagePath = `${agencyId ?? "unknown"}/${id}/vr-raw/${Date.now()}-${safeName}`;
 
         const { error: uploadErr } = await supabaseClient.storage
-          .from("vr-footage")
+          .from("property-media")
           .upload(storagePath, file, { upsert: false });
 
         if (uploadErr) {
@@ -105,10 +120,11 @@ export default function VrUploadPage() {
 
       const vrPayload = {
         property_id: id,
-        submission_status: "queued",
+        submission_status: "ready",
         submitted_at: new Date().toISOString(),
         raw_footage_path: rawFootagePath,
-        is_enabled: false, // enabled only once VBYM processes and sets video_path
+        video_path: rawFootagePath ? `property-media/${rawFootagePath}` : null,
+        is_enabled: true,
         ...(notes.trim() ? { submission_notes: notes.trim() } : {}),
       };
 
@@ -143,8 +159,7 @@ export default function VrUploadPage() {
 
   const inPipeline =
     vr?.submission_status === "queued" ||
-    vr?.submission_status === "processing" ||
-    vr?.submission_status === "ready";
+    vr?.submission_status === "processing";
 
   if (inPipeline) {
     return (
@@ -215,16 +230,16 @@ export default function VrUploadPage() {
             <div className="space-y-3">
               <p className="text-sm font-semibold text-[#0F172A]">360° footage files</p>
               <p className="text-[13px] text-[#6B7280]">
-                Upload your equirectangular 360° video files. Accepted: MP4, MOV, JPG, PNG. Max 2 GB per file.
+                Upload your 360° video files. Accepted: MP4 or MOV. Max 2 GB per file.
               </p>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/mp4,video/mov,video/quicktime,image/jpeg,image/png"
+                accept="video/mp4,video/mov,video/quicktime"
                 multiple
                 className="hidden"
-                onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); setError(null); }}
+                onChange={onFileChange}
               />
 
               {files.length > 0 ? (
@@ -249,14 +264,14 @@ export default function VrUploadPage() {
                     <circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" />
                   </svg>
                   <p className="text-[14px] font-semibold text-gray-700">Click to select footage</p>
-                  <p className="text-[12px] text-gray-400">MP4, MOV, JPG, PNG — up to 2 GB</p>
+                  <p className="text-[12px] text-gray-400">MP4 or MOV — up to 2 GB</p>
                 </div>
               )}
 
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-800">
                 <p className="font-semibold">Platform-only processing</p>
                 <p className="mt-1">
-                  Your footage is uploaded directly to VBYM's private storage and processed internally.
+                  Your footage is uploaded directly to VBYM&apos;s storage and saved to this listing.
                   No third-party services are used. The final VR tour is served exclusively through this platform via secure, time-limited access.
                 </p>
               </div>

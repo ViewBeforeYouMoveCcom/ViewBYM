@@ -27,7 +27,10 @@ interface Props {
 
 function Toast({ visible }: { visible: boolean }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   if (!mounted) return null;
 
   return createPortal(
@@ -76,6 +79,7 @@ export default function SavePropertyButton({ property, className, wrapperClassNa
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDbProperty = UUID_RE.test(property.id);
@@ -106,11 +110,22 @@ export default function SavePropertyButton({ property, className, wrapperClassNa
 
   async function saveToDb(uid: string) {
     if (!isDbProperty) return;
-    await supabaseClient.from("saved_properties").insert({
-      user_id: uid,
-      property_id: property.id,
-    });
+    const { error: saveError } = await supabaseClient
+      .from("saved_properties")
+      .upsert(
+        {
+          user_id: uid,
+          property_id: property.id,
+        },
+        { onConflict: "user_id,property_id" }
+      );
+
+    if (saveError) {
+      throw new Error(saveError.message);
+    }
+
     setSaved(true);
+    setError(null);
     showToast();
   }
 
@@ -144,7 +159,12 @@ export default function SavePropertyButton({ property, className, wrapperClassNa
         } else {
           await saveToDb(userId);
         }
+      } else {
+        throw new Error("This property cannot be saved.");
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save property.");
+      setSaved(false);
     } finally {
       setLoading(false);
     }
@@ -196,6 +216,11 @@ export default function SavePropertyButton({ property, className, wrapperClassNa
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </button>
+        {error ? (
+          <span className="absolute right-0 top-full z-20 mt-1 w-56 rounded-lg border border-red-200 bg-white p-2 text-xs leading-snug text-red-700 shadow-sm">
+            {error}
+          </span>
+        ) : null}
       </div>
     </>
   );

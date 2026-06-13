@@ -35,7 +35,7 @@ function AgentLoginForm() {
       return;
     }
 
-    router.push(redirectTo ?? "/agent/dashboard");
+    router.push(redirectTo ?? "/agents/auth-redirect");
 
     router.refresh();
   }

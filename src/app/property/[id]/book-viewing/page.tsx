@@ -321,7 +321,7 @@ export default function BookViewingPage() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="h-11 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+                  className="h-11 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold !text-white hover:bg-[#063d75]"
                 >
                   {submitting ? "Submitting…" : "Request viewing"}
                 </Button>

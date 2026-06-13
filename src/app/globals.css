@@ -3,6 +3,8 @@
 :root {
   --color-background: #ffffff;
   --color-foreground: #111827;
+  --color-brand: #08519A;
+  --color-brand-hover: #063d75;
   --color-deep-indigo: #1d2a4d;
   --color-amber: #fbbf24;
   --color-border: #e5e7eb;

@@ -31,6 +31,13 @@ export default function AgentOnboardingPage() {
       setLoading(false);
       return;
     }
+    const { data: applicationStatus } = await supabaseClient.rpc("agent_my_application_status");
+
+    if (applicationStatus !== "approved") {
+      setError("Your agent access request must be approved before onboarding.");
+      setLoading(false);
+      return;
+    }
 
     // Create agency.
     // Setting created_by triggers the add_creator_as_agency_owner DB trigger which
@@ -40,7 +47,7 @@ export default function AgentOnboardingPage() {
       .insert({
         name: form.name.trim(),
         website: form.website.trim() || null,
-        status: "pending",
+        status: "approved",
         created_by: user.id,
       })
       .select("id")
@@ -52,6 +59,11 @@ export default function AgentOnboardingPage() {
       setError("Could not create agency. " + insertError?.message);
       return;
     }
+
+    // Fallback: manually insert agency_members in case the DB trigger didn't fire
+    await supabaseClient
+      .from("agency_members")
+      .upsert({ agency_id: agency.id, user_id: user.id, member_role: "owner" }, { onConflict: "agency_id,user_id" });
 
     router.push("/agent/dashboard");
   }
@@ -98,7 +110,7 @@ export default function AgentOnboardingPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-11 w-full rounded-[10px] bg-blue-700 text-sm font-semibold text-white hover:bg-blue-800"
+              className="h-11 w-full rounded-[10px] bg-[#08519A] text-sm font-semibold text-white hover:bg-[#063d75]"
             >
               {loading ? "Creating…" : "Create agency"}
             </Button>
@@ -115,7 +127,7 @@ export default function AgentOnboardingPage() {
             { step: "3", title: "Start listing with immersive VR", body: "Once approved, you can create property listings and submit 360° footage for your full VR tours." },
           ].map(({ step, title, body }) => (
             <div key={step} className="flex gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-700 text-[11px] font-bold text-white">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
                 {step}
               </div>
               <div>

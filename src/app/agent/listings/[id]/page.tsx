@@ -11,11 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
+import { preparePhotoFile } from "@/lib/videoFrameToJpeg";
 
 type PropStatus = "draft" | "published" | "archived";
 
-// Reflects the real deployed schema — no price_display, price_qualifier,
-// area_sqft, listing_type, or features columns.
 interface Property {
   id: string;
   title: string | null;
@@ -30,6 +29,7 @@ interface Property {
   market_status: string;
   tenure: string | null;
   description: string | null;
+  features: string[] | null;
   status: PropStatus;
 }
 
@@ -40,17 +40,58 @@ interface MediaItem {
   sort_order: number;
 }
 
+// New interface for local state management to include UI-specific properties
+interface LocalMediaItem {
+  tempId: string; // Unique key for React list rendering before DB ID
+  id: string | null; // Supabase DB ID, null for new items until DB insert
+  storage_path: string | null; // Supabase storage path, null for new items until upload
+  public_url: string; // Blob URL for client-side preview, then Supabase URL
+  sort_order: number;
+  uploading: boolean; // True while processing/uploading
+  error?: string; // Error message if upload/conversion failed
+  originalFile?: File; // Keep original file for potential re-upload or info
+}
+
 const statusVariant: Record<PropStatus, "default" | "success" | "warning" | "error" | "amber"> = {
   draft: "default",
   published: "success",
   archived: "warning",
 };
 
+function getErrorMessage(err: unknown) {
+  return err instanceof Error ? err.message : String(err);
+}
+
+function isTransientNetworkError(err: unknown) {
+  return /failed to fetch|network|timeout|timed out|load failed/i.test(getErrorMessage(err));
+}
+
+async function wait(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function retryTransient<T>(task: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await task();
+    } catch (err) {
+      lastError = err;
+      if (!isTransientNetworkError(err) || attempt === attempts) break;
+      await wait(900 * attempt);
+    }
+  }
+
+  throw lastError;
+}
+
 export default function EditListingPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
-  const [photos, setPhotos] = useState<MediaItem[]>([]);
+  const [photos, setPhotos] = useState<LocalMediaItem[]>([]); // Use LocalMediaItem
+  const [floorplan, setFloorplan] = useState<MediaItem | null>(null);
   const [form, setForm] = useState<Partial<Property>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,6 +101,7 @@ export default function EditListingPage() {
   const [saved, setSaved] = useState(false);
   const [agencyId, setAgencyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const floorplanInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -67,7 +109,7 @@ export default function EditListingPage() {
         .from("properties")
         .select(
           "id, title, address_line1, address_line2, city, postcode, price, " +
-          "bedrooms, bathrooms, property_type, market_status, tenure, description, status, agency_id"
+          "bedrooms, bathrooms, property_type, market_status, tenure, description, features, status, agency_id"
         )
         .eq("id", id)
         .single();
@@ -84,13 +126,30 @@ export default function EditListingPage() {
         .eq("type", "photo")
         .order("sort_order", { ascending: true });
 
-      setPhotos((mediaData ?? []) as MediaItem[]);
+      const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
+      setPhotos(((mediaData ?? []) as MediaItem[]).filter((item) => !isVideoUrl(item.public_url)).map(item => ({
+          ...item,
+          tempId: item.id, // Use DB ID as tempId for existing items
+          uploading: false,
+          originalFile: undefined, // Not available for existing items
+      })));
+
+      const { data: floorplanData } = await supabaseClient
+        .from("property_media")
+        .select("id, storage_path, public_url, sort_order")
+        .eq("property_id", id)
+        .eq("type", "floorplan")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setFloorplan((floorplanData as MediaItem | null) ?? null);
       setLoading(false);
     }
     load();
   }, [id, router]);
 
-  function setField(field: string, value: string | number | null) {
+  function setField(field: string, value: string | number | string[] | null) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError(null);
     setSaved(false);
@@ -114,6 +173,7 @@ export default function EditListingPage() {
         market_status: form.market_status ?? "available",
         tenure: form.tenure ?? null,
         description: form.description ?? null,
+        features: form.features ?? [],
       })
       .eq("id", id);
     setSaving(false);
@@ -134,66 +194,222 @@ export default function EditListingPage() {
     setUploading(true);
     setUploadError(null);
 
-    const uploadedItems: MediaItem[] = [];
+    // Track the count locally so we can assign correct sort_order in the loop
+    let currentPhotoCount = photos.length; // Base for sort_order, will increment for each new file
 
     for (const file of files) {
-      const timestamp = Date.now();
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const storagePath = `${agencyId ?? "unknown"}/${id}/${timestamp}-${safeName}`;
+      const tempId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+      const initialPreviewUrl = URL.createObjectURL(file); // Client-side blob URL for immediate preview
 
-      const { error: uploadErr } = await supabaseClient.storage
-        .from("property-media")
-        .upload(storagePath, file, { upsert: false });
+      const initialLocalMediaItem: LocalMediaItem = {
+          tempId,
+          id: null, // No DB ID yet
+          storage_path: null, // No storage path yet
+          public_url: initialPreviewUrl, // Client-side preview
+          sort_order: currentPhotoCount, // Tentative sort order
+          uploading: true,
+          originalFile: file,
+      };
 
-      if (uploadErr) {
-        setUploadError(`Upload failed: ${uploadErr.message}`);
-        setUploading(false);
-        return;
+      setPhotos((prev) => [...prev, initialLocalMediaItem]); // Add placeholder to UI immediately
+      try {
+        console.log(`Processing file: ${file.name} (${file.type})`);
+        
+        // 1. Convert video to JPEG with a 60-second timeout protection.
+        // This prevents one bad video from hanging the entire upload process.
+        const conversionPromise = preparePhotoFile(file);
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error("Video conversion timed out. The file might be too large or incompatible.")), 60000)
+        );
+
+        const uploadFile = await Promise.race([conversionPromise, timeoutPromise]);
+        console.log(`File prepared for upload: ${uploadFile.name} as ${uploadFile.type}`);
+
+        // Create a URL for the new JPEG frame
+        const jpegPreviewUrl = URL.createObjectURL(uploadFile);
+
+        // Update UI to show the JPEG immediately while the upload happens in the background
+        setPhotos((prev) => prev.map((item) =>
+          item.tempId === tempId
+              ? { ...item, public_url: jpegPreviewUrl, error: undefined }
+              : item
+        ));
+
+        // Now it's safe to revoke the original video blob
+        URL.revokeObjectURL(initialPreviewUrl);
+
+        const timestamp = Date.now();
+        const originalName = file.name;
+        let safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+        // 2. Ensure proper extension for converted videos (e.g. video.mp4 -> video.jpg)
+        // This is critical so the listing view doesn't filter it out as a "video".
+        if (uploadFile.type.startsWith("image/") && /\.(mp4|mov|m4v|webm|qt|avi|mkv)$/i.test(safeName)) {
+          safeName = safeName.replace(/\.[^.]+$/, ".jpg");
+        }
+
+        const storagePath = `${agencyId ?? "unknown"}/${id}/${timestamp}-${safeName}`;
+
+        // 3. Upload the JPEG to Supabase Storage
+        const { error: uploadErr } = await retryTransient(async () =>
+          await supabaseClient.storage
+            .from("property-media")
+            .upload(storagePath, uploadFile, {
+              contentType: uploadFile.type.startsWith("image/") ? "image/jpeg" : uploadFile.type,
+              upsert: true,
+            })
+        );
+
+        if (uploadErr) throw new Error(`Upload failed: ${uploadErr.message}`);
+
+        const { data: urlData } = supabaseClient.storage
+          .from("property-media")
+          .getPublicUrl(storagePath);
+
+        // 4. Save metadata to DB with type "photo"
+        const { data: mediaRow, error: insertErr } = await supabaseClient
+          .from("property_media")
+          .insert({
+            property_id: id,
+            type: "photo",
+            storage_path: storagePath,
+            public_url: urlData.publicUrl,
+            sort_order: currentPhotoCount,
+          })
+          .select("id, storage_path, public_url, sort_order")
+          .single();
+
+        if (insertErr) throw new Error(`DB insert failed: ${insertErr.message}`);
+
+        // Update the specific item in state with actual DB data and mark as not uploading
+        setPhotos((prev) => prev.map((item) =>
+            item.tempId === tempId
+                ? {
+                      ...item,
+                      id: (mediaRow as MediaItem).id,
+                      storage_path: (mediaRow as MediaItem).storage_path,
+                      public_url: jpegPreviewUrl,
+                      sort_order: (mediaRow as MediaItem).sort_order,
+                      uploading: false,
+                      error: undefined,
+                  }
+                : item
+        ));
+        currentPhotoCount++;
+
+        // Add a small delay between files to allow the browser to garbage collect video decoders
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } catch (err) {
+        console.error("Upload error:", err);
+        const message = err instanceof Error ? err.message : "Could not prepare the selected photo for upload.";
+        setPhotos((prev) => prev.map((item) =>
+          item.tempId === tempId
+              ? { ...item, uploading: false, error: message }
+              : item
+        ));
+        setUploadError(`Failed for ${file.name}: ${message}`);
+        // Continue to the next file rather than aborting the entire batch
       }
-
-      const { data: urlData } = supabaseClient.storage
-        .from("property-media")
-        .getPublicUrl(storagePath);
-
-      const publicUrl = urlData.publicUrl;
-
-      const { data: mediaRow, error: insertErr } = await supabaseClient
-        .from("property_media")
-        .insert({
-          property_id: id,
-          type: "photo",
-          storage_path: storagePath,
-          public_url: publicUrl,
-          sort_order: photos.length + uploadedItems.length,
-        })
-        .select("id, storage_path, public_url, sort_order")
-        .single();
-
-      if (insertErr) {
-        setUploadError(`DB insert failed: ${insertErr.message}`);
-        setUploading(false);
-        return;
-      }
-
-      uploadedItems.push(mediaRow as MediaItem);
     }
 
-    setPhotos((prev) => [...prev, ...uploadedItems]);
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  async function deletePhoto(photo: MediaItem) {
-    await supabaseClient.storage
-      .from("property-media")
-      .remove([photo.storage_path]);
+  async function deletePhoto(photo: LocalMediaItem) {
+    if (photo.storage_path) {
+      await supabaseClient.storage
+        .from("property-media")
+        .remove([photo.storage_path]);
+    }
 
-    await supabaseClient
+    if (photo.id) {
+      await supabaseClient
+        .from("property_media")
+        .delete()
+        .eq("id", photo.id);
+    }
+
+    setPhotos((prev) => prev.filter((p) => p.tempId !== photo.tempId));
+  }
+
+  async function handleFloorplanUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storagePath = `${agencyId ?? "unknown"}/${id}/floorplan/${timestamp}-${safeName}`;
+
+    const { error: uploadErr } = await supabaseClient.storage
+      .from("property-media")
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadErr) {
+      setUploadError(`Floor plan upload failed: ${uploadErr.message}`);
+      setUploading(false);
+      return;
+    }
+
+    const publicUrl = supabaseClient.storage
+      .from("property-media")
+      .getPublicUrl(storagePath).data.publicUrl;
+
+    const { data: mediaRow, error: insertErr } = await supabaseClient
+      .from("property_media")
+      .insert({
+        property_id: id,
+        type: "floorplan",
+        storage_path: storagePath,
+        public_url: publicUrl,
+        sort_order: 0,
+      })
+      .select("id, storage_path, public_url, sort_order")
+      .single();
+
+    setUploading(false);
+    if (floorplanInputRef.current) floorplanInputRef.current.value = "";
+
+    if (insertErr) {
+      setUploadError(`Floor plan save failed: ${insertErr.message}`);
+      return;
+    }
+
+    if (floorplan) {
+      await supabaseClient.storage.from("property-media").remove([floorplan.storage_path]);
+      await supabaseClient.from("property_media").delete().eq("id", floorplan.id);
+    }
+
+    setFloorplan(mediaRow as MediaItem);
+  }
+
+  async function deleteFloorplan() {
+    if (!floorplan) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    await supabaseClient.storage.from("property-media").remove([floorplan.storage_path]);
+    const { error: deleteErr } = await supabaseClient
       .from("property_media")
       .delete()
-      .eq("id", photo.id);
+      .eq("id", floorplan.id);
 
-    setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    setUploading(false);
+
+    if (deleteErr) {
+      setUploadError(`Floor plan delete failed: ${deleteErr.message}`);
+      return;
+    }
+
+    setFloorplan(null);
   }
 
   if (loading) {
@@ -223,7 +439,7 @@ export default function EditListingPage() {
         <div className="flex gap-2">
           {property?.status === "draft" && (
             <Button
-              className="h-9 rounded-[10px] bg-blue-700 text-sm text-white hover:bg-blue-800"
+              className="h-9 rounded-[10px] bg-[#08519A] text-sm !text-white hover:bg-[#063d75]"
               onClick={() => changeStatus("published")}
             >
               Publish
@@ -382,6 +598,28 @@ export default function EditListingPage() {
                 />
               </FormField>
             </div>
+
+            <div className="md:col-span-2">
+              <FormField id="features" label="Key features">
+                <textarea
+                  id="features"
+                  rows={4}
+                  value={(form.features ?? []).join("\n")}
+                  onChange={(e) =>
+                    setField(
+                      "features",
+                      e.target.value
+                        .split("\n")
+                        .map((feature) => feature.trim())
+                        .filter(Boolean)
+                        .slice(0, 10)
+                    )
+                  }
+                  placeholder="One feature per line"
+                  className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </FormField>
+            </div>
           </div>
 
           {error && (
@@ -394,7 +632,7 @@ export default function EditListingPage() {
             <Button
               onClick={saveDetails}
               disabled={saving}
-              className="h-11 rounded-[10px] bg-blue-700 px-6 text-sm font-semibold text-white hover:bg-blue-800"
+              className="h-11 rounded-[10px] bg-[#08519A] px-6 text-sm font-semibold !text-white hover:bg-[#063d75]"
             >
               {saved ? "Saved!" : saving ? "Saving…" : "Save details"}
             </Button>
@@ -407,30 +645,45 @@ export default function EditListingPage() {
         <CardContent className="p-6">
           <h2 className="mb-1 text-sm font-semibold text-gray-900">Property photos</h2>
           <p className="mb-4 text-xs text-[#6B7280]">
-            Upload images for your listing. JPG, PNG, and WebP up to 10 MB each.
+            Upload images for your listing. MP4 files are converted to JPEG from the first frame.
           </p>
 
           {photos.length > 0 && (
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {photos.map((photo) => (
                 <div
-                  key={photo.id}
+                  key={photo.tempId} // Use tempId for unique key
                   className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photo.public_url}
                     alt="Property photo"
-                    className="h-full w-full object-cover"
+                    className={`h-full w-full object-cover ${photo.uploading || photo.error ? 'opacity-50' : ''}`} // Dim if uploading or error
                   />
-                  <button
-                    type="button"
-                    onClick={() => deletePhoto(photo)}
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs text-red-600 opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-50"
-                    title="Delete photo"
-                  >
-                    ✕
-                  </button>
+                  {photo.uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-blue-700">
+                      <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      <span className="sr-only">Uploading...</span>
+                    </div>
+                  )}
+                  {photo.error && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-100/80 p-2 text-center text-red-700 text-xs">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p className="mt-1">Failed</p>
+                        <p className="line-clamp-2" title={photo.error}>{photo.error.split(':').pop()?.trim() || 'Error'}</p>
+                    </div>
+                  )}
+                  {!photo.uploading && ( // Only show delete button if not uploading
+                    <button
+                      type="button"
+                      onClick={() => deletePhoto(photo)}
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs text-red-600 opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-50"
+                      title="Delete photo"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -446,7 +699,7 @@ export default function EditListingPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/quicktime,video/webm" // Added more video types
               multiple
               className="hidden"
               onChange={handlePhotoUpload}
@@ -469,6 +722,87 @@ export default function EditListingPage() {
         </CardContent>
       </Card>
 
+      {/* Floor plan */}
+      <Card className="rounded-xl border border-[#E5E7EB]">
+        <CardContent className="p-6">
+          <h2 className="mb-1 text-sm font-semibold text-gray-900">Floor plan</h2>
+          <p className="mb-4 text-xs text-[#6B7280]">
+            Upload a PDF or image floor plan. Existing floor plans can be opened, replaced, or removed.
+          </p>
+
+          <input
+            ref={floorplanInputRef}
+            type="file"
+            accept=".pdf,image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFloorplanUpload}
+          />
+
+          {floorplan ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <a
+                href={floorplan.public_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-w-0 items-center gap-3 rounded-lg outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                {/\.(jpg|jpeg|png|webp)(?:$|\?)/i.test(floorplan.public_url) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={floorplan.public_url}
+                    alt="Floor plan preview"
+                    className="h-16 w-24 shrink-0 rounded-lg border border-[#E5E7EB] object-cover"
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-semibold text-blue-700">
+                    PDF
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-gray-900">
+                    Open floor plan
+                  </span>
+                  <span className="block text-xs text-[#6B7280]">
+                    Click to view in a new tab
+                  </span>
+                </span>
+              </a>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={uploading}
+                  className="h-9 rounded-[10px] text-sm"
+                  onClick={() => floorplanInputRef.current?.click()}
+                >
+                  Replace
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={uploading}
+                  className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
+                  onClick={deleteFloorplan}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={uploading}
+              className="h-10 rounded-[10px] text-sm"
+              onClick={() => floorplanInputRef.current?.click()}
+            >
+              {uploading ? "Uploading..." : "Upload floor plan"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* VR Tour */}
       <Card className="rounded-xl border border-[#E5E7EB]">
         <CardContent className="p-6">
@@ -478,7 +812,7 @@ export default function EditListingPage() {
           </p>
           <Link
             href={`/agent/listings/${id}/vr-upload`}
-            className="inline-flex h-10 items-center rounded-[10px] bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800"
+            className="inline-flex h-10 items-center rounded-[10px] bg-[#08519A] px-5 text-sm font-semibold !text-white hover:bg-[#063d75]"
           >
             Manage VR submission →
           </Link>

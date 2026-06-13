@@ -22,6 +22,26 @@ const navItems = [
   { href: "/contact", label: "Contact" },
 ];
 
+function getAuthDisplayName(user: User | null) {
+  if (!user) return null;
+
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const candidates = [
+    metadata.full_name,
+    metadata.name,
+    metadata.display_name,
+    metadata.user_name,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return null;
+}
+
 export default function HeaderNav() {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,26 +54,26 @@ export default function HeaderNav() {
   const [mobileSearch, setMobileSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
-  async function loadProfile(userId: string) {
+  async function loadProfile(currentUser: User) {
     const { data } = await supabaseClient
       .from("profiles")
       .select("full_name")
-      .eq("id", userId)
-      .single();
-    setDisplayName(data?.full_name ?? null);
+      .eq("id", currentUser.id)
+      .maybeSingle();
+    setDisplayName(data?.full_name?.trim() || getAuthDisplayName(currentUser));
   }
 
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
+      if (session?.user) loadProfile(session.user);
       setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        loadProfile(session.user.id);
+        loadProfile(session.user);
       } else {
         setDisplayName(null);
       }
@@ -97,6 +117,11 @@ export default function HeaderNav() {
     ? displayName.split(" ")[0]
     : user?.email?.split("@")[0] ?? "Account";
 
+  // Truncate label for mobile screens if too long
+  const truncateLabel = (text: string, maxLength: number = 10) => {
+    return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+  };
+
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
@@ -109,16 +134,16 @@ export default function HeaderNav() {
       }`}
       style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
     >
-      <div className="mx-auto flex w-full max-w-[1800px] items-center gap-3 px-5 py-3">
+      <div className="mx-auto flex w-full max-w-[1800px] items-center gap-2 px-4 py-3 sm:gap-3 sm:px-5">
 
         {/* Logo */}
-        <Link href="/" className="shrink-0 mr-2">
+        <Link href="/" className="mr-1 min-w-0 shrink sm:mr-2 sm:shrink-0">
           <Image
             src="/images/vbym-logo.png"
             alt="View Before You Move"
             width={800}
             height={55}
-            className="h-4 w-auto object-contain md:h-[18px]"
+            className="h-4 w-auto max-w-[210px] object-contain sm:max-w-[260px] md:h-[18px]"
             priority
           />
         </Link>
@@ -173,16 +198,17 @@ export default function HeaderNav() {
         <div className="flex-1 lg:hidden" />
 
         {/* Right side: auth */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {!authLoading && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex h-9 items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 text-[13.5px] font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:shadow-sm">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
+                <button className="flex h-9 max-w-[104px] items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 text-[13.5px] font-semibold text-gray-700 transition-all duration-200 hover:border-gray-300 hover:shadow-sm sm:max-w-none sm:gap-2 sm:px-3.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#08519A] text-[11px] font-bold text-white">
                     {label.charAt(0).toUpperCase()}
                   </span>
-                  {label}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-400">
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="inline truncate max-w-[80px] sm:hidden">{truncateLabel(label, 8)}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0 text-gray-400">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
@@ -236,7 +262,7 @@ export default function HeaderNav() {
             type="button"
             aria-label="Toggle menu"
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 lg:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 lg:hidden"
           >
             {mobileOpen ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
