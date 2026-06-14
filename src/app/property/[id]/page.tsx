@@ -7,6 +7,8 @@ import VRTourPanel from "@/components/VRTourPanel";
 import VRPlayerOverlay from "@/components/VRPlayerOverlay";
 import PhotoGallery from "@/components/PhotoGallery";
 import PropertyHero from "@/components/PropertyHero";
+import PropertyLocationMap from "@/components/PropertyLocationMap";
+import PropertyStreetView from "@/components/PropertyStreetView";
 import TrackListingView from "@/components/TrackListingView";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -29,6 +31,9 @@ export default async function PropertyDetailPage({
   const isDbProperty = property.isDbProperty === true;
   const statusStyle = STATUS_STYLES[property.status] ?? "bg-gray-100 text-gray-600 border-gray-200";
   const mapQuery = encodeURIComponent([property.address, property.city].filter(Boolean).join(", "));
+  const streetViewUrl = property.latitude && property.longitude 
+    ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${property.latitude},${property.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -46,6 +51,8 @@ export default async function PropertyDetailPage({
         videoUrl={property.videoUrl}
         floorplanUrl={property.floorplanUrl}
         listingType={property.listingType}
+        latitude={property.latitude}
+        longitude={property.longitude}
         property={{ id: property.id, title: property.title, location: property.location, price: property.price, beds: property.beds, type: property.type }}
       />
 
@@ -157,7 +164,7 @@ export default async function PropertyDetailPage({
                 </a>
 
                 <a
-                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${mapQuery}`}
+                  href={streetViewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
@@ -177,6 +184,22 @@ export default async function PropertyDetailPage({
 
               <PhotoGallery images={gallery} labels={property.imageLabels} title={property.title} />
             </div>
+
+            {/* Map + Street View */}
+            {property.latitude && property.longitude && (
+              <div className="grid gap-5 lg:grid-cols-2">
+                <PropertyLocationMap
+                  latitude={property.latitude}
+                  longitude={property.longitude}
+                  address={`${property.address}, ${property.city}`}
+                />
+                <PropertyStreetView
+                  latitude={property.latitude}
+                  longitude={property.longitude}
+                  address={`${property.address}, ${property.city}`}
+                />
+              </div>
+            )}
 
             {/* Description */}
             {property.description && (

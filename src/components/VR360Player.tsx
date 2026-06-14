@@ -46,6 +46,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    body { visibility: hidden; }
+    body.ready { visibility: visible; }
     a-scene { width: 100%; height: 100%; }
   </style>
 </head>
@@ -72,6 +74,20 @@ export default function VR360Player({ videoUrl, imageUrl, className = "" }: Prop
     </a-videosphere>
     <a-camera look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-camera>
   </a-scene>
+  <script>
+    (function(){
+      var v = document.getElementById('v360');
+      if (!v) return;
+      function show() { document.body.classList.add('ready'); }
+      function tryPlay() {
+        try { var p = v.play(); if (p && p.then) p.then(show).catch(function(){}); else show(); } catch(e) { show(); }
+      }
+      if (v.readyState >= 2) { tryPlay(); }
+      else { v.addEventListener('canplay', tryPlay, { once: true }); }
+      v.addEventListener('loadedmetadata', tryPlay, { once: true });
+      setTimeout(show, 8000);
+    })();
+  </script>
 </body>
 </html>`
     : `<!DOCTYPE html>
