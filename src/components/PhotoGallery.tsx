@@ -10,12 +10,18 @@ interface Props {
   title: string;
 }
 
+const LIMIT = 10;
+
 export default function PhotoGallery({ images, labels, title }: Props) {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const hasMore = images.length > LIMIT;
 
   useEffect(() => { setMounted(true); }, []);
+
+  const displayImages = showAll || !hasMore ? images : images.slice(0, LIMIT);
 
   function openAt(i: number) { setCurrent(i); setOpen(true); }
   function prev() { setCurrent((c) => (c - 1 + images.length) % images.length); }
@@ -108,7 +114,7 @@ export default function PhotoGallery({ images, labels, title }: Props) {
     <>
       {lightbox}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {images.map((src, i) => (
+        {displayImages.map((src, i) => (
           <button
             key={i}
             onClick={() => openAt(i)}
@@ -123,6 +129,15 @@ export default function PhotoGallery({ images, labels, title }: Props) {
             )}
           </button>
         ))}
+        {hasMore && !showAll && (
+          <button
+            onClick={() => setShowAll(true)}
+            className="col-span-2 sm:col-span-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 py-8 text-[14px] font-semibold text-gray-700 hover:border-gray-400 hover:bg-gray-100 transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Show all {images.length} photos
+          </button>
+        )}
       </div>
     </>
   );
