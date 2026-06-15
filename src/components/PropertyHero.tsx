@@ -20,11 +20,13 @@ interface Props {
   videoUrl?: string;
   floorplanUrl?: string;
   listingType?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   property: SaveProp;
 }
 
 export default function PropertyHero({
-  gallery, title, address, city, status, statusStyle, vrEnabled, videoUrl, floorplanUrl, listingType, property,
+  gallery, title, address, city, status, statusStyle, vrEnabled, videoUrl, floorplanUrl, listingType, latitude, longitude, property,
 }: Props) {
   const [current, setCurrent] = useState(0);
   const [backHref] = useState(() => {
@@ -213,7 +215,9 @@ export default function PropertyHero({
 
           {/* Street View */}
           <a
-            href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(address + (city ? ', ' + city : ''))}`}
+            href={latitude && longitude
+              ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latitude},${longitude}`
+              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + (city ? ', ' + city : ''))}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-[12.5px] font-semibold text-white no-underline transition-colors visited:text-white hover:bg-white/20 hover:text-white focus:text-white active:text-white cursor-pointer"
