@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,24 @@ interface Stats {
   handledEnquiries: number;
 }
 
+function getAuthDisplayName(user: User) {
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const candidates = [
+    metadata.full_name,
+    metadata.name,
+    metadata.display_name,
+    metadata.user_name,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return user.email?.split("@")[0] ?? "Agent";
+}
+
 const statusVariant: Record<AgencyStatus, "default" | "success" | "warning" | "error" | "amber"> = {
   pending: "amber",
   approved: "success",
@@ -40,6 +59,7 @@ const statusMessage: Record<AgencyStatus, string> = {
 
 export default function AgentDashboardPage() {
   const [agency, setAgency] = useState<Agency | null>(null);
+  const [agentName, setAgentName] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,6 +67,14 @@ export default function AgentDashboardPage() {
     async function load() {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) return;
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      setAgentName(profile?.full_name?.trim() || getAuthDisplayName(user));
 
       const { data: memberships } = await supabaseClient
         .from("agency_members")
@@ -120,9 +148,14 @@ export default function AgentDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold text-gray-900">
-          {agency?.name ?? "Dashboard"}
-        </h1>
+        <div>
+          <h1 className="font-heading text-2xl font-semibold text-gray-900">
+            {agentName ?? "Dashboard"}
+          </h1>
+          {agency?.name && (
+            <p className="mt-1 text-sm text-[#6B7280]">{agency.name}</p>
+          )}
+        </div>
         {agency && (
           <Badge variant={statusVariant[agency.status]}>{agency.status}</Badge>
         )}
