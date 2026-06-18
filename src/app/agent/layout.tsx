@@ -20,6 +20,7 @@ export default function AgentLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [status, setStatus] = useState<"loading" | "ok" | "onboarding" | "pending">("loading");
+  const [agencyPlan, setAgencyPlan] = useState<string | null>(null);
 
   useEffect(() => {
     async function check() {
@@ -30,13 +31,15 @@ export default function AgentLayout({
       }
       const { data: memberships } = await supabaseClient
         .from("agency_members")
-        .select("agency_id, agencies(status)")
+        .select("agency_id, agencies(status, plan)")
         .eq("user_id", user.id)
         .limit(1);
 
       // User already has an agency — let them through
       if (memberships && memberships.length > 0) {
-        const agencyStatus = (memberships[0] as unknown as { agencies: { status: string } }).agencies?.status;
+        const agencyData = (memberships[0] as unknown as { agencies: { status: string; plan: string } }).agencies;
+        const agencyStatus = agencyData?.status;
+        setAgencyPlan(agencyData?.plan || null);
         if (pathname === "/agent/onboarding") {
           router.replace("/agent/dashboard");
           return;
@@ -160,6 +163,17 @@ export default function AgentLayout({
             Agent portal
           </p>
           <p className="mt-1 text-sm font-semibold text-gray-900">VBYM</p>
+          {agencyPlan && (
+            <div className="mt-3">
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                agencyPlan === "paid" 
+                  ? "bg-[#08519A] text-white" 
+                  : "bg-gray-200 text-gray-700"
+              }`}>
+                {agencyPlan === "paid" ? "Paid Plan" : "Free Plan"}
+              </span>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
@@ -198,7 +212,18 @@ export default function AgentLayout({
 
       {/* Mobile top bar */}
       <div className="fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 py-3 lg:hidden">
-        <p className="text-sm font-semibold text-gray-900">Agent</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-gray-900">Agent</p>
+          {agencyPlan && (
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              agencyPlan === "paid" 
+                ? "bg-[#08519A] text-white" 
+                : "bg-gray-200 text-gray-700"
+            }`}>
+              {agencyPlan === "paid" ? "Paid" : "Free"}
+            </span>
+          )}
+        </div>
         <div className="flex gap-2 overflow-x-auto">
           {navItems.map((item) => (
             <Link

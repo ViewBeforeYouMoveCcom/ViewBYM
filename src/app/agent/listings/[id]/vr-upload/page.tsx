@@ -34,6 +34,10 @@ export default function VrUploadPage() {
   const [notes, setNotes] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSpeed, setUploadSpeed] = useState(0);
+  const [uploadedBytes, setUploadedBytes] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,23 +101,64 @@ export default function VrUploadPage() {
     if (files.length === 0) return;
     setSubmitting(true);
     setError(null);
+    setUploadProgress(0);
+    setUploadSpeed(0);
+    setUploadedBytes(0);
 
     try {
       let rawFootagePath: string | null = null;
+      const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+      setTotalBytes(totalSize);
+      let uploadedSoFar = 0;
+      const startTime = Date.now();
 
       for (const file of files) {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const storagePath = `${agencyId ?? "unknown"}/${id}/vr-raw/${Date.now()}-${safeName}`;
 
-        const { error: uploadErr } = await supabaseClient.storage
-          .from("property-media")
-          .upload(storagePath, file, { upsert: false });
+        // Get auth token before creating the Promise
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const token = session?.access_token;
+        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-        if (uploadErr) {
-          setError(`File upload failed: ${uploadErr.message}`);
-          setSubmitting(false);
-          return;
-        }
+        // Upload with progress tracking using XMLHttpRequest
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const fileProgress = uploadedSoFar + e.loaded;
+              setUploadedBytes(fileProgress);
+              
+              const progress = (fileProgress / totalSize) * 100;
+              setUploadProgress(progress);
+
+              const elapsedSeconds = (Date.now() - startTime) / 1000;
+              const speed = fileProgress / elapsedSeconds;
+              setUploadSpeed(speed);
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              uploadedSoFar += file.size;
+              resolve();
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            reject(new Error('Network error during upload'));
+          });
+
+          xhr.open('POST', `${supabaseUrl}/storage/v1/object/property-media/${storagePath}`);
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhr.setRequestHeader('apikey', anonKey || '');
+          xhr.setRequestHeader('Content-Type', file.type);
+          xhr.send(file);
+        });
 
         if (!rawFootagePath) rawFootagePath = storagePath;
       }
@@ -294,9 +339,40 @@ export default function VrUploadPage() {
               <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
             )}
 
+            {submitting && (
+              <div className="space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-[#0F172A]">Uploading VR footage...</span>
+                  <span className="text-[#6B7280]">{uploadProgress.toFixed(1)}%</span>
+                </div>
+                
+                <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100">
+                  <div 
+                    className="h-full bg-[#08519A] transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[12px] text-[#6B7280]">
+                  <span>
+                    {(uploadedBytes / (1024 * 1024)).toFixed(1)} MB of {(totalBytes / (1024 * 1024)).toFixed(1)} MB
+                  </span>
+                  <span>
+                    {uploadSpeed > 0 ? `${(uploadSpeed / (1024 * 1024)).toFixed(2)} MB/s` : 'Calculating...'}
+                  </span>
+                </div>
+
+                {uploadSpeed > 0 && uploadProgress < 100 && (
+                  <div className="text-[12px] text-[#6B7280]">
+                    Remaining: {Math.ceil((totalBytes - uploadedBytes) / uploadSpeed)} seconds
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={submitting || files.length === 0}
-                className="h-11 rounded-[10px] bg-blue-700 px-6 text-sm font-semibold !text-white hover:bg-blue-800 disabled:opacity-40">
+                className="h-11 rounded-[10px] bg-[#08519A] px-6 text-sm font-semibold !text-white hover:bg-[#063d75] disabled:opacity-40">
                 {submitting ? "Uploading…" : "Submit for processing"}
               </Button>
               <Button type="button" variant="secondary" className="h-11 rounded-[10px] px-6 text-sm"
