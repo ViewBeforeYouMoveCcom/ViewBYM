@@ -162,11 +162,9 @@ export default function AgentDashboardPage() {
       </div>
 
       {/* Status banner */}
-      {agency && (
+      {agency && agency.status !== "approved" && (
         <div className={`rounded-xl border p-4 text-sm ${
-          agency.status === "approved"
-            ? "border-blue-200 bg-blue-50 text-gray-900"
-            : agency.status === "pending"
+          agency.status === "pending"
             ? "border-amber-200 bg-amber-50 text-amber-800"
             : "border-red-200 bg-red-50 text-red-700"
         }`}>

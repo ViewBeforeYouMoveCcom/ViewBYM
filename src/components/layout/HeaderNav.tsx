@@ -221,6 +221,9 @@ export default function HeaderNav() {
                   <Link href="/account/saved-properties">My account</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/account/alerts">Alerts & Notifications</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/account/enquiries">My enquiries</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
