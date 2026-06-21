@@ -127,6 +127,7 @@ function mapDbProperty(row: DbProperty): Property {
   if (row.tenure) tags.push(row.tenure);
 
   const listingType = row.listing_type === "rent" ? "rent" : "sale";
+  const agencyName = row.agencies?.name ?? "Agent";
 
   return {
     id: row.id,
@@ -158,8 +159,8 @@ function mapDbProperty(row: DbProperty): Property {
     longitude: row.longitude ?? undefined,
     isDbProperty: true,
     agent: {
-      name: row.agencies?.name ?? "Agent",
-      branch: row.agencies?.name ?? "Agent",
+      name: agencyName,
+      branch: agencyName,
       phone: row.agencies?.phone ?? "",
       email: row.agencies?.email ?? "",
     },

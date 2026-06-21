@@ -273,9 +273,9 @@ export default function VrStatusPage() {
                   <div
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
                       isDone
-                        ? "border-blue-500 bg-blue-500 text-white"
+                        ? "border-[#08519A] bg-[#08519A] text-white"
                         : isCurrent
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        ? "border-[#08519A] bg-blue-50 text-[#08519A]"
                         : "border-[#E5E7EB] bg-white text-[#6B7280]"
                     }`}
                   >
@@ -284,7 +284,7 @@ export default function VrStatusPage() {
                   <div className="pt-0.5">
                     <p
                       className={`text-sm font-semibold ${
-                        isCurrent ? "text-blue-700" : "text-[#0F172A]"
+                        isCurrent ? "text-[#08519A]" : "text-[#0F172A]"
                       }`}
                     >
                       {item.label}

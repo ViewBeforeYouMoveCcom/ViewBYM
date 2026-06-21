@@ -205,18 +205,40 @@ export default function NewListingPage() {
     const { data: membership } = await retryTransient(async () =>
       await supabaseClient
         .from("agency_members")
-        .select("agency_id, agencies(status)")
+        .select("agency_id, agencies(status, plan)")
         .eq("user_id", user.id)
         .limit(1)
         .single()
     );
 
     if (!membership) throw new Error("No agency found associated with your account.");
-    const agencyStatus = (membership as unknown as { agencies?: { status?: string } }).agencies?.status;
+    const agencyData = (membership as unknown as { agencies?: { status?: string; plan?: string } }).agencies;
+    const agencyStatus = agencyData?.status;
+    const agencyPlan = agencyData?.plan;
     if (agencyStatus !== "approved") {
       throw new Error("Your agent request must be approved before you can list properties.");
     }
     const currentAgencyId = membership.agency_id;
+
+    // Check property limit based on plan
+    if (!draftPropertyId) {
+      const { count, error: countError } = await supabaseClient
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .eq("agency_id", currentAgencyId)
+        .neq("status", "archived");
+
+      if (countError) throw new Error("Could not check property count.");
+
+      const propertyLimit = agencyPlan === "paid" ? 50 : 1;
+      if ((count ?? 0) >= propertyLimit) {
+        if (agencyPlan === "free") {
+          throw new Error("You have reached the limit for the free plan. You can only upload 1 property. Please upgrade to the paid plan to upload up to 50 properties.");
+        } else {
+          throw new Error(`You have reached the property limit (${propertyLimit}) for your plan.`);
+        }
+      }
+    }
 
     const priceNumeric = form.price ? parseFloat(form.price.replace(/[^0-9.]/g, "")) : null;
     const submittedFeatures = Array.from(
