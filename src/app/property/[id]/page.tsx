@@ -18,6 +18,13 @@ const STATUS_STYLES: Record<string, string> = {
   "Let agreed":   "bg-amber-50  text-amber-700  border-amber-200",
 };
 
+function normaliseFeatures(features: string[]) {
+  return features
+    .flatMap((feature) => feature.split(/[•\n]/g))
+    .map((feature) => feature.trim())
+    .filter(Boolean);
+}
+
 export default async function PropertyDetailPage({
   params,
 }: {
@@ -31,6 +38,7 @@ export default async function PropertyDetailPage({
   const isDbProperty = property.isDbProperty === true;
   const statusStyle = STATUS_STYLES[property.status] ?? "bg-gray-100 text-gray-600 border-gray-200";
   const mapQuery = encodeURIComponent([property.address, property.city].filter(Boolean).join(", "));
+  const keyFeatures = normaliseFeatures(property.features);
   const streetViewUrl = property.latitude && property.longitude 
     ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${property.latitude},${property.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
@@ -205,19 +213,23 @@ export default async function PropertyDetailPage({
             {property.description && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
                 <h2 className="mb-3 text-[15px] font-bold text-gray-900">About this property</h2>
-                <p className="text-[14px] leading-relaxed text-gray-600 whitespace-pre-line">{property.description}</p>
+                <div className="max-w-none overflow-hidden">
+                  <p className="whitespace-pre-line break-words text-[14px] leading-relaxed text-gray-600">
+                    {property.description}
+                  </p>
+                </div>
               </div>
             )}
 
             {/* Key features */}
-            {property.features.length > 0 && (
+            {keyFeatures.length > 0 && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                <h2 className="mb-4 text-[15px] font-bold text-gray-900">Key features</h2>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {property.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3.5 py-3 text-[13.5px] text-gray-700">
-                      <svg className="mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                      {f}
+                <h2 className="mb-3 text-[15px] font-bold text-gray-900">Key features</h2>
+                <ul className="space-y-2">
+                  {keyFeatures.map((f) => (
+                    <li key={f} className="flex min-w-0 items-start gap-2 text-[14px] leading-relaxed text-gray-700">
+                      <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#08519A]" />
+                      <span className="break-words">{f}</span>
                     </li>
                   ))}
                 </ul>

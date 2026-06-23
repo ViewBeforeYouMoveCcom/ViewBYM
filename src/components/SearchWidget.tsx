@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import PlacesAutocomplete from "@/components/PlacesAutocomplete";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 type Tab = "buy" | "rent" | "new" | "commercial";
 
@@ -117,10 +117,10 @@ export default function SearchWidget() {
           </svg>
           {/* Hidden input carries the value for the GET form */}
           <input type="hidden" name="location" value={location} />
-          <PlacesAutocomplete
+          <LocationAutocomplete
             value={location}
             onChange={setLocation}
-            onSelect={(r) => setLocation(r.city || r.line1)}
+            onSelect={setLocation}
             placeholder="City, postcode or area…"
             className="h-[46px] w-full rounded-xl border border-gray-300 bg-gray-50 pl-9 pr-3 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:outline-none focus:ring-2 focus:ring-blue-500"
           />

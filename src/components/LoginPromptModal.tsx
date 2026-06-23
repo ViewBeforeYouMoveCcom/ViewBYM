@@ -12,22 +12,30 @@ interface Props {
   onSuccess: () => void; // called after successful login
   heading?: string;
   subheading?: string;
+  ctaLabel?: string;
+  signupHref?: string;
+  dialogLabel?: string;
 }
 
-export default function LoginPromptModal({ open, onClose, onSuccess, heading, subheading }: Props) {
-  const [mounted, setMounted] = useState(false);
+export default function LoginPromptModal({
+  open,
+  onClose,
+  onSuccess,
+  heading,
+  subheading,
+  ctaLabel,
+  signupHref,
+  dialogLabel,
+}: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setMounted(true); }, []);
-
   // Focus email field when opened
   useEffect(() => {
     if (open) {
-      setError(null);
       setTimeout(() => emailRef.current?.focus(), 80);
     }
   }, [open]);
@@ -70,7 +78,7 @@ export default function LoginPromptModal({ open, onClose, onSuccess, heading, su
     });
   }
 
-  if (!mounted) return null;
+  if (typeof document === "undefined") return null;
 
   return createPortal(
     <>
@@ -94,7 +102,7 @@ export default function LoginPromptModal({ open, onClose, onSuccess, heading, su
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Sign in to save property"
+        aria-label={dialogLabel ?? "Sign in to save property"}
         style={{
           position: "fixed",
           top: "50%",
@@ -201,7 +209,7 @@ export default function LoginPromptModal({ open, onClose, onSuccess, heading, su
                     </svg>
                     Signing in…
                   </span>
-                ) : "Sign in & save property"}
+                ) : ctaLabel ?? "Sign in & save property"}
               </button>
             </form>
 
@@ -212,7 +220,7 @@ export default function LoginPromptModal({ open, onClose, onSuccess, heading, su
               </Link>
               <span>
                 No account?{" "}
-                <Link href="/account/signup" className="font-semibold text-[#08519A] hover:underline" onClick={onClose}>
+                <Link href={signupHref ?? "/account/signup"} className="font-semibold text-[#08519A] hover:underline" onClick={onClose}>
                   Sign up free
                 </Link>
               </span>

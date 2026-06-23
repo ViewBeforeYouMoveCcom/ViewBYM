@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import FormField from "@/components/FormField";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
@@ -9,15 +10,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 
-export default function SignupPage() {
+function SignupForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/account/saved-properties";
+  const authCallback = `/account/auth-callback?next=${encodeURIComponent(redirectTo)}`;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [consent, setConsent] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   const passwordsMatch = useMemo(() => {
     if (!password || !confirm) return true;
@@ -60,11 +68,11 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await supabaseClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/account/auth-callback?next=/account/saved-properties`,
+        emailRedirectTo: `${window.location.origin}${authCallback}`,
       },
     });
 
@@ -75,7 +83,36 @@ export default function SignupPage() {
       return;
     }
 
+    if (data.session) {
+      router.push(redirectTo);
+      router.refresh();
+      return;
+    }
+
     setSuccess(true);
+  }
+
+  async function resendConfirmation() {
+    setResending(true);
+    setError(null);
+    setResendMessage(null);
+
+    const { error: resendError } = await supabaseClient.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${window.location.origin}${authCallback}`,
+      },
+    });
+
+    setResending(false);
+
+    if (resendError) {
+      setError(resendError.message);
+      return;
+    }
+
+    setResendMessage("Confirmation email resent. Please check your inbox and spam folder.");
   }
 
   if (success) {
@@ -102,13 +139,33 @@ export default function SignupPage() {
             activate your account, then sign in below.
           </p>
           <p className="mt-1.5 text-[13px] text-blue-600/80">
-            If email confirmation is disabled on this project, you can sign in
-            immediately.
+            If it does not arrive, check spam or resend the confirmation email.
           </p>
         </div>
 
+        {resendMessage && (
+          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[13px] text-emerald-700">
+            {resendMessage}
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={resendConfirmation}
+          disabled={resending}
+          className="mt-4 w-full rounded-xl border border-blue-200 bg-white py-3 text-center text-[14px] font-bold text-[#08519A] transition-colors hover:bg-blue-50 disabled:opacity-60"
+        >
+          {resending ? "Resending..." : "Resend confirmation email"}
+        </button>
+
         <Link
-          href="/account/login"
+          href={`/account/login?redirect=${encodeURIComponent(redirectTo)}`}
           className="mt-6 block w-full rounded-xl bg-[#08519A] py-3 text-center text-[14px] font-bold text-white shadow-sm shadow-blue-900/15 transition-all duration-200 hover:bg-[#063d75] hover:shadow-md"
         >
           Sign in →
@@ -133,7 +190,7 @@ export default function SignupPage() {
 
       {/* Google first */}
       <GoogleSignInButton
-        redirectTo="/account/auth-callback?next=/account/saved-properties"
+        redirectTo={authCallback}
         label="Sign up with Google"
       />
 
@@ -259,7 +316,7 @@ export default function SignupPage() {
         <p className="text-center text-[13.5px] text-gray-500">
           Already have an account?{" "}
           <Link
-            href="/account/login"
+            href={`/account/login?redirect=${encodeURIComponent(redirectTo)}`}
             className="font-semibold text-[#08519A] transition-colors hover:text-[#063d75]"
           >
             Sign in →
@@ -267,5 +324,17 @@ export default function SignupPage() {
         </p>
       </form>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-96 w-full animate-pulse rounded-2xl border border-gray-200 bg-white" />
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }

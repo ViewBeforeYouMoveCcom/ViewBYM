@@ -52,7 +52,7 @@ const statusVariant: Record<AgencyStatus, "default" | "success" | "warning" | "e
 
 const statusMessage: Record<AgencyStatus, string> = {
   pending: "Your agency is pending review. You can add listings once approved.",
-  approved: "Your agency is approved. You can publish listings.",
+  approved: "Approved Founding Member. You can publish listings.",
   suspended: "Your agency has been suspended. Contact VBYM support.",
   rejected: "Your agency application was not approved. Contact VBYM for details.",
 };
