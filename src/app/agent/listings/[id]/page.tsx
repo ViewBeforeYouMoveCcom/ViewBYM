@@ -92,6 +92,7 @@ export default function EditListingPage() {
   const [property, setProperty] = useState<Property | null>(null);
   const [photos, setPhotos] = useState<LocalMediaItem[]>([]); // Use LocalMediaItem
   const [floorplan, setFloorplan] = useState<MediaItem | null>(null);
+  const [walkthrough, setWalkthrough] = useState<MediaItem | null>(null);
   const [form, setForm] = useState<Partial<Property>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,6 +103,10 @@ export default function EditListingPage() {
   const [agencyId, setAgencyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const floorplanInputRef = useRef<HTMLInputElement>(null);
+  const walkthroughInputRef = useRef<HTMLInputElement>(null);
+  const draggedIdx = useRef<number | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -144,6 +149,17 @@ export default function EditListingPage() {
         .maybeSingle();
 
       setFloorplan((floorplanData as MediaItem | null) ?? null);
+
+      const { data: walkthroughData } = await supabaseClient
+        .from("property_media")
+        .select("id, storage_path, public_url, sort_order")
+        .eq("property_id", id)
+        .eq("type", "video")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setWalkthrough((walkthroughData as MediaItem | null) ?? null);
       setLoading(false);
     }
     load();
@@ -186,6 +202,41 @@ export default function EditListingPage() {
     await supabaseClient.from("properties").update({ status }).eq("id", id);
     setProperty((prev) => prev ? { ...prev, status } : prev);
     setForm((prev) => ({ ...prev, status }));
+  }
+
+  function onPhotoDragStart(idx: number, tempId: string) {
+    draggedIdx.current = idx;
+    setDraggingId(tempId);
+  }
+
+  function onPhotoDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    setDragOverIdx(idx);
+  }
+
+  function onPhotoDrop(idx: number) {
+    const from = draggedIdx.current;
+    if (from === null || from === idx) return;
+    setPhotos((prev) => {
+      const next = [...prev];
+      [next[from], next[idx]] = [next[idx], next[from]];
+      next.forEach((p, i) => {
+        if (p.id) {
+          supabaseClient
+            .from("property_media")
+            .update({ sort_order: i })
+            .eq("id", p.id)
+            .then(() => {});
+        }
+      });
+      return next.map((p, i) => ({ ...p, sort_order: i }));
+    });
+  }
+
+  function onPhotoDragEnd() {
+    setDraggingId(null);
+    setDragOverIdx(null);
+    draggedIdx.current = null;
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -410,6 +461,81 @@ export default function EditListingPage() {
     }
 
     setFloorplan(null);
+  }
+
+  async function handleWalkthroughUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    const timestamp = Date.now();
+    const ext = file.name.split(".").pop() ?? "mp4";
+    const storagePath = `${agencyId ?? "unknown"}/${id}/video/${timestamp}-walkthrough.${ext}`;
+
+    const { error: uploadErr } = await supabaseClient.storage
+      .from("property-media")
+      .upload(storagePath, file, { contentType: file.type, upsert: false });
+
+    if (uploadErr) {
+      setUploadError(`Video upload failed: ${uploadErr.message}`);
+      setUploading(false);
+      return;
+    }
+
+    const publicUrl = supabaseClient.storage
+      .from("property-media")
+      .getPublicUrl(storagePath).data.publicUrl;
+
+    const { data: mediaRow, error: insertErr } = await supabaseClient
+      .from("property_media")
+      .insert({
+        property_id: id,
+        type: "video",
+        storage_path: storagePath,
+        public_url: publicUrl,
+        sort_order: 0,
+      })
+      .select("id, storage_path, public_url, sort_order")
+      .single();
+
+    if (walkthroughInputRef.current) walkthroughInputRef.current.value = "";
+    setUploading(false);
+
+    if (insertErr) {
+      setUploadError(`Video save failed: ${insertErr.message}`);
+      return;
+    }
+
+    if (walkthrough) {
+      await supabaseClient.storage.from("property-media").remove([walkthrough.storage_path]);
+      await supabaseClient.from("property_media").delete().eq("id", walkthrough.id);
+    }
+
+    setWalkthrough(mediaRow as MediaItem);
+  }
+
+  async function deleteWalkthrough() {
+    if (!walkthrough) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    await supabaseClient.storage.from("property-media").remove([walkthrough.storage_path]);
+    const { error: deleteErr } = await supabaseClient
+      .from("property_media")
+      .delete()
+      .eq("id", walkthrough.id);
+
+    setUploading(false);
+
+    if (deleteErr) {
+      setUploadError(`Video delete failed: ${deleteErr.message}`);
+      return;
+    }
+
+    setWalkthrough(null);
   }
 
   if (loading) {
@@ -649,44 +775,71 @@ export default function EditListingPage() {
           </p>
 
           {photos.length > 0 && (
-            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.tempId} // Use tempId for unique key
-                  className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photo.public_url}
-                    alt="Property photo"
-                    className={`h-full w-full object-cover ${photo.uploading || photo.error ? 'opacity-50' : ''}`} // Dim if uploading or error
-                  />
-                  {photo.uploading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-blue-700">
-                      <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                      <span className="sr-only">Uploading...</span>
-                    </div>
-                  )}
-                  {photo.error && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-100/80 p-2 text-center text-red-700 text-xs">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <>
+              <p className="mb-2 text-xs text-[#6B7280]">Drag photos to reorder. First photo is the cover image.</p>
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {photos.map((photo, idx) => (
+                  <div
+                    key={photo.tempId}
+                    draggable={!photo.uploading && !photo.error}
+                    onDragStart={() => onPhotoDragStart(idx, photo.tempId)}
+                    onDragOver={(e) => onPhotoDragOver(e, idx)}
+                    onDrop={() => onPhotoDrop(idx)}
+                    onDragEnd={onPhotoDragEnd}
+                    className={`group relative aspect-[4/3] overflow-hidden rounded-xl border bg-[#F9FAFB] transition-opacity ${
+                      draggingId === photo.tempId
+                        ? "opacity-40 border-blue-400"
+                        : dragOverIdx === idx && draggingId !== null
+                        ? "border-blue-400 ring-2 ring-blue-300"
+                        : "border-[#E5E7EB]"
+                    } ${!photo.uploading && !photo.error ? "cursor-grab active:cursor-grabbing" : ""}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.public_url}
+                      alt="Property photo"
+                      className={`h-full w-full object-cover ${photo.uploading || photo.error ? "opacity-50" : ""}`}
+                    />
+                    {idx === 0 && !photo.uploading && !photo.error && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-[#08519A] px-2 py-0.5 text-[10px] font-bold text-white">
+                        Cover
+                      </span>
+                    )}
+                    {photo.uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+                        <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      </div>
+                    )}
+                    {photo.error && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-100/80 p-2 text-center text-red-700 text-xs">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <p className="mt-1">Failed</p>
-                        <p className="line-clamp-2" title={photo.error}>{photo.error.split(':').pop()?.trim() || 'Error'}</p>
-                    </div>
-                  )}
-                  {!photo.uploading && ( // Only show delete button if not uploading
-                    <button
-                      type="button"
-                      onClick={() => deletePhoto(photo)}
-                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs text-red-600 opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-50"
-                      title="Delete photo"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                        <p className="line-clamp-2" title={photo.error}>{photo.error.split(":").pop()?.trim() || "Error"}</p>
+                      </div>
+                    )}
+                    {!photo.uploading && !photo.error && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => deletePhoto(photo)}
+                          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs text-red-600 opacity-0 shadow transition group-hover:opacity-100 hover:bg-red-50"
+                          title="Delete photo"
+                        >
+                          ✕
+                        </button>
+                        <div className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded bg-black/40 opacity-0 transition group-hover:opacity-100">
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="white">
+                            <circle cx="2" cy="2" r="1"/><circle cx="8" cy="2" r="1"/>
+                            <circle cx="2" cy="5" r="1"/><circle cx="8" cy="5" r="1"/>
+                            <circle cx="2" cy="8" r="1"/><circle cx="8" cy="8" r="1"/>
+                          </svg>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {uploadError && (
@@ -719,6 +872,76 @@ export default function EditListingPage() {
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Walkthrough video */}
+      <Card className="rounded-xl border border-[#E5E7EB]">
+        <CardContent className="p-6">
+          <h2 className="mb-1 text-sm font-semibold text-gray-900">Walkthrough video</h2>
+          <p className="mb-4 text-xs text-[#6B7280]">
+            Upload a standard property walkthrough video. Existing video can be previewed, replaced, or removed.
+          </p>
+
+          <input
+            ref={walkthroughInputRef}
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm,video/*"
+            className="hidden"
+            onChange={handleWalkthroughUpload}
+          />
+
+          {walkthrough ? (
+            <div className="space-y-3">
+              <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <video
+                  src={walkthrough.public_url}
+                  controls
+                  className="h-56 w-full object-contain"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={uploading}
+                  className="h-9 rounded-[10px] text-sm"
+                  onClick={() => walkthroughInputRef.current?.click()}
+                >
+                  {uploading ? "Uploading…" : "Replace video"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={uploading}
+                  className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
+                  onClick={deleteWalkthrough}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => walkthroughInputRef.current?.click()}
+              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#D1D5DB] bg-gray-50 px-6 py-10 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
+              </svg>
+              <p className="text-[14px] font-semibold text-gray-700">
+                {uploading ? "Uploading…" : "Click to upload walkthrough video"}
+              </p>
+              <p className="text-[12px] text-gray-400">MP4, MOV, WebM — up to 500 MB</p>
+            </div>
+          )}
+
+          {uploadError && (
+            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {uploadError}
+            </div>
+          )}
         </CardContent>
       </Card>
 

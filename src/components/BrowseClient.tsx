@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import PropertyCard from "@/components/PropertyCard";
 import PropertyMap from "@/components/PropertyMap";
 import { Button } from "@/components/ui/button";
@@ -347,11 +348,11 @@ export default function BrowseClient({
             </p>
 
             <div className="mt-5 space-y-3">
-              <input
-                type="text"
+              <LocationAutocomplete
                 placeholder="e.g. E14, Canary Wharf, Manchester"
                 value={locationInput}
-                onChange={(e) => setLocationInput(e.target.value)}
+                onChange={setLocationInput}
+                onSelect={setLocationInput}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 autoFocus
                 className="h-12 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-4 text-sm text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-0 focus:border-[#E5E7EB]"
@@ -469,11 +470,11 @@ export default function BrowseClient({
       {tabStrip}
       {/* Active search bar (compact) */}
       <div className="flex flex-col gap-3 rounded-[10px] border border-[#E5E7EB] bg-[#F9FAFB] p-3 md:flex-row md:items-center">
-        <input
-          type="text"
+        <LocationAutocomplete
           placeholder="Location or postcode…"
           value={locationInput}
-          onChange={(e) => setLocationInput(e.target.value)}
+          onChange={setLocationInput}
+          onSelect={setLocationInput}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="h-10 flex-1 rounded-[8px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

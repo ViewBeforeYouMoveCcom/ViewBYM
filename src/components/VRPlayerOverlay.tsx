@@ -91,7 +91,7 @@ export default function VRPlayerOverlay({ propertyId }: Props) {
                 </div>
               </div>
             ) : (
-              <VR360Player videoUrl={signedUrl} className="h-[420px] w-full md:h-[560px]" />
+              <VR360Player videoUrl={signedUrl} className="h-[420px] w-full md:h-[560px]" autoHideControls />
             )}
           </div>
 

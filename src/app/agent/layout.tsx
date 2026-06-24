@@ -156,13 +156,14 @@ export default function AgentLayout({
   return (
     <div className="flex min-h-screen bg-[#F9FAFB]">
       {/* Sidebar */}
-      <aside className="hidden w-56 flex-shrink-0 lg:block">
-        <div className="fixed top-0 flex h-screen w-56 flex-col border-r border-[#E5E7EB] bg-white">
+      <aside className="hidden w-56 flex-col border-r border-[#E5E7EB] bg-white lg:flex">
         <div className="border-b border-[#E5E7EB] px-5 py-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#6B7280]">
             Agent portal
           </p>
-          <p className="mt-1 text-sm font-semibold text-gray-900">VBYM</p>
+          <p className="mt-1 text-sm font-semibold text-gray-900">
+            VBYM Console
+          </p>
           {agencyPlan && (
             <div className="mt-3">
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
@@ -192,13 +193,7 @@ export default function AgentLayout({
           ))}
         </nav>
 
-        <div className="border-t border-[#E5E7EB] px-3 py-4 space-y-1">
-          <Link
-            href="/"
-            className="block rounded-lg px-3 py-2 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
-          >
-            Public site
-          </Link>
+        <div className="border-t border-[#E5E7EB] px-3 py-4">
           <button
             type="button"
             onClick={handleSignOut}
@@ -206,7 +201,6 @@ export default function AgentLayout({
           >
             Sign out
           </button>
-        </div>
         </div>
       </aside>
 

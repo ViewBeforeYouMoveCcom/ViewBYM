@@ -52,7 +52,7 @@ const statusVariant: Record<AgencyStatus, "default" | "success" | "warning" | "e
 
 const statusMessage: Record<AgencyStatus, string> = {
   pending: "Your agency is pending review. You can add listings once approved.",
-  approved: "Your agency is approved. You can publish listings.",
+  approved: "Approved Founding Member. You can publish listings.",
   suspended: "Your agency has been suspended. Contact VBYM support.",
   rejected: "Your agency application was not approved. Contact VBYM for details.",
 };
@@ -162,11 +162,9 @@ export default function AgentDashboardPage() {
       </div>
 
       {/* Status banner */}
-      {agency && (
+      {agency && agency.status !== "approved" && (
         <div className={`rounded-xl border p-4 text-sm ${
-          agency.status === "approved"
-            ? "border-blue-200 bg-blue-50 text-gray-900"
-            : agency.status === "pending"
+          agency.status === "pending"
             ? "border-amber-200 bg-amber-50 text-amber-800"
             : "border-red-200 bg-red-50 text-red-700"
         }`}>

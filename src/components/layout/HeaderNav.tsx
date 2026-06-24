@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { supabaseClient } from "@/lib/supabaseClient";
 
 const navItems = [
@@ -52,7 +53,6 @@ export default function HeaderNav() {
   const [scrolled, setScrolled] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [mobileSearch, setMobileSearch] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
 
   async function loadProfile(currentUser: User) {
     const { data } = await supabaseClient
@@ -176,11 +176,10 @@ export default function HeaderNav() {
           <svg className="shrink-0 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
           </svg>
-          <input
-            ref={searchRef}
-            type="text"
+          <LocationAutocomplete
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={setSearchValue}
+            onSelect={setSearchValue}
             placeholder="Search by town or postcode…"
             className="flex-1 bg-transparent text-[12.5px] text-gray-800 placeholder-gray-400 outline-none"
           />
@@ -219,6 +218,9 @@ export default function HeaderNav() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/account/saved-properties">My account</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/account/alerts">Alerts & Notifications</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/account/enquiries">My enquiries</Link>
@@ -290,10 +292,10 @@ export default function HeaderNav() {
               <svg className="shrink-0 text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
-              <input
-                type="text"
+              <LocationAutocomplete
                 value={mobileSearch}
-                onChange={(e) => setMobileSearch(e.target.value)}
+                onChange={setMobileSearch}
+                onSelect={setMobileSearch}
                 placeholder="Search by town or postcode…"
                 className="flex-1 bg-transparent text-[13.5px] text-gray-800 placeholder-gray-400 outline-none"
               />

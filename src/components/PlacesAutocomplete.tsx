@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { KeyboardEventHandler } from "react";
 import { useGoogleMaps } from "@/lib/useGoogleMaps";
 
 export interface PlacesResult {
@@ -17,6 +18,8 @@ interface Props {
   placeholder?: string;
   required?: boolean;
   className?: string;
+  autoFocus?: boolean;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
 /**
@@ -33,6 +36,8 @@ export default function PlacesAutocomplete({
   placeholder = "Start typing an address…",
   required = false,
   className,
+  autoFocus = false,
+  onKeyDown,
 }: Props) {
   const mapsLoaded = useGoogleMaps();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +53,7 @@ export default function PlacesAutocomplete({
     if (autocompleteRef.current) return; // already initialised
 
     const ac = new window.google.maps.places.Autocomplete(inputRef.current, {
-      types: ["(regions)"],
+      types: ["geocode"],
       componentRestrictions: { country: "gb" },
       fields: ["address_components", "name", "types"],
     });
@@ -104,7 +109,9 @@ export default function PlacesAutocomplete({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       required={required}
+      autoFocus={autoFocus}
       autoComplete="off"
+      onKeyDown={onKeyDown}
       className={inputClass}
     />
   );
