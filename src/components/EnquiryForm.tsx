@@ -13,7 +13,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 
 interface Props {
   propertyId: string;
-  agencyId: string;  // required: real schema has agency_id NOT NULL on enquiries
+  agencyId: string;
   agentEmail?: string;
   propertyTitle?: string;
 }
@@ -30,13 +30,9 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
   const redirectParam = encodeURIComponent(pathname);
 
   const loadUser = useCallback(async () => {
-    const {
-      data: { user: currentUser },
-    } = await supabaseClient.auth.getUser();
-
+    const { data: { user: currentUser } } = await supabaseClient.auth.getUser();
     setUser(currentUser);
     setAuthChecked(true);
-
     if (!currentUser) return;
 
     const { data: profile } = await supabaseClient
@@ -45,17 +41,13 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
       .eq("id", currentUser.id)
       .maybeSingle();
 
-    const metadata = currentUser.user_metadata as Record<string, unknown>;
-    const metadataName =
-      typeof metadata.full_name === "string"
-        ? metadata.full_name
-        : typeof metadata.name === "string"
-          ? metadata.name
-          : "";
+    const meta = currentUser.user_metadata as Record<string, unknown>;
+    const metaName = typeof meta.full_name === "string" ? meta.full_name
+      : typeof meta.name === "string" ? meta.name : "";
 
     setForm((prev) => ({
       ...prev,
-      name: prev.name || profile?.full_name || metadataName || "",
+      name: prev.name || profile?.full_name || metaName || "",
       email: currentUser.email ?? prev.email,
       phone: prev.phone || profile?.phone || "",
     }));
@@ -63,21 +55,17 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
 
   useEffect(() => {
     loadUser();
-
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user?.email) {
         setForm((prev) => ({ ...prev, email: session.user.email ?? prev.email }));
       }
       setAuthChecked(true);
     });
-
     return () => subscription.unsubscribe();
   }, [loadUser]);
 
-  function set(field: string, value: string) {
+  function setField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError(null);
   }
@@ -88,14 +76,10 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
     setError(null);
 
     try {
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession();
-
+      const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session?.access_token) {
         setError("Please sign in before sending an enquiry.");
         setLoading(false);
-        await loadUser();
         return;
       }
 
@@ -109,7 +93,6 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
           propertyId,
           agencyId,
           name: form.name,
-          email: form.email,
           phone: form.phone,
           message: form.message,
           agentEmail,
@@ -118,7 +101,6 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
       });
 
       const data = await res.json();
-
       if (!res.ok || data.error) {
         setError(data.error ?? "Could not send enquiry. Please try again.");
         return;
@@ -139,12 +121,8 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
         <p className="mt-1 text-sm text-[#6B7280]">
           The agent will be in touch shortly.
           {agentEmail && (
-            <>
-              {" "}You can also email them directly at{" "}
-              <a href={`mailto:${agentEmail}`} className="underline">
-                {agentEmail}
-              </a>
-              .
+            <> You can also email them directly at{" "}
+              <a href={`mailto:${agentEmail}`} className="underline">{agentEmail}</a>.
             </>
           )}
         </p>
@@ -155,11 +133,12 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
   if (!authChecked) {
     return (
       <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
-        <p className="text-sm text-[#6B7280]">Checking your account...</p>
+        <p className="text-sm text-[#6B7280]">Checking your account…</p>
       </div>
     );
   }
 
+  // Not signed in — show prompt
   if (!user) {
     return (
       <div className="rounded-xl border border-blue-100 bg-blue-50 p-5">
@@ -196,6 +175,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
     );
   }
 
+  // Signed in — show form
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <FormField id="enq-name" label="Your name">
@@ -203,7 +183,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
           id="enq-name"
           placeholder="Sophie Reeves"
           value={form.name}
-          onChange={(e) => set("name", e.target.value)}
+          onChange={(e) => setField("name", e.target.value)}
           required
         />
       </FormField>
@@ -212,7 +192,6 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
         <Input
           id="enq-email"
           type="email"
-          placeholder="you@email.com"
           value={form.email}
           readOnly
           className="bg-gray-50 text-gray-500"
@@ -225,7 +204,7 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
           id="enq-phone"
           placeholder="+44 7700 900000"
           value={form.phone}
-          onChange={(e) => set("phone", e.target.value)}
+          onChange={(e) => setField("phone", e.target.value)}
         />
       </FormField>
 
@@ -235,16 +214,14 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
           rows={3}
           placeholder="I'd like to arrange a viewing…"
           value={form.message}
-          onChange={(e) => set("message", e.target.value)}
+          onChange={(e) => setField("message", e.target.value)}
           required
           className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </FormField>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       <Button

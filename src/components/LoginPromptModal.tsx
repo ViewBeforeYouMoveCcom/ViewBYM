@@ -9,7 +9,7 @@ import { supabaseClient } from "@/lib/supabaseClient";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void; // called after successful login
+  onSuccess: () => void;
   heading?: string;
   subheading?: string;
   ctaLabel?: string;
@@ -23,7 +23,6 @@ export default function LoginPromptModal({
   onSuccess,
   heading,
   subheading,
-  ctaLabel,
   signupHref,
   dialogLabel,
 }: Props) {
@@ -33,40 +32,44 @@ export default function LoginPromptModal({
   const [error, setError] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
-  // Focus email field when opened
   useEffect(() => {
-    if (open) {
-      setTimeout(() => emailRef.current?.focus(), 80);
+    if (!open) {
+      setEmail("");
+      setPassword("");
+      setError(null);
     }
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
+    const timer = setTimeout(() => emailRef.current?.focus(), 80);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     const { error: signInError } = await supabaseClient.auth.signInWithPassword({
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
     });
 
+    setLoading(false);
+
     if (signInError) {
-      setError("Incorrect email or password.");
-      setLoading(false);
+      setError("Incorrect email or password. Please try again.");
       return;
     }
 
-    setLoading(false);
     onClose();
     onSuccess();
   }
@@ -87,14 +90,10 @@ export default function LoginPromptModal({
         aria-hidden="true"
         onClick={onClose}
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 10000,
-          background: "rgba(0,0,0,0.45)",
-          backdropFilter: "blur(4px)",
+          position: "fixed", inset: 0, zIndex: 10000,
+          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
           transition: "opacity 0.2s ease",
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? "auto" : "none",
+          opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none",
         }}
       />
 
@@ -102,23 +101,17 @@ export default function LoginPromptModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={dialogLabel ?? "Sign in to save property"}
+        aria-label={dialogLabel ?? "Sign in"}
         style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          zIndex: 10001,
+          position: "fixed", top: "50%", left: "50%", zIndex: 10001,
           transform: `translate(-50%, ${open ? "-50%" : "-46%"})`,
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? "auto" : "none",
+          opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none",
           transition: "transform 0.28s cubic-bezier(0.34,1.3,0.64,1), opacity 0.2s ease",
-          width: "100%",
-          maxWidth: "420px",
-          padding: "0 20px",
+          width: "100%", maxWidth: "420px", padding: "0 20px",
         }}
       >
         <div className="relative rounded-2xl border border-gray-200 bg-white shadow-2xl">
-          {/* Close button */}
+          {/* Close */}
           <button
             type="button"
             onClick={onClose}
@@ -131,7 +124,7 @@ export default function LoginPromptModal({
           </button>
 
           <div className="px-7 pb-7 pt-7">
-            {/* Heart icon + heading */}
+            {/* Icon + heading */}
             <div className="mb-5 flex flex-col items-center text-center">
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -139,10 +132,10 @@ export default function LoginPromptModal({
                 </svg>
               </div>
               <h2 className="text-[19px] font-extrabold tracking-tight text-gray-900">
-                {heading ?? "Save this property"}
+                {heading ?? "Sign in to continue"}
               </h2>
               <p className="mt-1 text-[13.5px] text-gray-500">
-                {subheading ?? "Sign in to save properties and access them anywhere."}
+                {subheading ?? "Sign in to your account to continue."}
               </p>
             </div>
 
@@ -168,8 +161,8 @@ export default function LoginPromptModal({
               <div className="flex-1 border-t border-gray-200" />
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Email + Password */}
+            <form onSubmit={handleEmailSignIn} className="space-y-3">
               <input
                 ref={emailRef}
                 type="email"
@@ -209,15 +202,12 @@ export default function LoginPromptModal({
                     </svg>
                     Signing in…
                   </span>
-                ) : ctaLabel ?? "Sign in & save property"}
+                ) : "Sign in"}
               </button>
             </form>
 
             {/* Footer */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-gray-400">
-              <Link href="/account/forgot-password" className="hover:text-gray-700 hover:underline" onClick={onClose}>
-                Forgot password?
-              </Link>
               <span>
                 No account?{" "}
                 <Link href={signupHref ?? "/account/signup"} className="font-semibold text-[#08519A] hover:underline" onClick={onClose}>

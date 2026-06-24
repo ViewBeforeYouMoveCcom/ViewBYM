@@ -99,6 +99,11 @@ export default function EditListingPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [wtUploading, setWtUploading] = useState(false);
+  const [wtProgress, setWtProgress] = useState(0);
+  const [wtSpeed, setWtSpeed] = useState(0);
+  const [wtUploadedBytes, setWtUploadedBytes] = useState(0);
+  const [wtTotalBytes, setWtTotalBytes] = useState(0);
   const [saved, setSaved] = useState(false);
   const [agencyId, setAgencyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -467,59 +472,88 @@ export default function EditListingPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    setWtUploading(true);
+    setWtProgress(0);
+    setWtSpeed(0);
+    setWtUploadedBytes(0);
+    setWtTotalBytes(file.size);
     setUploadError(null);
 
     const timestamp = Date.now();
     const ext = file.name.split(".").pop() ?? "mp4";
     const storagePath = `${agencyId ?? "unknown"}/${id}/video/${timestamp}-walkthrough.${ext}`;
 
-    const { error: uploadErr } = await supabaseClient.storage
-      .from("property-media")
-      .upload(storagePath, file, { contentType: file.type, upsert: false });
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.access_token;
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const startTime = Date.now();
 
-    if (uploadErr) {
-      setUploadError(`Video upload failed: ${uploadErr.message}`);
-      setUploading(false);
-      return;
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (ev) => {
+          if (ev.lengthComputable) {
+            setWtUploadedBytes(ev.loaded);
+            setWtProgress((ev.loaded / ev.total) * 100);
+            const elapsed = (Date.now() - startTime) / 1000;
+            setWtSpeed(ev.loaded / elapsed);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload failed with status ${xhr.status}`));
+        });
+
+        xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+
+        xhr.open("POST", `${supabaseUrl}/storage/v1/object/property-media/${storagePath}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("apikey", anonKey || "");
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+      });
+
+      const publicUrl = supabaseClient.storage
+        .from("property-media")
+        .getPublicUrl(storagePath).data.publicUrl;
+
+      const { data: mediaRow, error: insertErr } = await supabaseClient
+        .from("property_media")
+        .insert({
+          property_id: id,
+          type: "video",
+          storage_path: storagePath,
+          public_url: publicUrl,
+          sort_order: 0,
+        })
+        .select("id, storage_path, public_url, sort_order")
+        .single();
+
+      if (walkthroughInputRef.current) walkthroughInputRef.current.value = "";
+
+      if (insertErr) {
+        setUploadError(`Video save failed: ${insertErr.message}`);
+      } else {
+        if (walkthrough) {
+          await supabaseClient.storage.from("property-media").remove([walkthrough.storage_path]);
+          await supabaseClient.from("property_media").delete().eq("id", walkthrough.id);
+        }
+        setWalkthrough(mediaRow as MediaItem);
+      }
+    } catch (err) {
+      setUploadError(`Video upload failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setWtUploading(false);
     }
-
-    const publicUrl = supabaseClient.storage
-      .from("property-media")
-      .getPublicUrl(storagePath).data.publicUrl;
-
-    const { data: mediaRow, error: insertErr } = await supabaseClient
-      .from("property_media")
-      .insert({
-        property_id: id,
-        type: "video",
-        storage_path: storagePath,
-        public_url: publicUrl,
-        sort_order: 0,
-      })
-      .select("id, storage_path, public_url, sort_order")
-      .single();
-
-    if (walkthroughInputRef.current) walkthroughInputRef.current.value = "";
-    setUploading(false);
-
-    if (insertErr) {
-      setUploadError(`Video save failed: ${insertErr.message}`);
-      return;
-    }
-
-    if (walkthrough) {
-      await supabaseClient.storage.from("property-media").remove([walkthrough.storage_path]);
-      await supabaseClient.from("property_media").delete().eq("id", walkthrough.id);
-    }
-
-    setWalkthrough(mediaRow as MediaItem);
   }
 
   async function deleteWalkthrough() {
     if (!walkthrough) return;
 
-    setUploading(true);
+    setWtUploading(true);
     setUploadError(null);
 
     await supabaseClient.storage.from("property-media").remove([walkthrough.storage_path]);
@@ -528,7 +562,7 @@ export default function EditListingPage() {
       .delete()
       .eq("id", walkthrough.id);
 
-    setUploading(false);
+    setWtUploading(false);
 
     if (deleteErr) {
       setUploadError(`Video delete failed: ${deleteErr.message}`);
@@ -905,16 +939,16 @@ export default function EditListingPage() {
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={uploading}
+                  disabled={wtUploading}
                   className="h-9 rounded-[10px] text-sm"
                   onClick={() => walkthroughInputRef.current?.click()}
                 >
-                  {uploading ? "Uploading…" : "Replace video"}
+                  {wtUploading ? "Uploading…" : "Replace video"}
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={uploading}
+                  disabled={wtUploading}
                   className="h-9 rounded-[10px] border-red-200 text-sm text-red-600 hover:bg-red-50"
                   onClick={deleteWalkthrough}
                 >
@@ -931,9 +965,37 @@ export default function EditListingPage() {
                 <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
               </svg>
               <p className="text-[14px] font-semibold text-gray-700">
-                {uploading ? "Uploading…" : "Click to upload walkthrough video"}
+                {wtUploading ? "Uploading…" : "Click to upload walkthrough video"}
               </p>
               <p className="text-[12px] text-gray-400">MP4, MOV, WebM — up to 500 MB</p>
+            </div>
+          )}
+
+          {wtUploading && (
+            <div className="mt-4 space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold text-[#0F172A]">Uploading video...</span>
+                <span className="text-[#6B7280]">{wtProgress.toFixed(1)}%</span>
+              </div>
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100">
+                <div
+                  className="h-full bg-[#08519A] transition-all duration-300"
+                  style={{ width: `${wtProgress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[12px] text-[#6B7280]">
+                <span>
+                  {(wtUploadedBytes / (1024 * 1024)).toFixed(1)} MB of {(wtTotalBytes / (1024 * 1024)).toFixed(1)} MB
+                </span>
+                <span>
+                  {wtSpeed > 0 ? `${(wtSpeed / (1024 * 1024)).toFixed(2)} MB/s` : "Calculating..."}
+                </span>
+              </div>
+              {wtSpeed > 0 && wtProgress < 100 && (
+                <div className="text-[12px] text-[#6B7280]">
+                  Remaining: {Math.ceil((wtTotalBytes - wtUploadedBytes) / wtSpeed)} seconds
+                </div>
+              )}
             </div>
           )}
 
