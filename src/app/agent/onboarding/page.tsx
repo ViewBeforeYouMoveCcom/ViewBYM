@@ -47,7 +47,7 @@ export default function AgentOnboardingPage() {
       .insert({
         name: form.name.trim(),
         website: form.website.trim() || null,
-        status: "approved",
+        status: "pending",
         created_by: user.id,
       })
       .select("id")
