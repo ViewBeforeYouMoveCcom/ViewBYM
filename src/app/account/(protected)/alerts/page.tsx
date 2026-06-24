@@ -216,8 +216,8 @@ export default function AlertsPage() {
             <div key={alert.id} className="flex items-center gap-3">
               <Checkbox
                 id={alert.id}
-                checked={prefs[alert.id] ?? false}
-                onCheckedChange={() => toggle(alert.id)}
+                checked={prefs[alert.id as keyof AlertPreferences] ?? false}
+                onCheckedChange={() => toggle(alert.id as keyof AlertPreferences)}
               />
               <Label
                 htmlFor={alert.id}
