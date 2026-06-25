@@ -62,7 +62,6 @@ export default function AgentDashboardPage() {
   const [agentName, setAgentName] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showApprovedPopup, setShowApprovedPopup] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -89,14 +88,6 @@ export default function AgentDashboardPage() {
       const agencyData = (memberships as unknown as { agencies: Agency }).agencies ?? null;
       setAgency(agencyData);
 
-      // Show one-time popup when agency is first approved
-      if (agencyData?.status === "approved") {
-        const key = `vbym_approved_seen_${agencyData.id}`;
-        if (!localStorage.getItem(key)) {
-          setShowApprovedPopup(true);
-          localStorage.setItem(key, "1");
-        }
-      }
 
       if (!agencyData) { setLoading(false); return; }
 
@@ -157,44 +148,6 @@ export default function AgentDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* One-time approval popup */}
-      {showApprovedPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
-            <div className="bg-[#08519A] px-8 py-6 text-center">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-              </div>
-              <h2 className="text-[22px] font-extrabold text-white">You&apos;re Approved!</h2>
-              <p className="mt-1 text-[13px] text-blue-200">Approved Founding Member</p>
-            </div>
-            <div className="px-8 py-6 text-center">
-              <p className="text-[15px] text-gray-700 leading-relaxed">
-                Congratulations! Your agency <strong>{agency?.name}</strong> has been approved on ViewBeforeYouMove.
-              </p>
-              <p className="mt-2 text-[14px] text-gray-500">
-                You can now start adding property listings and reach thousands of buyers.
-              </p>
-              <Link
-                href="/agent/listings/new"
-                onClick={() => setShowApprovedPopup(false)}
-                className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#08519A] px-6 py-3 text-[14px] font-bold text-white hover:bg-[#063d75]"
-              >
-                Start listing a property →
-              </Link>
-              <button
-                type="button"
-                onClick={() => setShowApprovedPopup(false)}
-                className="mt-3 text-[13px] text-gray-400 hover:text-gray-600"
-              >
-                I&apos;ll do this later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold text-gray-900">
