@@ -275,7 +275,7 @@ export default function VrUploadPage() {
             <div className="space-y-3">
               <p className="text-sm font-semibold text-[#0F172A]">360° footage files</p>
               <p className="text-[13px] text-[#6B7280]">
-                Upload your 360° video files. Accepted: MP4 or MOV. Max 2 GB per file.
+                Upload your 360° video files. Accepted: MP4 or MOV. Max 5 GB per file.
               </p>
 
               <input
@@ -309,7 +309,7 @@ export default function VrUploadPage() {
                     <circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" />
                   </svg>
                   <p className="text-[14px] font-semibold text-gray-700">Click to select footage</p>
-                  <p className="text-[12px] text-gray-400">MP4 or MOV — up to 2 GB</p>
+                  <p className="text-[12px] text-gray-400">MP4 or MOV — up to 5 GB</p>
                 </div>
               )}
 
