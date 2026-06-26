@@ -14,6 +14,7 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  const [vrOverlayOpen, setVrOverlayOpen] = useState(false);
 
   useEffect(() => {
     if (!vrEnabled) return;
@@ -63,6 +64,8 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
                 </p>
               </div>
             </div>
+          ) : vrOverlayOpen ? (
+            <div className="flex h-[420px] items-center justify-center bg-gray-950 md:h-[540px]" />
           ) : (
             <VR360Player videoUrl={signedUrl} className="h-[420px] w-full md:h-[540px]" />
           )}
@@ -76,7 +79,7 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
                 Click and drag to look around in full 360°. Works on desktop, mobile, and VR headsets.
               </p>
             </div>
-            <VRPlayerOverlay propertyId={propertyId} />
+            <VRPlayerOverlay propertyId={propertyId} onOpenChange={setVrOverlayOpen} />
           </div>
         )}
       </CardContent>
