@@ -643,7 +643,7 @@ export default function NewListingPage() {
               onChange={(e) => setFeatureInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addFeature(); } }}
               className="flex-1" />
-            <Button type="button" variant="secondary" className="h-11 rounded-[10px] px-4 text-sm" onClick={addFeature} disabled={features.length >= 10}>Add</Button>
+            <Button type="button" variant="secondary" className="h-11 rounded-[10px] px-4 text-sm" onClick={addFeature} disabled={false}>Add</Button>
           </div>
           {features.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">

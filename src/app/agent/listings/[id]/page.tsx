@@ -112,6 +112,7 @@ export default function EditListingPage() {
   const draggedIdx = useRef<number | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [featureInput, setFeatureInput] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -224,7 +225,8 @@ export default function EditListingPage() {
     if (from === null || from === idx) return;
     setPhotos((prev) => {
       const next = [...prev];
-      [next[from], next[idx]] = [next[idx], next[from]];
+      const [moved] = next.splice(from, 1);
+      next.splice(idx, 0, moved);
       next.forEach((p, i) => {
         if (p.id) {
           supabaseClient
@@ -242,6 +244,15 @@ export default function EditListingPage() {
     setDraggingId(null);
     setDragOverIdx(null);
     draggedIdx.current = null;
+  }
+
+  function addFeature() {
+    const val = featureInput.trim();
+    const current = form.features ?? [];
+    if (val && !current.includes(val)) {
+      setField("features", [...current, val]);
+    }
+    setFeatureInput("");
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -761,23 +772,41 @@ export default function EditListingPage() {
 
             <div className="md:col-span-2">
               <FormField id="features" label="Key features">
-                <textarea
-                  id="features"
-                  rows={4}
-                  value={(form.features ?? []).join("\n")}
-                  onChange={(e) =>
-                    setField(
-                      "features",
-                      e.target.value
-                        .split("\n")
-                        .map((feature) => feature.trim())
-                        .filter(Boolean)
-                        .slice(0, 10)
-                    )
-                  }
-                  placeholder="One feature per line"
-                  className="w-full rounded-[10px] border border-[#E5E7EB] px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="features"
+                    placeholder="e.g. Underfloor heating"
+                    value={featureInput}
+                    onChange={(e) => setFeatureInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addFeature(); } }}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-10 rounded-[10px] px-4 text-sm"
+                    onClick={addFeature}
+                    disabled={false}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {(form.features ?? []).length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(form.features ?? []).map((f) => (
+                      <span key={f} className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[13px] font-medium text-blue-700">
+                        {f}
+                        <button
+                          type="button"
+                          onClick={() => setField("features", (form.features ?? []).filter((x) => x !== f))}
+                          className="ml-0.5 text-blue-400 hover:text-blue-700"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </FormField>
             </div>
           </div>
