@@ -309,6 +309,39 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   </div>
   <script>
     (function(){
+      // ── WebGL / VR support detection ──────────────────────────────
+      function isWebGLSupported() {
+        try {
+          var canvas = document.createElement('canvas');
+          var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          return !!(gl && gl instanceof WebGLRenderingContext);
+        } catch(e) { return false; }
+      }
+
+      if (!isWebGLSupported()) {
+        var errEl = document.createElement('div');
+        errEl.style.cssText = [
+          'position:fixed','inset:0','z-index:99999','background:#0d0d0d',
+          'display:flex','flex-direction:column','align-items:center',
+          'justify-content:center','gap:14px','padding:24px','text-align:center'
+        ].join(';');
+        errEl.innerHTML =
+          '<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round">' +
+            '<circle cx="12" cy="12" r="10"/>' +
+            '<line x1="12" y1="8" x2="12" y2="12"/>' +
+            '<circle cx="12" cy="16" r="0.5" fill="#ef4444"/>' +
+          '</svg>' +
+          '<p style="color:#fff;font-size:16px;font-weight:700;margin:0;font-family:sans-serif">VR Not Supported</p>' +
+          '<p style="color:#9ca3af;font-size:13px;margin:0;font-family:sans-serif;max-width:280px;line-height:1.6">' +
+            'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.' +
+          '</p>';
+        document.body.appendChild(errEl);
+        var loadingScreen = document.getElementById('loading');
+        if (loadingScreen) loadingScreen.style.display = 'none';
+        return;
+      }
+      // ─────────────────────────────────────────────────────────────
+
       var v = document.getElementById('v360');
       var loadingEl = document.getElementById('loading');
       var videoStatusEl = document.getElementById('video-status');
