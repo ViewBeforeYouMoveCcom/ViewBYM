@@ -58,6 +58,7 @@ export default function AdminAdminsPage() {
   }
 
   const filtered = profiles.filter((p) => {
+    if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
       p.email?.toLowerCase().includes(q) ||

@@ -7,7 +7,7 @@ import Image from "next/image";
 
 import { supabaseClient } from "@/lib/supabaseClient";
 
-type Step = "validating" | "invalid" | "signup" | "agency" | "done";
+type Step = "validating" | "invalid" | "signup" | "verify" | "agency" | "done";
 
 export default function AgentJoinPage() {
   const { token } = useParams<{ token: string }>();
@@ -27,6 +27,7 @@ export default function AgentJoinPage() {
   const [agencyCity, setAgencyCity] = useState("");
   const [agencyPhone, setAgencyPhone] = useState("");
 
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,27 +57,52 @@ export default function AgentJoinPage() {
 
     const fullName = `${firstName.trim()} ${surname.trim()}`.trim();
 
-    const { error: signUpError } = await supabaseClient.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { data: { full_name: fullName } },
+    // Create the account server-side with email pre-confirmed.
+    // The invite token already proves authorization, so no confirmation email is needed.
+    const res = await fetch("/api/agents/invite-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password, fullName, token }),
     });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    const result = await res.json() as { error?: string };
+
+    if (!res.ok) {
+      setError(result.error ?? "Failed to create account. Please try again.");
       setLoading(false);
       return;
     }
 
-    // Sign in immediately (some Supabase configs auto-confirm)
+    // Try signing in immediately (works if Supabase email confirmation is disabled)
     const { error: signInError } = await supabaseClient.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
     if (signInError) {
-      // Email confirmation may be required
-      setError("Account created — please check your email to confirm your address, then return here to complete setup.");
+      // Supabase sent an OTP — go to verify step
+      setStep("verify");
+      setLoading(false);
+      return;
+    }
+
+    setStep("agency");
+    setLoading(false);
+  }
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+      email: email.trim(),
+      token: otp.trim(),
+      type: "signup",
+    });
+
+    if (verifyError) {
+      setError("Invalid or expired code. Check your email and try again.");
       setLoading(false);
       return;
     }
@@ -119,12 +145,11 @@ export default function AgentJoinPage() {
       role: "owner",
     });
 
-    // Update profile name
+    // Upsert profile — covers both new users (no row yet) and existing ones
     const fullName = `${firstName.trim()} ${surname.trim()}`.trim();
     await supabaseClient
       .from("profiles")
-      .update({ full_name: fullName, role: "agent" })
-      .eq("id", user.id);
+      .upsert({ id: user.id, email: user.email, full_name: fullName, role: "agent" });
 
     // Mark invite as used
     await supabaseClient
@@ -186,6 +211,41 @@ export default function AgentJoinPage() {
           <h2 className="text-[18px] font-bold text-gray-900">You&apos;re all set!</h2>
           <p className="text-[13.5px] text-gray-500">Your agency account is ready. Redirecting to your dashboard…</p>
         </div>
+      </Shell>
+    );
+  }
+
+  // ── Verify OTP ───────────────────────────────────────────────────
+  if (step === "verify") {
+    return (
+      <Shell>
+        <div className="mb-6 space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-[.14em] text-green-600">Invited access</p>
+          <h1 className="text-[22px] font-extrabold tracking-tight text-gray-900">Check your email</h1>
+          <p className="text-[13.5px] text-gray-500">
+            We sent a 6-digit code to <strong>{email}</strong>. Enter it below to continue.
+          </p>
+        </div>
+
+        <form onSubmit={handleVerify} className="space-y-4">
+          <Field label="Verification code">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={8}
+              required
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              placeholder="12345678"
+              className={inputCls}
+              autoFocus
+            />
+          </Field>
+
+          {error && <ErrorBox>{error}</ErrorBox>}
+
+          <SubmitButton loading={loading}>Verify &amp; continue →</SubmitButton>
+        </form>
       </Shell>
     );
   }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import VR360Player from "@/components/VR360Player";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { preparePhotoFile } from "@/lib/videoFrameToJpeg";
@@ -575,7 +576,14 @@ export default function NewListingPage() {
                 <Input placeholder="21 Meridian Wharf" value={form.address} onChange={(e) => setField("address", e.target.value)} />
               </Field>
             </div>
-            <Field label="City" required><Input placeholder="London" value={form.city} onChange={(e) => setField("city", e.target.value)} /></Field>
+            <Field label="City" required>
+              <LocationAutocomplete
+                value={form.city}
+                onChange={(v) => setField("city", v)}
+                onSelect={(v) => setField("city", v)}
+                placeholder="London"
+              />
+            </Field>
             <Field label="Postcode" required><Input placeholder="E14 9UH" value={form.postcode} onChange={(e) => setField("postcode", e.target.value)} /></Field>
             <Field label="Listing type">
               <Sel value={form.listing_type} onChange={(v) => setField("listing_type", v)}>
@@ -778,7 +786,7 @@ export default function NewListingPage() {
               </div>
               <div>
                 <p className="text-[14px] font-semibold text-gray-800">Upload 360° VR video</p>
-                <p className="mt-1 text-[12px] text-gray-400">MP4 or WebM · up to 2 GB</p>
+                <p className="mt-1 text-[12px] text-gray-400">MP4 or WebM · up to 5 GB</p>
                 <p className="mt-0.5 text-[11.5px] text-gray-400">Works on desktop, mobile &amp; VR headsets — processed entirely on our platform</p>
               </div>
               <input ref={vrFileRef} type="file" accept="video/mp4,video/webm,video/*" className="hidden" onChange={onVrFileChange} />

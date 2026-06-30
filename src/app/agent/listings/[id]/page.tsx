@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 import FormField from "@/components/FormField";
-import PlacesAutocomplete from "@/components/PlacesAutocomplete";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -656,7 +657,7 @@ export default function EditListingPage() {
             {/* Address — Google Places Autocomplete */}
             <div className="md:col-span-2">
               <FormField id="address_line1" label="Address">
-                <PlacesAutocomplete
+                <AddressAutocomplete
                   id="address_line1"
                   value={form.address_line1 ?? ""}
                   onChange={(raw) => setField("address_line1", raw)}
@@ -674,10 +675,12 @@ export default function EditListingPage() {
             </div>
 
             <FormField id="city" label="City">
-              <Input
+              <LocationAutocomplete
                 id="city"
                 value={form.city ?? ""}
-                onChange={(e) => setField("city", e.target.value)}
+                onChange={(v) => setField("city", v)}
+                onSelect={(v) => setField("city", v)}
+                placeholder="Town or city…"
               />
             </FormField>
 

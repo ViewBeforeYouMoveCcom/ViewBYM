@@ -1,6 +1,6 @@
 "use client";
+
 import { useEffect, useRef } from "react";
-import { useGoogleMaps } from "@/lib/useGoogleMaps";
 import type { Property } from "@/data/properties";
 
 interface Props {
@@ -9,89 +9,113 @@ interface Props {
 }
 
 export default function PropertyMap({ properties, onPinClick }: Props) {
-  const mapsLoaded = useGoogleMaps();
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markersRef = useRef<import("leaflet").Marker[]>([]);
 
+  // Initialise map once
   useEffect(() => {
-    if (!mapsLoaded || !mapRef.current) return;
-    if (mapInstanceRef.current) return;
+    if (typeof window === "undefined" || !containerRef.current) return;
+    if (mapRef.current) return;
 
-    // Default centre: UK
-    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 54.5, lng: -2.5 },
-      zoom: 6,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [
-        { featureType: "poi", stylers: [{ visibility: "off" }] },
-        { featureType: "transit", stylers: [{ visibility: "off" }] },
-      ],
-    });
-  }, [mapsLoaded]);
-
-  useEffect(() => {
-    if (!mapsLoaded || !mapInstanceRef.current) return;
-
-    // Clear old markers
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = [];
-
-    const propertiesWithCoords = properties.filter(
-      (p) => p.latitude != null && p.longitude != null
-    );
-
-    if (propertiesWithCoords.length === 0) return;
-
-    const bounds = new window.google.maps.LatLngBounds();
-
-    propertiesWithCoords.forEach((p) => {
-      const position = { lat: p.latitude!, lng: p.longitude! };
-      const marker = new window.google.maps.Marker({
-        position,
-        map: mapInstanceRef.current!,
-        title: p.title,
-        label: {
-          text: p.price.replace("£", "£").slice(0, 8),
-          color: "#fff",
-          fontSize: "11px",
-          fontWeight: "700",
-        },
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 26,
-          fillColor: p.vrEnabled ? "#2563EB" : "#08519A",
-          fillOpacity: 1,
-          strokeColor: "#fff",
-          strokeWeight: 2,
-        },
+    import("leaflet").then((L) => {
+      // Fix default marker icon path broken by webpack
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      marker.addListener("click", () => {
-        onPinClick?.(p.id);
+      const map = L.map(containerRef.current!, {
+        center: [54.5, -2.5],
+        zoom: 6,
+        zoomControl: true,
       });
 
-      markersRef.current.push(marker);
-      bounds.extend(position);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapRef.current = map;
     });
 
-    mapInstanceRef.current.fitBounds(bounds);
-    if (propertiesWithCoords.length === 1) {
-      mapInstanceRef.current.setZoom(14);
-    }
-  }, [mapsLoaded, properties, onPinClick]);
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-    return (
-      <div className="flex h-full items-center justify-center bg-gray-100 rounded-xl">
-        <p className="text-sm text-gray-500">Map unavailable — API key not configured</p>
-      </div>
-    );
-  }
+  // Update markers when properties change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    import("leaflet").then((L) => {
+      const map = mapRef.current!;
+
+      // Clear old markers
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+
+      const propertiesWithCoords = properties.filter(
+        (p) => p.latitude != null && p.longitude != null
+      );
+
+      if (propertiesWithCoords.length === 0) return;
+
+      const bounds: [number, number][] = [];
+
+      propertiesWithCoords.forEach((p) => {
+        const lat = p.latitude!;
+        const lng = p.longitude!;
+
+        const colour = p.vrEnabled ? "#2563EB" : "#08519A";
+        const priceLabel = p.price.slice(0, 8);
+
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="
+            background:${colour};
+            color:#fff;
+            border:2px solid #fff;
+            border-radius:20px;
+            padding:4px 8px;
+            font-size:11px;
+            font-weight:700;
+            white-space:nowrap;
+            box-shadow:0 1px 4px rgba(0,0,0,.35);
+            font-family:system-ui,sans-serif;
+          ">${priceLabel}</div>`,
+          iconAnchor: [0, 0],
+        });
+
+        const marker = L.marker([lat, lng], { icon })
+          .addTo(map)
+          .on("click", () => onPinClick?.(p.id));
+
+        markersRef.current.push(marker);
+        bounds.push([lat, lng]);
+      });
+
+      if (bounds.length === 1) {
+        map.setView(bounds[0], 14);
+      } else if (bounds.length > 1) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    });
+  }, [properties, onPinClick]);
 
   return (
-    <div ref={mapRef} className="h-full w-full rounded-xl" />
+    <>
+      {/* Leaflet CSS */}
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      />
+      <div ref={containerRef} className="h-full w-full rounded-xl" />
+    </>
   );
 }

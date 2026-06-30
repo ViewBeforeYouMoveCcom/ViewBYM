@@ -19,9 +19,11 @@ export default function AdminInvitesPage() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [expiryDays, setExpiryDays] = useState(30);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<{ token: string; ok: boolean; error?: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -37,15 +39,39 @@ export default function AdminInvitesPage() {
 
   async function createInvite() {
     setCreating(true);
+    setEmailStatus(null);
     const expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + expiryDays);
 
-    await supabaseClient.from("agency_invites").insert({
-      note: note.trim() || null,
-      expires_at: expires_at.toISOString(),
-    });
+    await supabaseClient
+      .from("agency_invites")
+      .insert({
+        note: note.trim() || null,
+        expires_at: expires_at.toISOString(),
+      });
+
+    // Fetch the token of the invite we just created
+    const { data: newInvite } = await supabaseClient
+      .from("agency_invites")
+      .select("token")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    // If a recipient email was provided, send the invite link directly
+    if (recipientEmail.trim() && newInvite?.token) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const res = await fetch("/api/admin/send-invite-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientEmail: recipientEmail.trim(), token: newInvite.token }),
+      });
+      const result = await res.json() as { sent?: boolean; error?: string };
+      setEmailStatus({ token: newInvite.token, ok: res.ok, error: result.error });
+    }
 
     setNote("");
+    setRecipientEmail("");
     load();
     setCreating(false);
   }
@@ -81,37 +107,57 @@ export default function AdminInvitesPage() {
       {/* Create invite */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
         <p className="mb-4 text-sm font-semibold text-gray-900">Create invite</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-1.5">
-            <label className="text-[12.5px] font-medium text-gray-500">Note (optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. Jones & Partners, Manchester"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#08519A]/40 focus:bg-white"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[12.5px] font-medium text-gray-500">Expires in</label>
-            <select
-              value={expiryDays}
-              onChange={(e) => setExpiryDays(parseInt(e.target.value))}
-              className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13.5px] text-gray-700 outline-none"
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <label className="text-[12.5px] font-medium text-gray-500">Note (optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Jones & Partners, Manchester"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#08519A]/40 focus:bg-white"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <label className="text-[12.5px] font-medium text-gray-500">Email invite to (optional)</label>
+              <input
+                type="email"
+                placeholder="agent@agency.co.uk"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:border-[#08519A]/40 focus:bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[12.5px] font-medium text-gray-500">Expires in</label>
+              <select
+                value={expiryDays}
+                onChange={(e) => setExpiryDays(parseInt(e.target.value))}
+                className="h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 text-[13.5px] text-gray-700 outline-none"
+              >
+                <option value={7}>7 days</option>
+                <option value={14}>14 days</option>
+                <option value={30}>30 days</option>
+                <option value={90}>90 days</option>
+              </select>
+            </div>
+            <button
+              onClick={createInvite}
+              disabled={creating}
+              className="h-10 rounded-lg bg-[#08519A] px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#063d75] disabled:opacity-60"
             >
-              <option value={7}>7 days</option>
-              <option value={14}>14 days</option>
-              <option value={30}>30 days</option>
-              <option value={90}>90 days</option>
-            </select>
+              {creating ? "Creating…" : "Create invite"}
+            </button>
           </div>
-          <button
-            onClick={createInvite}
-            disabled={creating}
-            className="h-10 rounded-lg bg-[#08519A] px-5 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#063d75] disabled:opacity-60"
-          >
-            {creating ? "Creating…" : "Create invite"}
-          </button>
+
+          {emailStatus && (
+            <p className={`text-[12px] ${emailStatus.ok ? "text-green-600" : "text-red-500"}`}>
+              {emailStatus.ok
+                ? "Invite email sent successfully."
+                : `Email failed: ${emailStatus.error ?? "unknown error"} — copy the link manually.`}
+            </p>
+          )}
         </div>
         <p className="mt-3 text-[12px] text-gray-400">
           The invite link can be used once. The agency skips the application queue and gets an approved account immediately.
