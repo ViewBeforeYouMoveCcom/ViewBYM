@@ -41,7 +41,7 @@ export default function AgentContactPage() {
     <div className="bg-white font-sans">
       <section className="relative overflow-hidden bg-[#1A3A6C] py-12 sm:py-16">
         <div className="relative mx-auto max-w-[1800px] px-5">
-          <Link href="/contact" className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-white/70 hover:text-white">
+          <Link href="/contact" className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-white hover:text-white">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
             Back to contact
           </Link>

@@ -277,7 +277,11 @@ export const getPropertiesFiltered = async (params: {
     }
 
     if (params.listingType && params.listingType !== "all") {
-      query = query.eq("listing_type", params.listingType);
+      if (params.listingType === "new") {
+        query = query.eq("listing_type", "sale").eq("property_type", "New build");
+      } else {
+        query = query.eq("listing_type", params.listingType);
+      }
     }
 
     if (params.priceMin) {
