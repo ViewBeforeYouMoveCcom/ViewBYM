@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Sign up — email confirmation depends on your Supabase project settings
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email: email.trim().toLowerCase(),
     password,
     options: { data: { full_name: fullName } },
@@ -42,6 +42,19 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  // Write full_name to profiles immediately (service role bypasses RLS) so it
+  // shows up in the admin panel even if the user never finishes agency setup —
+  // the "agency" onboarding step used to be the only place this was saved.
+  if (signUpData.user) {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    await supabaseAdmin
+      .from("profiles")
+      .upsert({ id: signUpData.user.id, email: signUpData.user.email, full_name: fullName, role: "agent" });
   }
 
   return NextResponse.json({ ok: true });
