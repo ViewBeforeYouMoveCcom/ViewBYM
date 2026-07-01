@@ -305,6 +305,13 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         </button>
         <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="0" />
       </div>
+      <button id="enterVRBtn" title="Enter VR headset" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="10" rx="4"/>
+          <circle cx="8" cy="12" r="1.6" fill="white" stroke="none"/>
+          <circle cx="16" cy="12" r="1.6" fill="white" stroke="none"/>
+        </svg>
+      </button>
     </div>
   </div>
   <script>
@@ -549,6 +556,23 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           p.then(hideTapOverlay).catch(showTapOverlay);
         }
       }
+
+      // ── WebXR headset entry ─────────────────────────────────────
+      // Shows the headset button only when the browser + device actually
+      // support an immersive-vr WebXR session (e.g. Quest Browser), and
+      // launches a real stereoscopic/head-tracked session via A-Frame.
+      var enterVRBtn = document.getElementById('enterVRBtn');
+      if (enterVRBtn && navigator.xr && navigator.xr.isSessionSupported) {
+        navigator.xr.isSessionSupported('immersive-vr').then(function(supported) {
+          if (supported) enterVRBtn.style.display = 'flex';
+        }).catch(function() {});
+
+        enterVRBtn.addEventListener('click', function() {
+          var sceneEl = document.querySelector('a-scene');
+          if (sceneEl && sceneEl.enterVR) sceneEl.enterVR();
+        });
+      }
+      // ─────────────────────────────────────────────────────────────
 
       // Remove A-Frame built-in UI buttons (fullscreen, VR, AR)
       function removeAFrameUI() {
