@@ -120,6 +120,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       display: flex;
       align-items: center;
       gap: 2px;
+      min-width: 0;
     }
     .a-enter-vr, .a-enter-ar, .a-enter-vr-button, .a-enter-ar-button,
     [data-aframe-default-button], .a-fullscreen-button, #a-fullscreen-button,
@@ -263,6 +264,72 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       color: #93c5fd;
       font-size: 10px;
     }
+    #enterVRBtn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1200;
+      border-radius: 16px !important;
+      padding: 8px 11px !important;
+      gap: 4px;
+      background: rgba(0,0,0,0.72) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
+    #enterVRBtn:hover { background: rgba(20,20,20,0.88) !important; }
+    @media (max-width: 560px) {
+      #controls {
+        padding: 6px 8px 9px;
+      }
+      #btn-row {
+        gap: 1px;
+      }
+      #controls button {
+        padding: 6px;
+      }
+      #time {
+        font-size: 11px;
+        padding: 0 2px;
+      }
+      #volume-wrap {
+        margin-left: 0;
+      }
+      #vol-slider {
+        width: 44px;
+      }
+      #qualityBtn {
+        min-width: 44px;
+        padding: 6px 7px !important;
+        font-size: 10px;
+      }
+      #quality-menu {
+        right: -8px;
+      }
+      #enterVRBtn {
+        top: 8px;
+        right: 8px;
+        padding: 7px 9px !important;
+      }
+      #enterVRBtn span {
+        font-size: 10px !important;
+      }
+    }
+    @media (max-width: 420px) {
+      #skipBack,
+      #skipFwd {
+        display: none !important;
+      }
+      #time {
+        font-size: 10px;
+      }
+      #vol-slider {
+        width: 34px;
+      }
+      #qualityBtn {
+        min-width: 40px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -290,13 +357,14 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   <a-scene
     embedded
     renderer="${rendererSettings}"
+    webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false"
   >
     <a-assets timeout="3000">
       <video id="v360"
         data-src="${escapeAttr(videoUrl)}"
-        loop muted playsinline preload="metadata"
+        autoplay loop muted playsinline preload="auto"
         crossorigin="anonymous"
         webkit-playsinline>
       </video>
@@ -366,6 +434,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           <circle cx="8" cy="12" r="1.6" fill="white" stroke="none"/>
           <circle cx="16" cy="12" r="1.6" fill="white" stroke="none"/>
         </svg>
+        <span style="font:700 11px/1 sans-serif;margin-left:2px">VR</span>
       </button>
     </div>
   </div>
@@ -437,6 +506,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var qualityAutoNote = document.getElementById('quality-auto-note');
       var hlsAutoStartedLow = false;
       var plainVideoMode = false;
+      var inImmersiveVr = false;
 
       if (!v) return;
 
@@ -501,6 +571,10 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         var profile = renderProfileFor(height);
         var sceneEl = document.querySelector('a-scene');
         var sphereEl = document.getElementById('videosphere');
+
+        if (inImmersiveVr && (!height || height > 1080)) {
+          profile = renderProfileFor(1080);
+        }
 
         if (sphereEl) {
           sphereEl.setAttribute('segments-width', String(profile.width));
@@ -729,20 +803,24 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         }
       }
 
+      function setPlayButtonState(isPlaying) {
+        if (!playIcon || !pauseIcon) return;
+        playIcon.style.display = isPlaying ? 'none' : 'block';
+        pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      }
+
       function togglePlay() {
         if (v.paused) {
           v.play().then(function() {
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = 'block';
+            setPlayButtonState(true);
           }).catch(function() {});
         } else {
           v.pause();
-          playIcon.style.display = 'block';
-          pauseIcon.style.display = 'none';
+          setPlayButtonState(false);
         }
       }
 
-      playPauseBtn.addEventListener('click', togglePlay);
+      if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlay);
 
 
 
@@ -851,14 +929,12 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       // Fallback: poll every 500ms for mobile where timeupdate is unreliable in A-Frame
       setInterval(updateTime, 500);
       v.addEventListener('play', function() {
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
+        setPlayButtonState(true);
         bufferingEl.classList.remove('active');
         videoStatusEl.classList.remove('show');
       });
       v.addEventListener('pause', function() {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
+        setPlayButtonState(false);
       });
       v.addEventListener('waiting', function() {
         bufferingEl.classList.add('active');
@@ -926,14 +1002,70 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       // support an immersive-vr WebXR session (e.g. Quest Browser), and
       // launches a real stereoscopic/head-tracked session via A-Frame.
       var enterVRBtn = document.getElementById('enterVRBtn');
-      if (enterVRBtn && navigator.xr && navigator.xr.isSessionSupported) {
-        navigator.xr.isSessionSupported('immersive-vr').then(function(supported) {
-          if (supported) enterVRBtn.style.display = 'flex';
-        }).catch(function() {});
+      function showEnterVRButton() {
+        if (!enterVRBtn) return;
+        enterVRBtn.style.display = 'flex';
+        enterVRBtn.style.borderRadius = '14px';
+        enterVRBtn.style.gap = '2px';
+      }
+
+      if (enterVRBtn) {
+        var isLocalTest =
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          document.referrer.indexOf('localhost') !== -1 ||
+          document.referrer.indexOf('127.0.0.1') !== -1;
+        var isQuestBrowser = /Quest|Oculus/i.test(navigator.userAgent);
+        if (navigator.xr || isLocalTest || isQuestBrowser) showEnterVRButton();
+
+        if (navigator.xr && navigator.xr.isSessionSupported) {
+          navigator.xr.isSessionSupported('immersive-vr').then(function(supported) {
+          if (supported) {
+            showEnterVRButton();
+          } else if (!isLocalTest && !isQuestBrowser) {
+            enterVRBtn.style.display = 'none';
+          }
+          }).catch(function() {
+            if (!isLocalTest && !isQuestBrowser) enterVRBtn.style.display = 'none';
+          });
+        }
 
         enterVRBtn.addEventListener('click', function() {
           var sceneEl = document.querySelector('a-scene');
-          if (sceneEl && sceneEl.enterVR) sceneEl.enterVR();
+          tryPlay();
+          applyRenderQuality(selectedQuality === 'auto' ? 720 : Number(selectedQuality));
+          if (sceneEl && sceneEl.enterVR) {
+            var vrAttempt = sceneEl.enterVR();
+            if (vrAttempt && vrAttempt.catch) {
+              vrAttempt.catch(function() {
+                showUnsupportedPopup(
+                  'VR Mode Not Available',
+                  'Turn on the WebXR emulator polyfill, reload the page, then try the VR button again.'
+                );
+              });
+            }
+          } else {
+            showUnsupportedPopup(
+              'VR Mode Not Available',
+              'This browser does not expose WebXR for the VR tour. Enable the WebXR emulator polyfill or test in a headset browser.'
+            );
+          }
+        });
+      }
+
+      var sceneForVrEvents = document.querySelector('a-scene');
+      if (sceneForVrEvents) {
+        sceneForVrEvents.addEventListener('enter-vr', function() {
+          inImmersiveVr = true;
+          tryPlay();
+          applyRenderQuality(selectedQuality === 'auto' ? 720 : Number(selectedQuality));
+          if (hls && selectedQuality === 'auto') {
+            hls.nextLevel = 0;
+          }
+        });
+        sceneForVrEvents.addEventListener('exit-vr', function() {
+          inImmersiveVr = false;
+          applyRenderQuality(selectedQuality === 'auto' ? lastKnownHeight : Number(selectedQuality));
         });
       }
       // ─────────────────────────────────────────────────────────────
@@ -1025,6 +1157,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   <a-scene
     embedded
     renderer="${rendererSettings}"
+    webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false"
   >
@@ -1044,7 +1177,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       srcDoc={html}
       className={className}
       style={{ border: 0, display: "block" }}
-      allow="autoplay; xr-spatial-tracking; gyroscope; accelerometer"
+      allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer"
+      allowFullScreen
       title="360° VR tour"
     />
   );
