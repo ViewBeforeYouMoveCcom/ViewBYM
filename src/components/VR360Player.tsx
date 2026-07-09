@@ -37,6 +37,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
     "pixelRatio: 1",
     "sortObjects: false",
   ].join("; ");
+  const videoSrcJson = JSON.stringify(videoUrl ?? "");
 
   const html = videoUrl
     ? `<!DOCTYPE html>
@@ -46,6 +47,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>VR360</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.7/dist/hls.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -118,6 +120,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       display: flex;
       align-items: center;
       gap: 2px;
+      min-width: 0;
     }
     .a-enter-vr, .a-enter-ar, .a-enter-vr-button, .a-enter-ar-button,
     [data-aframe-default-button], .a-fullscreen-button, #a-fullscreen-button,
@@ -219,6 +222,114 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       border: none;
       box-shadow: 0 1px 4px rgba(0,0,0,0.5);
     }
+    #quality-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    #qualityBtn {
+      border-radius: 14px !important;
+      padding: 6px 9px !important;
+      min-width: 52px;
+      font: 700 11px/1 sans-serif;
+    }
+    #qualityBtn.active { background: rgba(255,255,255,0.14); }
+    #quality-menu {
+      position: absolute;
+      right: 0;
+      bottom: 34px;
+      width: 118px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      background: rgba(12,12,12,0.96);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.42);
+      backdrop-filter: blur(12px);
+    }
+    #quality-menu.open { display: flex; }
+    #quality-menu button {
+      width: 100%;
+      justify-content: space-between;
+      border-radius: 0 !important;
+      padding: 9px 10px !important;
+      color: #e5e7eb;
+      font: 600 12px/1 sans-serif;
+    }
+    #quality-menu button.selected {
+      color: #fff;
+      background: rgba(59,130,246,0.28);
+    }
+    #quality-menu button span:last-child {
+      color: #93c5fd;
+      font-size: 10px;
+    }
+    #enterVRBtn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1200;
+      border-radius: 16px !important;
+      padding: 8px 11px !important;
+      gap: 4px;
+      background: rgba(0,0,0,0.72) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
+    #enterVRBtn:hover { background: rgba(20,20,20,0.88) !important; }
+    @media (max-width: 560px) {
+      #controls {
+        padding: 6px 8px 9px;
+      }
+      #btn-row {
+        gap: 1px;
+      }
+      #controls button {
+        padding: 6px;
+      }
+      #time {
+        font-size: 11px;
+        padding: 0 2px;
+      }
+      #volume-wrap {
+        margin-left: 0;
+      }
+      #vol-slider {
+        width: 44px;
+      }
+      #qualityBtn {
+        min-width: 44px;
+        padding: 6px 7px !important;
+        font-size: 10px;
+      }
+      #quality-menu {
+        right: -8px;
+      }
+      #enterVRBtn {
+        top: 8px;
+        right: 8px;
+        padding: 7px 9px !important;
+      }
+      #enterVRBtn span {
+        font-size: 10px !important;
+      }
+    }
+    @media (max-width: 420px) {
+      #skipBack,
+      #skipFwd {
+        display: none !important;
+      }
+      #time {
+        font-size: 10px;
+      }
+      #vol-slider {
+        width: 34px;
+      }
+      #qualityBtn {
+        min-width: 40px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -246,13 +357,14 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   <a-scene
     embedded
     renderer="${rendererSettings}"
+    webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false"
   >
     <a-assets timeout="3000">
       <video id="v360"
-        src="${escapeAttr(videoUrl)}"
-        loop muted playsinline preload="auto"
+        data-src="${escapeAttr(videoUrl)}"
+        autoplay loop muted playsinline preload="auto"
         crossorigin="anonymous"
         webkit-playsinline>
       </video>
@@ -305,6 +417,25 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         </button>
         <input id="vol-slider" type="range" min="0" max="1" step="0.05" value="0" />
       </div>
+      <div id="quality-wrap">
+        <button id="qualityBtn" title="Video quality" type="button">Auto</button>
+        <div id="quality-menu" aria-label="Video quality">
+          <button type="button" data-quality="auto" class="selected"><span>Auto</span><span id="quality-auto-note"></span></button>
+          <button type="button" data-quality="2160"><span>4K</span><span>2160p</span></button>
+          <button type="button" data-quality="1440"><span>2K</span><span>1440p</span></button>
+          <button type="button" data-quality="1080"><span>1080p</span><span>HD</span></button>
+          <button type="button" data-quality="720"><span>720p</span><span>HD</span></button>
+          <button type="button" data-quality="360"><span>360p</span><span>Low</span></button>
+        </div>
+      </div>
+      <button id="enterVRBtn" title="Enter VR headset" style="display:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="10" rx="4"/>
+          <circle cx="8" cy="12" r="1.6" fill="white" stroke="none"/>
+          <circle cx="16" cy="12" r="1.6" fill="white" stroke="none"/>
+        </svg>
+        <span style="font:700 11px/1 sans-serif;margin-left:2px">VR</span>
+      </button>
     </div>
   </div>
   <script>
@@ -318,7 +449,10 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         } catch(e) { return false; }
       }
 
-      if (!isWebGLSupported()) {
+      var unsupportedShown = false;
+      function showUnsupportedPopup(title, message) {
+        if (unsupportedShown) return;
+        unsupportedShown = true;
         var errEl = document.createElement('div');
         errEl.style.cssText = [
           'position:fixed','inset:0','z-index:99999','background:#0d0d0d',
@@ -331,13 +465,20 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
             '<line x1="12" y1="8" x2="12" y2="12"/>' +
             '<circle cx="12" cy="16" r="0.5" fill="#ef4444"/>' +
           '</svg>' +
-          '<p style="color:#fff;font-size:16px;font-weight:700;margin:0;font-family:sans-serif">VR Not Supported</p>' +
+          '<p style="color:#fff;font-size:16px;font-weight:700;margin:0;font-family:sans-serif">' + title + '</p>' +
           '<p style="color:#9ca3af;font-size:13px;margin:0;font-family:sans-serif;max-width:280px;line-height:1.6">' +
-            'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.' +
+            message +
           '</p>';
         document.body.appendChild(errEl);
         var loadingScreen = document.getElementById('loading');
         if (loadingScreen) loadingScreen.style.display = 'none';
+      }
+
+      if (!isWebGLSupported()) {
+        showUnsupportedPopup(
+          'VR Not Supported',
+          'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.'
+        );
         return;
       }
       // ─────────────────────────────────────────────────────────────
@@ -355,8 +496,287 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var progress = document.getElementById('progress');
       var timeDisplay = document.getElementById('time');
       var loadingHidden = false;
+      var sourceUrl = ${videoSrcJson};
+      var hls = null;
+      var qualityLevels = [];
+      var selectedQuality = 'auto';
+      var lastKnownHeight = 0;
+      var qualityBtn = document.getElementById('qualityBtn');
+      var qualityMenu = document.getElementById('quality-menu');
+      var qualityAutoNote = document.getElementById('quality-auto-note');
+      var hlsAutoStartedLow = false;
+      var plainVideoMode = false;
+      var inImmersiveVr = false;
 
       if (!v) return;
+
+      function getCloudflareHlsUrl(url) {
+        try {
+          var parsed = new URL(url, window.location.href);
+          var host = parsed.hostname.toLowerCase();
+          var parts = parsed.pathname.split('/').filter(Boolean);
+          var fileLike = /\\.(mp4|m4v|mov|webm)(?:$|\\?)/i.test(parsed.pathname);
+          if (/\\.m3u8(?:$|\\?)/i.test(parsed.pathname) || fileLike) return url;
+          if (host === 'iframe.videodelivery.net' && parts[0]) {
+            return 'https://videodelivery.net/' + parts[0] + '/manifest/video.m3u8';
+          }
+          if ((host.indexOf('cloudflarestream.com') !== -1 || host.indexOf('videodelivery.net') !== -1) && parts[0]) {
+            if (parts.indexOf('manifest') !== -1) return url;
+            return parsed.origin + '/' + parts[0] + '/manifest/video.m3u8';
+          }
+        } catch(e) {}
+        return url;
+      }
+
+      function isHlsUrl(url) {
+        return /\\.m3u8(?:$|\\?)/i.test(url);
+      }
+
+      function qualityLabel(height) {
+        if (!height) return 'Auto';
+        if (height >= 2160) return '4K';
+        if (height >= 1440) return '2K';
+        return height + 'p';
+      }
+
+      function setQualityButtonText(text) {
+        if (qualityBtn) qualityBtn.textContent = text;
+      }
+
+      function currentQualityText() {
+        if (selectedQuality === 'auto') {
+          return lastKnownHeight ? 'Auto ' + qualityLabel(lastKnownHeight) : 'Auto';
+        }
+        return qualityLabel(Number(selectedQuality));
+      }
+
+      function updateQualityButton() {
+        setQualityButtonText(currentQualityText());
+        if (qualityAutoNote) qualityAutoNote.textContent = lastKnownHeight ? qualityLabel(lastKnownHeight) : '';
+        if (!qualityMenu) return;
+        qualityMenu.querySelectorAll('button').forEach(function(btn) {
+          btn.classList.toggle('selected', btn.getAttribute('data-quality') === selectedQuality);
+        });
+      }
+
+      function renderProfileFor(height) {
+        if (!height || height >= 2160) return { pixelRatio: 1, width: 32, height: 32 };
+        if (height >= 1440) return { pixelRatio: 0.85, width: 28, height: 28 };
+        if (height >= 1080) return { pixelRatio: 0.72, width: 24, height: 24 };
+        if (height >= 720) return { pixelRatio: 0.58, width: 18, height: 18 };
+        return { pixelRatio: 0.42, width: 12, height: 12 };
+      }
+
+      function applyRenderQuality(height) {
+        var profile = renderProfileFor(height);
+        var sceneEl = document.querySelector('a-scene');
+        var sphereEl = document.getElementById('videosphere');
+
+        if (inImmersiveVr && (!height || height > 1080)) {
+          profile = renderProfileFor(1080);
+        }
+
+        if (sphereEl) {
+          sphereEl.setAttribute('segments-width', String(profile.width));
+          sphereEl.setAttribute('segments-height', String(profile.height));
+        }
+
+        if (sceneEl && sceneEl.renderer) {
+          try {
+            sceneEl.renderer.setPixelRatio(profile.pixelRatio);
+            sceneEl.resize();
+          } catch(e) {}
+        }
+      }
+
+      function renderQualityMenu() {
+        if (!qualityBtn || !qualityMenu) return;
+        qualityMenu.querySelectorAll('button[data-quality]').forEach(function(btn) {
+          if (btn.getAttribute('data-bound') === 'true') return;
+          btn.setAttribute('data-bound', 'true');
+          btn.addEventListener('click', function() {
+            selectedQuality = btn.getAttribute('data-quality') || 'auto';
+            applyQualitySelection();
+            qualityMenu.classList.remove('open');
+            qualityBtn.classList.remove('active');
+          });
+        });
+        updateQualityButton();
+      }
+
+      function findBestLevel(targetHeight) {
+        if (!qualityLevels.length) return null;
+        var sorted = qualityLevels.slice().sort(function(a, b) { return b.height - a.height; });
+        var notHigherThanTarget = sorted.find(function(level) { return level.height <= targetHeight; });
+        if (notHigherThanTarget) return notHigherThanTarget;
+        return sorted
+          .slice()
+          .sort(function(a, b) {
+            return Math.abs(a.height - targetHeight) - Math.abs(b.height - targetHeight);
+          })[0] || null;
+      }
+
+      function flushForwardBuffer() {
+        if (!hls || !window.Hls || !window.Hls.Events) return;
+        try {
+          hls.trigger(window.Hls.Events.BUFFER_FLUSHING, {
+            startOffset: Math.max(0, (v.currentTime || 0) + 0.25),
+            endOffset: Number.POSITIVE_INFINITY,
+            type: 'video'
+          });
+        } catch(e) {}
+      }
+
+      function restartHlsAtCurrentTime() {
+        if (!hls) return;
+        try { hls.stopLoad(); } catch(e) {}
+        try { hls.startLoad(Math.max(0, (v.currentTime || 0) - 0.1)); } catch(e) {}
+      }
+
+      function tuneBufferForSelection(height) {
+        if (!hls || !hls.config) return;
+        if (height && height <= 360) {
+          hls.config.maxBufferLength = 6;
+          hls.config.maxMaxBufferLength = 10;
+          hls.config.backBufferLength = 6;
+        } else if (height && height <= 720) {
+          hls.config.maxBufferLength = 10;
+          hls.config.maxMaxBufferLength = 16;
+          hls.config.backBufferLength = 10;
+        } else {
+          hls.config.maxBufferLength = 18;
+          hls.config.maxMaxBufferLength = 30;
+          hls.config.backBufferLength = 20;
+        }
+      }
+
+      function applyQualitySelection() {
+        var wanted = selectedQuality === 'auto' ? 0 : Number(selectedQuality);
+        applyRenderQuality(wanted);
+
+        if (!hls) {
+          updateQualityButton();
+          return;
+        }
+        if (selectedQuality === 'auto') {
+          hls.currentLevel = -1;
+          hls.autoLevelCapping = -1;
+          tuneBufferForSelection(0);
+          if (!hlsAutoStartedLow && qualityLevels.length) {
+            hlsAutoStartedLow = true;
+            hls.loadLevel = 0;
+            hls.nextLevel = 0;
+            applyRenderQuality(360);
+            setTimeout(function() {
+              if (selectedQuality === 'auto' && hls) {
+                hls.loadLevel = -1;
+                hls.nextLevel = -1;
+              }
+            }, 4000);
+          } else {
+            hls.loadLevel = -1;
+            hls.nextLevel = -1;
+          }
+        } else {
+          var match = findBestLevel(wanted);
+          if (match) {
+            tuneBufferForSelection(wanted);
+            hls.autoLevelCapping = match.index;
+            hls.firstLevel = match.index;
+            hls.startLevel = match.index;
+            hls.currentLevel = match.index;
+            hls.loadLevel = match.index;
+            hls.nextLevel = match.index;
+            lastKnownHeight = wanted;
+            flushForwardBuffer();
+            restartHlsAtCurrentTime();
+          }
+        }
+        updateQualityButton();
+      }
+
+      if (qualityBtn && qualityMenu) {
+        qualityBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          qualityMenu.classList.toggle('open');
+          qualityBtn.classList.toggle('active', qualityMenu.classList.contains('open'));
+        });
+        document.addEventListener('click', function(e) {
+          if (!qualityMenu.contains(e.target) && e.target !== qualityBtn) {
+            qualityMenu.classList.remove('open');
+            qualityBtn.classList.remove('active');
+          }
+        });
+      }
+
+      function setupVideoSource() {
+        var normalizedUrl = getCloudflareHlsUrl(sourceUrl);
+        if (isHlsUrl(normalizedUrl) && window.Hls && window.Hls.isSupported()) {
+          hls = new window.Hls({
+            capLevelToPlayerSize: false,
+            startLevel: 0,
+            autoStartLoad: true,
+            abrEwmaDefaultEstimate: 500000,
+            maxStarvationDelay: 2,
+            maxLoadingDelay: 2,
+            maxBufferHole: 0.5,
+            maxBufferLength: 10,
+            maxMaxBufferLength: 18,
+            backBufferLength: 10
+          });
+          hls.loadSource(normalizedUrl);
+          hls.attachMedia(v);
+          hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+            var seen = {};
+            qualityLevels = hls.levels
+              .map(function(level, index) {
+                return { index: index, height: level.height || 0, bitrate: level.bitrate || 0 };
+              })
+              .filter(function(level) {
+                if (!level.height || seen[level.height]) return false;
+                seen[level.height] = true;
+                return true;
+              });
+            renderQualityMenu();
+            if (selectedQuality === 'auto') {
+              hls.nextLevel = 0;
+              applyRenderQuality(360);
+            }
+            applyQualitySelection();
+          });
+          hls.on(window.Hls.Events.LEVEL_SWITCHED, function(_, data) {
+            var level = hls.levels[data.level];
+            if (level && level.height) {
+              lastKnownHeight = level.height;
+              if (selectedQuality === 'auto') applyRenderQuality(level.height);
+              renderQualityMenu();
+            }
+          });
+          hls.on(window.Hls.Events.ERROR, function(_, data) {
+            if (data && data.fatal) {
+              if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+              else if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+              else showUnsupportedPopup('VR Tour Unavailable', 'This adaptive VR tour could not be loaded. Please try again.');
+            }
+          });
+          return;
+        }
+
+        plainVideoMode = true;
+        v.src = normalizedUrl;
+        if (isHlsUrl(normalizedUrl) && v.canPlayType('application/vnd.apple.mpegurl')) {
+          selectedQuality = 'auto';
+          renderQualityMenu();
+          setQualityButtonText('Auto');
+        } else {
+          qualityLevels = [];
+          renderQualityMenu();
+          setQualityButtonText('Source');
+        }
+      }
+
+      renderQualityMenu();
+      setupVideoSource();
 
       function hideLoading() {
         if (loadingHidden) return;
@@ -383,20 +803,24 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         }
       }
 
+      function setPlayButtonState(isPlaying) {
+        if (!playIcon || !pauseIcon) return;
+        playIcon.style.display = isPlaying ? 'none' : 'block';
+        pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      }
+
       function togglePlay() {
         if (v.paused) {
           v.play().then(function() {
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = 'block';
+            setPlayButtonState(true);
           }).catch(function() {});
         } else {
           v.pause();
-          playIcon.style.display = 'block';
-          pauseIcon.style.display = 'none';
+          setPlayButtonState(false);
         }
       }
 
-      playPauseBtn.addEventListener('click', togglePlay);
+      if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlay);
 
 
 
@@ -505,18 +929,41 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       // Fallback: poll every 500ms for mobile where timeupdate is unreliable in A-Frame
       setInterval(updateTime, 500);
       v.addEventListener('play', function() {
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
+        setPlayButtonState(true);
         bufferingEl.classList.remove('active');
         videoStatusEl.classList.remove('show');
       });
       v.addEventListener('pause', function() {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
+        setPlayButtonState(false);
       });
-      v.addEventListener('waiting', function() { bufferingEl.classList.add('active'); });
+      v.addEventListener('waiting', function() {
+        bufferingEl.classList.add('active');
+        if (hls && selectedQuality === 'auto' && qualityLevels.length) {
+          var lowLevel = findBestLevel(360) || qualityLevels.slice().sort(function(a, b) { return a.height - b.height; })[0];
+          if (lowLevel) {
+            tuneBufferForSelection(360);
+            hls.autoLevelCapping = lowLevel.index;
+            hls.currentLevel = lowLevel.index;
+            hls.loadLevel = lowLevel.index;
+            hls.nextLevel = lowLevel.index;
+            flushForwardBuffer();
+            restartHlsAtCurrentTime();
+            applyRenderQuality(lowLevel.height || 360);
+          }
+        } else if (plainVideoMode) {
+          applyRenderQuality(selectedQuality === 'auto' ? 360 : Number(selectedQuality));
+        }
+      });
       v.addEventListener('playing', function() { bufferingEl.classList.remove('active'); });
       v.addEventListener('loadedmetadata', updateTime);
+      v.addEventListener('loadedmetadata', function() {
+        if (v.videoHeight) {
+          lastKnownHeight = v.videoHeight;
+          if (!hls && selectedQuality === 'auto') setQualityButtonText(qualityLabel(v.videoHeight));
+          else if (!hls) updateQualityButton();
+          else renderQualityMenu();
+        }
+      });
       v.addEventListener('progress', function() {
         if (v.buffered.length > 0 && v.duration && isFinite(v.duration)) {
           var pct = Math.round((v.buffered.end(v.buffered.length - 1) / v.duration) * 100);
@@ -549,6 +996,79 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           p.then(hideTapOverlay).catch(showTapOverlay);
         }
       }
+
+      // ── WebXR headset entry ─────────────────────────────────────
+      // Shows the headset button only when the browser + device actually
+      // support an immersive-vr WebXR session (e.g. Quest Browser), and
+      // launches a real stereoscopic/head-tracked session via A-Frame.
+      var enterVRBtn = document.getElementById('enterVRBtn');
+      function showEnterVRButton() {
+        if (!enterVRBtn) return;
+        enterVRBtn.style.display = 'flex';
+        enterVRBtn.style.borderRadius = '14px';
+        enterVRBtn.style.gap = '2px';
+      }
+
+      if (enterVRBtn) {
+        var isLocalTest =
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          document.referrer.indexOf('localhost') !== -1 ||
+          document.referrer.indexOf('127.0.0.1') !== -1;
+        var isQuestBrowser = /Quest|Oculus/i.test(navigator.userAgent);
+        if (navigator.xr || isLocalTest || isQuestBrowser) showEnterVRButton();
+
+        if (navigator.xr && navigator.xr.isSessionSupported) {
+          navigator.xr.isSessionSupported('immersive-vr').then(function(supported) {
+          if (supported) {
+            showEnterVRButton();
+          } else if (!isLocalTest && !isQuestBrowser) {
+            enterVRBtn.style.display = 'none';
+          }
+          }).catch(function() {
+            if (!isLocalTest && !isQuestBrowser) enterVRBtn.style.display = 'none';
+          });
+        }
+
+        enterVRBtn.addEventListener('click', function() {
+          var sceneEl = document.querySelector('a-scene');
+          tryPlay();
+          applyRenderQuality(selectedQuality === 'auto' ? 720 : Number(selectedQuality));
+          if (sceneEl && sceneEl.enterVR) {
+            var vrAttempt = sceneEl.enterVR();
+            if (vrAttempt && vrAttempt.catch) {
+              vrAttempt.catch(function() {
+                showUnsupportedPopup(
+                  'VR Mode Not Available',
+                  'Turn on the WebXR emulator polyfill, reload the page, then try the VR button again.'
+                );
+              });
+            }
+          } else {
+            showUnsupportedPopup(
+              'VR Mode Not Available',
+              'This browser does not expose WebXR for the VR tour. Enable the WebXR emulator polyfill or test in a headset browser.'
+            );
+          }
+        });
+      }
+
+      var sceneForVrEvents = document.querySelector('a-scene');
+      if (sceneForVrEvents) {
+        sceneForVrEvents.addEventListener('enter-vr', function() {
+          inImmersiveVr = true;
+          tryPlay();
+          applyRenderQuality(selectedQuality === 'auto' ? 720 : Number(selectedQuality));
+          if (hls && selectedQuality === 'auto') {
+            hls.nextLevel = 0;
+          }
+        });
+        sceneForVrEvents.addEventListener('exit-vr', function() {
+          inImmersiveVr = false;
+          applyRenderQuality(selectedQuality === 'auto' ? lastKnownHeight : Number(selectedQuality));
+        });
+      }
+      // ─────────────────────────────────────────────────────────────
 
       // Remove A-Frame built-in UI buttons (fullscreen, VR, AR)
       function removeAFrameUI() {
@@ -583,6 +1103,40 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       v.addEventListener('canplay', function() {
         if (v.paused) tryPlay();
       }, { once: true });
+
+      // ── Real failure detection ───────────────────────────────────
+      // The checks above only confirm WebGL exists — they say nothing
+      // about whether THIS video can actually play (unsupported codec,
+      // broken/missing file, blocked network request, etc). Without
+      // this, a failure just leaves the loading spinner running forever
+      // with no feedback. Surface it instead.
+      var MEDIA_ERROR_MESSAGES = {
+        1: 'Loading was aborted. Please try again.',
+        2: 'A network error interrupted the video. Check your connection and try again.',
+        3: 'This video could not be decoded — the format may not be supported by your browser.',
+        4: 'This video format or source is not supported by your browser.'
+      };
+
+      v.addEventListener('error', function() {
+        var code = v.error && v.error.code;
+        showUnsupportedPopup(
+          'VR Tour Unavailable',
+          MEDIA_ERROR_MESSAGES[code] || 'This VR tour could not be loaded on your device or browser.'
+        );
+      });
+
+      // If literally nothing has loaded within 20s (no metadata, no bytes),
+      // stop waiting silently and tell the user instead of spinning forever.
+      setTimeout(function() {
+        if (unsupportedShown) return;
+        if (v.readyState === 0) {
+          showUnsupportedPopup(
+            'VR Tour Unavailable',
+            'This VR tour is taking too long to load and may not be supported on your device or browser. Please try again or use a different device.'
+          );
+        }
+      }, 20000);
+      // ─────────────────────────────────────────────────────────────
     })();
   </script>
 </body>
@@ -603,6 +1157,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   <a-scene
     embedded
     renderer="${rendererSettings}"
+    webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false"
   >
@@ -622,7 +1177,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       srcDoc={html}
       className={className}
       style={{ border: 0, display: "block" }}
-      allow="autoplay; xr-spatial-tracking; gyroscope; accelerometer"
+      allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer"
+      allowFullScreen
       title="360° VR tour"
     />
   );

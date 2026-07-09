@@ -15,7 +15,10 @@ interface Agency {
   id: string;
   name: string;
   status: AgencyStatus;
+  approved_at: string | null;
 }
+
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
 interface Stats {
   published: number;
@@ -78,7 +81,7 @@ export default function AgentDashboardPage() {
 
       const { data: memberships } = await supabaseClient
         .from("agency_members")
-        .select("agency_id, agencies(id, name, status)")
+        .select("agency_id, agencies(id, name, status, approved_at)")
         .eq("user_id", user.id)
         .limit(1)
         .single();
@@ -162,8 +165,12 @@ export default function AgentDashboardPage() {
         )}
       </div>
 
-      {/* Status banner */}
+      {/* Status banner — the "Approved Founding Member" welcome only shows
+          for the first 3 days after approval; other statuses always show. */}
       {agency && (
+        agency.status !== "approved" ||
+        (agency.approved_at && Date.now() - new Date(agency.approved_at).getTime() < THREE_DAYS_MS)
+      ) && (
         <div className={`rounded-xl border p-4 text-sm ${
           agency.status === "approved"
             ? "border-emerald-200 bg-emerald-50 text-emerald-800"

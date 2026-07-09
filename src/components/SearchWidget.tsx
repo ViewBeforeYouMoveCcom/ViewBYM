@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 
@@ -56,13 +57,58 @@ const CHEVRON_SVG =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
 
 export default function SearchWidget() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("buy");
   const [vrOnly, setVrOnly] = useState(false);
   const [location, setLocation] = useState("");
+  const [locationSelected, setLocationSelected] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const priceRef = useRef<HTMLSelectElement>(null);
+  const bedsRef = useRef<HTMLSelectElement>(null);
 
   const handleTabClick = (tab: Tab) => {
     setActiveTab(tab);
   };
+
+  function handleLocationChange(val: string) {
+    setLocation(val);
+    setLocationSelected(false);
+    setShowError(false);
+  }
+
+  function handleLocationSelect(val: string) {
+    setLocation(val);
+    setLocationSelected(true);
+    setShowError(false);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    // If user typed something but didn't select from dropdown, show error
+    if (location.trim() && !locationSelected) {
+      setShowError(true);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (location.trim()) params.set("location", location.trim());
+
+    if (activeTab === "buy")             params.set("listing_type", "sale");
+    else if (activeTab === "rent")       params.set("listing_type", "rent");
+    else if (activeTab === "new")        params.set("listing_type", "new");
+    else if (activeTab === "commercial") params.set("listing_type", "commercial");
+
+    const price = priceRef.current?.value;
+    if (price) params.set("price_max", price);
+
+    const beds = bedsRef.current?.value;
+    if (beds) params.set("beds", beds);
+
+    if (vrOnly) params.set("vr", "1");
+
+    router.push(`/browse?${params.toString()}`);
+  }
 
   const prices = activeTab === "rent" ? RENT_PRICES : SALE_PRICES;
   const footerLinks = FOOTER_LINKS[activeTab];
@@ -93,18 +139,9 @@ export default function SearchWidget() {
 
       {/* ── Input row ──────────────────────────────────────── */}
       <form
-        action="/browse"
-        method="GET"
+        onSubmit={handleSubmit}
         className="flex items-center gap-2.5 px-4 py-4"
       >
-        {/* Hidden params */}
-        {activeTab === "buy"  && <input type="hidden" name="listing_type" value="sale" />}
-        {activeTab === "rent" && <input type="hidden" name="listing_type" value="rent" />}
-        {activeTab === "new"        && <input type="hidden" name="listing_type" value="sale" />}
-        {activeTab === "new"        && <input type="hidden" name="type" value="new" />}
-        {activeTab === "commercial" && <input type="hidden" name="listing_type" value="commercial" />}
-        {vrOnly && <input type="hidden" name="vr" value="1" />}
-
         {/* Location */}
         <div className="relative min-w-0 flex-[1.1]">
           <svg
@@ -115,20 +152,28 @@ export default function SearchWidget() {
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
           </svg>
-          {/* Hidden input carries the value for the GET form */}
-          <input type="hidden" name="location" value={location} />
           <LocationAutocomplete
             value={location}
-            onChange={setLocation}
-            onSelect={setLocation}
+            onChange={handleLocationChange}
+            onSelect={handleLocationSelect}
             placeholder="City, postcode or area…"
-            className="h-[46px] w-full rounded-xl border border-gray-300 bg-gray-50 pl-9 pr-3 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`h-[46px] w-full rounded-xl border bg-gray-50 pl-9 pr-3 text-[13.5px] text-gray-900 placeholder-gray-400 outline-none focus:outline-none focus:ring-2 ${
+              showError ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:ring-blue-500"
+            }`}
           />
+          {showError && (
+            <div className="absolute left-0 top-full z-20 mt-1 flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 shadow-md">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="#ef4444"/>
+              </svg>
+              <span className="text-[12.5px] font-medium text-red-600">Please select a location from the dropdown</span>
+            </div>
+          )}
         </div>
 
         {/* Price */}
         <select
-          name="price_max"
+          ref={priceRef}
           className="hidden h-[46px] min-w-[130px] flex-1 cursor-pointer rounded-xl border border-gray-300 bg-gray-50 px-3.5 pr-8 text-[13.5px] font-medium text-gray-800 outline-none md:block"
           style={{
             backgroundImage: CHEVRON_SVG,
@@ -145,7 +190,7 @@ export default function SearchWidget() {
         {/* Beds (hidden on commercial tab) */}
         {activeTab !== "commercial" && (
           <select
-            name="beds"
+            ref={bedsRef}
             className="hidden h-[46px] min-w-[120px] flex-1 cursor-pointer rounded-xl border border-gray-300 bg-gray-50 px-3.5 pr-8 text-[13.5px] font-medium text-gray-800 outline-none md:block"
             style={{
               backgroundImage: CHEVRON_SVG,

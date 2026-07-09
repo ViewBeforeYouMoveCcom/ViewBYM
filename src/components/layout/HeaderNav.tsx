@@ -181,7 +181,7 @@ export default function HeaderNav() {
             onChange={setSearchValue}
             onSelect={setSearchValue}
             placeholder="Search by town or postcode…"
-            className="flex-1 bg-transparent text-[12.5px] text-gray-800 placeholder-gray-400 outline-none"
+            className="w-full bg-transparent text-[12.5px] text-gray-800 placeholder-gray-400 outline-none"
           />
           {searchValue && (
             <button
@@ -296,7 +296,7 @@ export default function HeaderNav() {
                 value={mobileSearch}
                 onChange={setMobileSearch}
                 onSelect={setMobileSearch}
-                placeholder="Search by town or postcode…"
+                placeholder="Town or postcode…"
                 className="flex-1 bg-transparent text-[13.5px] text-gray-800 placeholder-gray-400 outline-none"
               />
               <button type="submit" className="rounded-full bg-[#08519A] px-3 py-1 text-[12px] font-bold text-white">
