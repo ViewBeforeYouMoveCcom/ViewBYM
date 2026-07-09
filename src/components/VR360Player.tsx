@@ -325,7 +325,10 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         } catch(e) { return false; }
       }
 
-      if (!isWebGLSupported()) {
+      var unsupportedShown = false;
+      function showUnsupportedPopup(title, message) {
+        if (unsupportedShown) return;
+        unsupportedShown = true;
         var errEl = document.createElement('div');
         errEl.style.cssText = [
           'position:fixed','inset:0','z-index:99999','background:#0d0d0d',
@@ -338,13 +341,20 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
             '<line x1="12" y1="8" x2="12" y2="12"/>' +
             '<circle cx="12" cy="16" r="0.5" fill="#ef4444"/>' +
           '</svg>' +
-          '<p style="color:#fff;font-size:16px;font-weight:700;margin:0;font-family:sans-serif">VR Not Supported</p>' +
+          '<p style="color:#fff;font-size:16px;font-weight:700;margin:0;font-family:sans-serif">' + title + '</p>' +
           '<p style="color:#9ca3af;font-size:13px;margin:0;font-family:sans-serif;max-width:280px;line-height:1.6">' +
-            'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.' +
+            message +
           '</p>';
         document.body.appendChild(errEl);
         var loadingScreen = document.getElementById('loading');
         if (loadingScreen) loadingScreen.style.display = 'none';
+      }
+
+      if (!isWebGLSupported()) {
+        showUnsupportedPopup(
+          'VR Not Supported',
+          'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.'
+        );
         return;
       }
       // ─────────────────────────────────────────────────────────────
@@ -607,6 +617,40 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       v.addEventListener('canplay', function() {
         if (v.paused) tryPlay();
       }, { once: true });
+
+      // ── Real failure detection ───────────────────────────────────
+      // The checks above only confirm WebGL exists — they say nothing
+      // about whether THIS video can actually play (unsupported codec,
+      // broken/missing file, blocked network request, etc). Without
+      // this, a failure just leaves the loading spinner running forever
+      // with no feedback. Surface it instead.
+      var MEDIA_ERROR_MESSAGES = {
+        1: 'Loading was aborted. Please try again.',
+        2: 'A network error interrupted the video. Check your connection and try again.',
+        3: 'This video could not be decoded — the format may not be supported by your browser.',
+        4: 'This video format or source is not supported by your browser.'
+      };
+
+      v.addEventListener('error', function() {
+        var code = v.error && v.error.code;
+        showUnsupportedPopup(
+          'VR Tour Unavailable',
+          MEDIA_ERROR_MESSAGES[code] || 'This VR tour could not be loaded on your device or browser.'
+        );
+      });
+
+      // If literally nothing has loaded within 20s (no metadata, no bytes),
+      // stop waiting silently and tell the user instead of spinning forever.
+      setTimeout(function() {
+        if (unsupportedShown) return;
+        if (v.readyState === 0) {
+          showUnsupportedPopup(
+            'VR Tour Unavailable',
+            'This VR tour is taking too long to load and may not be supported on your device or browser. Please try again or use a different device.'
+          );
+        }
+      }, 20000);
+      // ─────────────────────────────────────────────────────────────
     })();
   </script>
 </body>
