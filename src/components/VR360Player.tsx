@@ -265,17 +265,14 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       font-size: 10px;
     }
     #enterVRBtn {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 1200;
+      flex-shrink: 0;
       border-radius: 16px !important;
       padding: 8px 11px !important;
       gap: 4px;
       background: rgba(0,0,0,0.72) !important;
       border: 1px solid rgba(255,255,255,0.18) !important;
       backdrop-filter: blur(10px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
     #enterVRBtn:hover { background: rgba(20,20,20,0.88) !important; }
     @media (max-width: 560px) {
@@ -307,8 +304,6 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         right: -8px;
       }
       #enterVRBtn {
-        top: 8px;
-        right: 8px;
         padding: 7px 9px !important;
       }
       #enterVRBtn span {
@@ -376,7 +371,29 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       segments-height="32"
       segments-width="32">
     </a-videosphere>
-    <a-camera look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-camera>
+    <a-camera look-controls="pointerLockEnabled: false" wasd-controls="enabled: false">
+      <a-cursor fuse="true" fuse-timeout="1200"
+        geometry="primitive: ring; radiusInner: 0.008; radiusOuter: 0.012"
+        material="color: white; shader: flat; opacity: 0.85"
+        animation__fuse="property: scale; startEvents: fusing; from: 1 1 1; to: 0.2 0.2 0.2; dur: 1200">
+      </a-cursor>
+      <a-entity id="vrHud" position="0 -0.45 -1.1" visible="false">
+        <a-entity id="vrPlayPauseBtn" class="vr-btn"
+          geometry="primitive: circle; radius: 0.09" material="color: #08519A; shader: flat; opacity: 0.9"
+          text="value: ||; align: center; color: #fff; width: 0.6">
+        </a-entity>
+        <a-entity id="vrSkipBackBtn" class="vr-btn" position="-0.24 0 0"
+          geometry="primitive: circle; radius: 0.065" material="color: #000; shader: flat; opacity: 0.65"
+          text="value: -10s; align: center; color: #fff; width: 0.9">
+        </a-entity>
+        <a-entity id="vrSkipFwdBtn" class="vr-btn" position="0.24 0 0"
+          geometry="primitive: circle; radius: 0.065" material="color: #000; shader: flat; opacity: 0.65"
+          text="value: +10s; align: center; color: #fff; width: 0.9">
+        </a-entity>
+      </a-entity>
+    </a-camera>
+    <a-entity id="leftHandController" laser-controls="hand: left" raycaster="objects: .vr-btn"></a-entity>
+    <a-entity id="rightHandController" laser-controls="hand: right" raycaster="objects: .vr-btn"></a-entity>
   </a-scene>
   <div id="controls">
     <div id="timeline">
@@ -661,7 +678,11 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         if (selectedQuality === 'auto') {
           hls.currentLevel = -1;
           hls.autoLevelCapping = -1;
-          tuneBufferForSelection(0);
+          // 0 is falsy, so passing it here previously fell through to the
+          // largest buffer profile (18-30s target) instead of the tight
+          // one meant for starting at low quality — the opposite of what
+          // "auto" should do, and the direct cause of buffering even at 360p.
+          tuneBufferForSelection(360);
           if (!hlsAutoStartedLow && qualityLevels.length) {
             hlsAutoStartedLow = true;
             hls.loadLevel = 0;
@@ -759,6 +780,19 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
               else showUnsupportedPopup('VR Tour Unavailable', 'This adaptive VR tour could not be loaded. Please try again.');
             }
           });
+          return;
+        }
+
+        if (isHlsUrl(normalizedUrl) && !v.canPlayType('application/vnd.apple.mpegurl')) {
+          // Neither hls.js nor native HLS is available — a plain <video>
+          // tag can never parse an .m3u8 manifest, so this would just
+          // hang until the backup timeout. Fail immediately instead,
+          // the same way YouTube shows "not supported" right away on
+          // old Safari/Chrome rather than making you wait.
+          showUnsupportedPopup(
+            'VR Not Supported',
+            'Your browser does not support this VR tour format. Please try on a modern smartphone or a different browser.'
+          );
           return;
         }
 
@@ -1062,12 +1096,49 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           if (hls && selectedQuality === 'auto') {
             hls.nextLevel = 0;
           }
+          var vrHud = document.getElementById('vrHud');
+          if (vrHud) vrHud.setAttribute('visible', 'true');
         });
         sceneForVrEvents.addEventListener('exit-vr', function() {
           inImmersiveVr = false;
           applyRenderQuality(selectedQuality === 'auto' ? lastKnownHeight : Number(selectedQuality));
+          var vrHud = document.getElementById('vrHud');
+          if (vrHud) vrHud.setAttribute('visible', 'false');
         });
       }
+
+      // In-headset controls — normal 2D HTML controls aren't visible inside
+      // an actual WebXR session (the headset only sees the WebGL scene), so
+      // these are real 3D buttons floating in front of the camera, clickable
+      // via gaze (a-cursor, works with no controllers) or Quest controllers
+      // (laser-controls, added on the scene above).
+      var vrPlayPauseBtn = document.getElementById('vrPlayPauseBtn');
+      var vrSkipBackBtn = document.getElementById('vrSkipBackBtn');
+      var vrSkipFwdBtn = document.getElementById('vrSkipFwdBtn');
+
+      function updateVrPlayPauseIcon() {
+        if (vrPlayPauseBtn) vrPlayPauseBtn.setAttribute('text', 'value', v.paused ? '\\u25B6' : '\\u23F8');
+      }
+
+      if (vrPlayPauseBtn) {
+        vrPlayPauseBtn.addEventListener('click', function() {
+          togglePlay();
+          updateVrPlayPauseIcon();
+        });
+      }
+      if (vrSkipBackBtn) {
+        vrSkipBackBtn.addEventListener('click', function() {
+          v.currentTime = Math.max(0, v.currentTime - 10);
+        });
+      }
+      if (vrSkipFwdBtn) {
+        vrSkipFwdBtn.addEventListener('click', function() {
+          v.currentTime = Math.min(v.duration || 0, v.currentTime + 10);
+        });
+      }
+      v.addEventListener('play', updateVrPlayPauseIcon);
+      v.addEventListener('pause', updateVrPlayPauseIcon);
+      updateVrPlayPauseIcon();
       // ─────────────────────────────────────────────────────────────
 
       // Remove A-Frame built-in UI buttons (fullscreen, VR, AR)
@@ -1125,17 +1196,20 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         );
       });
 
-      // If literally nothing has loaded within 20s (no metadata, no bytes),
-      // stop waiting silently and tell the user instead of spinning forever.
+      // Backup safety net only — real incompatibility is already caught
+      // immediately above (WebGL check, HLS-support check, video error
+      // event). This just covers a genuinely stuck network (not a
+      // compatibility signal), so it's deliberately long — 3 minutes —
+      // to avoid misdiagnosing "slow" as "unsupported".
       setTimeout(function() {
         if (unsupportedShown) return;
         if (v.readyState === 0) {
           showUnsupportedPopup(
             'VR Tour Unavailable',
-            'This VR tour is taking too long to load and may not be supported on your device or browser. Please try again or use a different device.'
+            'This VR tour is taking too long to load. Please check your connection and try again.'
           );
         }
-      }, 20000);
+      }, 180000);
       // ─────────────────────────────────────────────────────────────
     })();
   </script>
