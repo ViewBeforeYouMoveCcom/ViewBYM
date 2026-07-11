@@ -35,7 +35,6 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               alt={property.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
-              unoptimized
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
               {thumbs.length}/{Math.max(thumbs.length, 1)}
@@ -109,7 +108,6 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               alt={property.title}
               fill
               className="object-cover"
-              unoptimized
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
               {thumbs.length}/{Math.max(thumbs.length, 1)}
@@ -128,8 +126,7 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
                     alt={`${property.title} ${idx + 1}`}
                     fill
                     className="object-cover"
-                    unoptimized
-                  />
+                        />
                 </div>
               ))}
             </div>

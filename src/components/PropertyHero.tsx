@@ -61,7 +61,7 @@ export default function PropertyHero({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 max-w-[1200px] mx-auto w-full">
             {(showAllPhotosExpanded ? gallery : gallery.slice(0, 10)).map((src, i) => (
               <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" unoptimized />
+                <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
                 <div className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white">
                   {i + 1} / {gallery.length}
                 </div>
@@ -122,7 +122,7 @@ export default function PropertyHero({
               {isFloorplanPdf ? (
                 <iframe src={floorplanUrl} title={`${title} floor plan`} className="h-[80vh] w-full" />
               ) : (
-                <Image src={floorplanUrl} alt={`${title} floor plan`} width={900} height={600} className="w-full h-auto object-contain" unoptimized />
+                <Image src={floorplanUrl} alt={`${title} floor plan`} width={900} height={600} className="w-full h-auto object-contain" />
               )}
             </div>
           </div>
@@ -137,7 +137,6 @@ export default function PropertyHero({
           fill
           className="object-cover opacity-90 transition-opacity duration-300"
           priority
-          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
@@ -277,7 +276,7 @@ export default function PropertyHero({
                   : "border-transparent opacity-50 hover:opacity-80"
               }`}
             >
-              <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" unoptimized />
+              <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
             </button>
           ))}
           {gallery.length > 10 && (
