@@ -207,7 +207,12 @@ export const getProperties = async (): Promise<Property[]> => {
       .from("properties")
       .select(DB_SELECT)
       .eq("status", "published")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      // Safety cap — this fetches every photo/video URL for every published
+      // property via the property_media join, with no pagination. Without a
+      // limit this grows unbounded as listings are added, which is exactly
+      // the kind of query that burns through Supabase egress quota fastest.
+      .limit(100);
 
     if (error) {
       console.error("[properties] DB fetch failed:", error.message);
@@ -299,6 +304,11 @@ export const getPropertiesFiltered = async (params: {
     } else {
       query = query.order("created_at", { ascending: false });
     }
+
+    // Safety cap — browse has no pagination yet, so this stays generous
+    // enough to show every real result at current catalog size, while still
+    // preventing an unbounded query as listings grow.
+    query = query.limit(300);
 
     const { data, error } = await query;
 

@@ -78,7 +78,6 @@ export default function PhotoGallery({ images, labels, title }: Props) {
           alt={`${title} photo ${current + 1}`}
           fill
           className="object-contain"
-          unoptimized
         />
       </div>
 
@@ -101,7 +100,7 @@ export default function PhotoGallery({ images, labels, title }: Props) {
               onClick={(e) => { e.stopPropagation(); setCurrent(i); }}
               className={`relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${i === current ? "border-white" : "border-transparent opacity-50 hover:opacity-80"}`}
             >
-              <Image src={src} alt={`Thumb ${i + 1}`} fill className="object-cover" unoptimized />
+              <Image src={src} alt={`Thumb ${i + 1}`} fill className="object-cover" />
             </button>
           ))}
         </div>
@@ -120,7 +119,7 @@ export default function PhotoGallery({ images, labels, title }: Props) {
             onClick={() => openAt(i)}
             className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100"
           >
-            <Image src={src} alt={labels?.[i] ?? `${title} photo ${i + 1}`} fill className="object-cover transition-transform duration-200 group-hover:scale-105" unoptimized />
+            <Image src={src} alt={labels?.[i] ?? `${title} photo ${i + 1}`} fill className="object-cover transition-transform duration-200 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
             {labels?.[i] && (
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2.5 pb-2 pt-5">
