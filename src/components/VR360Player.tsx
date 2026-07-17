@@ -402,14 +402,18 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           geometry="primitive: circle; radius: 0.065" material="color: #000; shader: flat; opacity: 0.65"
           text="value: Vol +; align: center; color: #fff; width: 0.8">
         </a-entity>
-        <a-entity id="vrExitBtn" class="vr-btn" position="0 -0.36 0"
-          geometry="primitive: plane; width: 0.3; height: 0.1" material="color: #991b1b; shader: flat; opacity: 0.9"
+        <a-entity id="vrQualityBtn" class="vr-btn" position="-0.18 -0.36 0"
+          geometry="primitive: plane; width: 0.28; height: 0.1" material="color: #173f70; shader: flat; opacity: 0.9"
+          text="value: Quality: Auto; align: center; color: #fff; width: 0.68">
+        </a-entity>
+        <a-entity id="vrExitBtn" class="vr-btn" position="0.18 -0.36 0"
+          geometry="primitive: plane; width: 0.28; height: 0.1" material="color: #991b1b; shader: flat; opacity: 0.9"
           text="value: Exit VR; align: center; color: #fff; width: 0.75">
         </a-entity>
       </a-entity>
     </a-camera>
-    <a-entity id="leftHandController" laser-controls="hand: left" raycaster="objects: .vr-btn; far: 10"></a-entity>
-    <a-entity id="rightHandController" laser-controls="hand: right" raycaster="objects: .vr-btn; far: 10"></a-entity>
+    <a-entity id="leftHandController" laser-controls="hand: left; model: true" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
+    <a-entity id="rightHandController" laser-controls="hand: right; model: true" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
   </a-scene>
   <div id="controls">
     <div id="timeline">
@@ -584,6 +588,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
 
       function updateQualityButton() {
         setQualityButtonText(currentQualityText());
+        updateVrQualityLabel();
         if (!qualityMenu) return;
         qualityMenu.querySelectorAll('button').forEach(function(btn) {
           btn.classList.toggle('selected', btn.getAttribute('data-quality') === selectedQuality);
@@ -1109,14 +1114,12 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           if (hls && selectedQuality === 'auto') {
             hls.nextLevel = 0;
           }
-          var vrHud = document.getElementById('vrHud');
-          if (vrHud) vrHud.setAttribute('visible', 'true');
+          showVrHud();
         });
         sceneForVrEvents.addEventListener('exit-vr', function() {
           inImmersiveVr = false;
           applyRenderQuality(selectedQuality === 'auto' ? lastKnownHeight : Number(selectedQuality));
-          var vrHud = document.getElementById('vrHud');
-          if (vrHud) vrHud.setAttribute('visible', 'false');
+          hideVrHud();
         });
       }
 
@@ -1131,7 +1134,23 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var vrVolumeDownBtn = document.getElementById('vrVolumeDownBtn');
       var vrMuteBtn = document.getElementById('vrMuteBtn');
       var vrVolumeUpBtn = document.getElementById('vrVolumeUpBtn');
+      var vrQualityBtn = document.getElementById('vrQualityBtn');
       var vrExitBtn = document.getElementById('vrExitBtn');
+      var vrHud = document.getElementById('vrHud');
+      var vrHudHideTimer = null;
+
+      function hideVrHud() {
+        if (vrHudHideTimer) clearTimeout(vrHudHideTimer);
+        vrHudHideTimer = null;
+        if (vrHud) vrHud.setAttribute('visible', 'false');
+      }
+
+      function showVrHud() {
+        if (!inImmersiveVr || !vrHud) return;
+        vrHud.setAttribute('visible', 'true');
+        if (vrHudHideTimer) clearTimeout(vrHudHideTimer);
+        vrHudHideTimer = setTimeout(hideVrHud, 3000);
+      }
 
       function updateVrPlayPauseIcon() {
         if (vrPlayPauseBtn) vrPlayPauseBtn.setAttribute('text', 'value', v.paused ? '\\u25B6' : '\\u23F8');
@@ -1139,6 +1158,26 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
 
       function updateVrMuteLabel() {
         if (vrMuteBtn) vrMuteBtn.setAttribute('text', 'value', v.muted || v.volume === 0 ? 'Unmute' : 'Mute');
+      }
+
+      function updateVrQualityLabel() {
+        if (vrQualityBtn) vrQualityBtn.setAttribute('text', 'value', 'Quality: ' + currentQualityText());
+      }
+
+      function cycleVrQuality() {
+        var choices = ['auto'];
+        qualityLevels
+          .slice()
+          .sort(function(a, b) { return b.height - a.height; })
+          .forEach(function(level) {
+            var value = String(level.height);
+            if (level.height && choices.indexOf(value) === -1) choices.push(value);
+          });
+        var currentIndex = choices.indexOf(selectedQuality);
+        selectedQuality = choices[(currentIndex + 1) % choices.length] || 'auto';
+        applyQualitySelection();
+        updateVrQualityLabel();
+        showVrHud();
       }
 
       function changeVrVolume(amount) {
@@ -1193,25 +1232,40 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           updateVrMuteLabel();
         });
       }
+      if (vrQualityBtn) vrQualityBtn.addEventListener('click', cycleVrQuality);
       if (vrExitBtn) vrExitBtn.addEventListener('click', exitImmersiveVr);
+      if (vrHud) {
+        vrHud.querySelectorAll('.vr-btn').forEach(function(button) {
+          button.addEventListener('click', showVrHud);
+        });
+      }
 
-      // Quest-style controller shortcuts. Trigger selects the raycast buttons;
-      // thumbstick left/right seeks, up/down changes volume, X toggles playback,
-      // and B or Y exits the immersive session.
+      // Quest controls: trigger reveals/selects the HUD, the left stick seeks
+      // and changes volume, while the right stick turns the 360 view.
       var lastThumbstickAction = 0;
-      function bindVrController(controller) {
+      function bindVrController(controller, hand) {
         if (!controller) return;
-        controller.addEventListener('xbuttondown', togglePlay);
+        ['controllerconnected', 'triggerdown', 'gripdown', 'abuttondown', 'xbuttondown'].forEach(function(eventName) {
+          controller.addEventListener(eventName, showVrHud);
+        });
+        controller.addEventListener('xbuttondown', function() {
+          togglePlay();
+          updateVrPlayPauseIcon();
+        });
         controller.addEventListener('bbuttondown', exitImmersiveVr);
         controller.addEventListener('ybuttondown', exitImmersiveVr);
         controller.addEventListener('thumbstickmoved', function(event) {
+          showVrHud();
           var now = Date.now();
           if (now - lastThumbstickAction < 350) return;
           var x = Number(event.detail && event.detail.x) || 0;
           var y = Number(event.detail && event.detail.y) || 0;
-          if (Math.abs(x) > 0.75) {
+          if (hand === 'right' && Math.abs(x) > 0.75) {
+            var sphere = document.getElementById('videosphere');
+            if (sphere && sphere.object3D) sphere.object3D.rotation.y += x > 0 ? -Math.PI / 6 : Math.PI / 6;
+          } else if (hand === 'left' && Math.abs(x) > 0.75) {
             v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + (x > 0 ? 10 : -10)));
-          } else if (Math.abs(y) > 0.75) {
+          } else if (hand === 'left' && Math.abs(y) > 0.75) {
             changeVrVolume(y < 0 ? 0.1 : -0.1);
           } else {
             return;
@@ -1219,12 +1273,13 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           lastThumbstickAction = now;
         });
       }
-      bindVrController(document.getElementById('leftHandController'));
-      bindVrController(document.getElementById('rightHandController'));
+      bindVrController(document.getElementById('leftHandController'), 'left');
+      bindVrController(document.getElementById('rightHandController'), 'right');
       v.addEventListener('play', updateVrPlayPauseIcon);
       v.addEventListener('pause', updateVrPlayPauseIcon);
       updateVrPlayPauseIcon();
       updateVrMuteLabel();
+      updateVrQualityLabel();
       // ─────────────────────────────────────────────────────────────
 
       // Remove A-Frame built-in UI buttons (fullscreen, VR, AR)
