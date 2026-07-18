@@ -1175,7 +1175,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         vrHud.setAttribute('visible', true);
         if (vrHud.object3D) vrHud.object3D.visible = true;
         if (vrHudHideTimer) clearTimeout(vrHudHideTimer);
-        vrHudHideTimer = null;
+        vrHudHideTimer = setTimeout(hideVrHud, 8000);
       }
 
       // Desktop emulators dispatch pointer/click events rather than Quest's
