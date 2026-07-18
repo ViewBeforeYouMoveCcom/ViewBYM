@@ -353,6 +353,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
     embedded
     renderer="${rendererSettings}"
     webxr="optionalFeatures: local-floor, bounded-floor, hand-tracking"
+    cursor="rayOrigin: mouse; fuse: false"
+    raycaster="objects: .vr-btn; far: 10"
     vr-mode-ui="enabled: false"
     loading-screen="enabled: false"
   >
@@ -406,14 +408,33 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           geometry="primitive: plane; width: 0.28; height: 0.1" material="color: #173f70; shader: flat; opacity: 0.9"
           text="value: Quality: Auto; align: center; color: #fff; width: 0.68">
         </a-entity>
+        <a-entity id="vrQualityMenu" position="0 0.3 0.01" visible="false"
+          geometry="primitive: plane; width: 0.66; height: 0.42"
+          material="color: #080f1c; shader: flat; opacity: 0.94">
+          <a-entity class="vr-btn vr-quality-option" data-vr-quality="auto" position="-0.16 0.13 0.01"
+            geometry="primitive: plane; width: 0.27; height: 0.09" material="color: #2563eb; shader: flat"
+            text="value: Auto; align: center; color: #fff; width: 0.75"></a-entity>
+          <a-entity class="vr-btn vr-quality-option" data-vr-quality="1440" position="0.16 0.13 0.01"
+            geometry="primitive: plane; width: 0.27; height: 0.09" material="color: #1f2937; shader: flat"
+            text="value: 2K / 1440p; align: center; color: #fff; width: 0.75"></a-entity>
+          <a-entity class="vr-btn vr-quality-option" data-vr-quality="1080" position="0.16 0.02 0.01"
+            geometry="primitive: plane; width: 0.27; height: 0.09" material="color: #1f2937; shader: flat"
+            text="value: 1080p; align: center; color: #fff; width: 0.75"></a-entity>
+          <a-entity class="vr-btn vr-quality-option" data-vr-quality="720" position="-0.16 -0.09 0.01"
+            geometry="primitive: plane; width: 0.27; height: 0.09" material="color: #1f2937; shader: flat"
+            text="value: 720p; align: center; color: #fff; width: 0.75"></a-entity>
+          <a-entity class="vr-btn vr-quality-option" data-vr-quality="360" position="0.16 -0.09 0.01"
+            geometry="primitive: plane; width: 0.27; height: 0.09" material="color: #1f2937; shader: flat"
+            text="value: 360p; align: center; color: #fff; width: 0.75"></a-entity>
+        </a-entity>
         <a-entity id="vrExitBtn" class="vr-btn" position="0.18 -0.36 0"
           geometry="primitive: plane; width: 0.28; height: 0.1" material="color: #991b1b; shader: flat; opacity: 0.9"
           text="value: Exit VR; align: center; color: #fff; width: 0.75">
         </a-entity>
       </a-entity>
     </a-camera>
-    <a-entity id="leftHandController" laser-controls="hand: left; model: true" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
-    <a-entity id="rightHandController" laser-controls="hand: right; model: true" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
+    <a-entity id="leftHandController" laser-controls="hand: left" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
+    <a-entity id="rightHandController" laser-controls="hand: right" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
   </a-scene>
   <div id="controls">
     <div id="timeline">
@@ -458,7 +479,6 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         <button id="qualityBtn" title="Video quality" type="button">Auto</button>
         <div id="quality-menu" aria-label="Video quality">
           <button type="button" data-quality="auto" class="selected"><span>Auto</span><span></span></button>
-          <button type="button" data-quality="2160"><span>4K</span><span>2160p</span></button>
           <button type="button" data-quality="1440"><span>2K</span><span>1440p</span></button>
           <button type="button" data-quality="1080"><span>1080p</span><span>HD</span></button>
           <button type="button" data-quality="720"><span>720p</span><span>HD</span></button>
@@ -1135,6 +1155,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var vrMuteBtn = document.getElementById('vrMuteBtn');
       var vrVolumeUpBtn = document.getElementById('vrVolumeUpBtn');
       var vrQualityBtn = document.getElementById('vrQualityBtn');
+      var vrQualityMenu = document.getElementById('vrQualityMenu');
       var vrExitBtn = document.getElementById('vrExitBtn');
       var vrHud = document.getElementById('vrHud');
       var vrHudHideTimer = null;
@@ -1142,14 +1163,28 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       function hideVrHud() {
         if (vrHudHideTimer) clearTimeout(vrHudHideTimer);
         vrHudHideTimer = null;
-        if (vrHud) vrHud.setAttribute('visible', 'false');
+        setVrQualityMenuVisible(false);
+        if (vrHud) {
+          vrHud.setAttribute('visible', false);
+          if (vrHud.object3D) vrHud.object3D.visible = false;
+        }
       }
 
       function showVrHud() {
         if (!inImmersiveVr || !vrHud) return;
-        vrHud.setAttribute('visible', 'true');
+        vrHud.setAttribute('visible', true);
+        if (vrHud.object3D) vrHud.object3D.visible = true;
         if (vrHudHideTimer) clearTimeout(vrHudHideTimer);
-        vrHudHideTimer = setTimeout(hideVrHud, 3000);
+        vrHudHideTimer = null;
+      }
+
+      // Desktop emulators dispatch pointer/click events rather than Quest's
+      // triggerdown event. Keep both paths working so the in-headset HUD can
+      // always be revealed during testing and on controller reconnects.
+      if (sceneForVrEvents) {
+        ['click', 'pointerdown', 'touchstart'].forEach(function(eventName) {
+          sceneForVrEvents.addEventListener(eventName, showVrHud);
+        });
       }
 
       function updateVrPlayPauseIcon() {
@@ -1164,19 +1199,25 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         if (vrQualityBtn) vrQualityBtn.setAttribute('text', 'value', 'Quality: ' + currentQualityText());
       }
 
-      function cycleVrQuality() {
-        var choices = ['auto'];
-        qualityLevels
-          .slice()
-          .sort(function(a, b) { return b.height - a.height; })
-          .forEach(function(level) {
-            var value = String(level.height);
-            if (level.height && choices.indexOf(value) === -1) choices.push(value);
-          });
-        var currentIndex = choices.indexOf(selectedQuality);
-        selectedQuality = choices[(currentIndex + 1) % choices.length] || 'auto';
-        applyQualitySelection();
-        updateVrQualityLabel();
+      function setVrQualityMenuVisible(visible) {
+        if (!vrQualityMenu) return;
+        vrQualityMenu.setAttribute('visible', visible);
+        if (vrQualityMenu.object3D) vrQualityMenu.object3D.visible = visible;
+      }
+
+      function updateVrQualityOptions() {
+        if (!vrQualityMenu) return;
+        vrQualityMenu.querySelectorAll('.vr-quality-option').forEach(function(option) {
+          var active = option.getAttribute('data-vr-quality') === selectedQuality;
+          option.setAttribute('material', 'color', active ? '#2563eb' : '#1f2937');
+        });
+      }
+
+      function toggleVrQualityMenu() {
+        if (!vrQualityMenu) return;
+        var isVisible = !!(vrQualityMenu.object3D && vrQualityMenu.object3D.visible);
+        setVrQualityMenuVisible(!isVisible);
+        updateVrQualityOptions();
         showVrHud();
       }
 
@@ -1232,7 +1273,19 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           updateVrMuteLabel();
         });
       }
-      if (vrQualityBtn) vrQualityBtn.addEventListener('click', cycleVrQuality);
+      if (vrQualityBtn) vrQualityBtn.addEventListener('click', toggleVrQualityMenu);
+      if (vrQualityMenu) {
+        vrQualityMenu.querySelectorAll('.vr-quality-option').forEach(function(option) {
+          option.addEventListener('click', function() {
+            selectedQuality = option.getAttribute('data-vr-quality') || 'auto';
+            applyQualitySelection();
+            updateVrQualityLabel();
+            updateVrQualityOptions();
+            setVrQualityMenuVisible(false);
+            showVrHud();
+          });
+        });
+      }
       if (vrExitBtn) vrExitBtn.addEventListener('click', exitImmersiveVr);
       if (vrHud) {
         vrHud.querySelectorAll('.vr-btn').forEach(function(button) {
@@ -1245,7 +1298,11 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var lastThumbstickAction = 0;
       function bindVrController(controller, hand) {
         if (!controller) return;
-        ['controllerconnected', 'triggerdown', 'gripdown', 'abuttondown', 'xbuttondown'].forEach(function(eventName) {
+        controller.addEventListener('controllerconnected', function() {
+          if (controller.object3D) controller.object3D.visible = true;
+          showVrHud();
+        });
+        ['triggerdown', 'gripdown', 'abuttondown', 'xbuttondown'].forEach(function(eventName) {
           controller.addEventListener(eventName, showVrHud);
         });
         controller.addEventListener('xbuttondown', function() {
