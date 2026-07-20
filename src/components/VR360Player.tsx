@@ -433,8 +433,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         </a-entity>
       </a-entity>
     </a-camera>
-    <a-entity id="leftHandController" laser-controls="hand: left" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
-    <a-entity id="rightHandController" laser-controls="hand: right" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: true" line="color: #60a5fa; opacity: 0.85"></a-entity>
+    <a-entity id="leftHandController" oculus-touch-controls="hand: left" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: false"></a-entity>
+    <a-entity id="rightHandController" oculus-touch-controls="hand: right" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: false"></a-entity>
   </a-scene>
   <div id="controls">
     <div id="timeline">
@@ -1046,7 +1046,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
 
       // Tap-to-play overlay (mobile fallback)
       var tapOverlay = document.createElement('div');
-      tapOverlay.style.cssText = 'position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);cursor:pointer;';
+      tapOverlay.style.cssText = 'position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);cursor:pointer;user-select:none;-webkit-user-select:none;';
       tapOverlay.innerHTML = '<div style="text-align:center;color:#fff;pointer-events:none;">' +
         '<svg width="64" height="64" viewBox="0 0 24 24" fill="white" style="opacity:0.9"><path d="M8 5v14l11-7z"/></svg>' +
         '<p style="font-family:sans-serif;font-size:15px;margin-top:10px;opacity:0.85">Tap to start VR tour</p>' +
