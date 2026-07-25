@@ -37,11 +37,7 @@ export default async function PropertyDetailPage({
   const gallery = property.images?.length ? property.images : [property.image];
   const isDbProperty = property.isDbProperty === true;
   const statusStyle = STATUS_STYLES[property.status] ?? "bg-gray-100 text-gray-600 border-gray-200";
-  const mapQuery = encodeURIComponent([property.address, property.city].filter(Boolean).join(", "));
   const keyFeatures = normaliseFeatures(property.features);
-  const streetViewUrl = property.latitude && property.longitude 
-    ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${property.latitude},${property.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -141,55 +137,6 @@ export default async function PropertyDetailPage({
             {/* Photos gallery */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <h2 className="mb-4 text-[15px] font-bold text-gray-900">Gallery</h2>
-
-              {/* Gallery view buttons */}
-              <div className="mb-4 flex flex-wrap gap-2">
-                <button className="flex items-center gap-1.5 rounded-lg bg-[#08519A] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#063d75]">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
-                  </svg>
-                  All images ({gallery.length})
-                </button>
-
-                {property.floorplanUrl && (
-                  <a
-                    href={property.floorplanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                  >
-                    Floor plan
-                  </a>
-                )}
-
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                >
-                  Map
-                </a>
-
-                <a
-                  href={streetViewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                >
-                  Street View
-                </a>
-
-                {property.vrEnabled && (
-                  <a
-                    href="#vr-tour-section"
-                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700 transition-colors hover:bg-blue-100"
-                  >
-                    Immersive VR Tour
-                  </a>
-                )}
-              </div>
-
               <PhotoGallery images={gallery} labels={property.imageLabels} title={property.title} />
             </div>
 

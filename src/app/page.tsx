@@ -44,7 +44,7 @@ export default async function HomePage() {
             Find your next home.<br />Walk it in VR first.
           </h1>
           <p className="mb-7 max-w-[440px] text-[16px] leading-relaxed text-white/90">
-            Browse thousands of properties and take an immersive VR tour before you book a single viewing.
+            Search properties and explore selected homes through immersive 360° tours before deciding which ones to visit in person.
           </p>
 
           {/* Search card */}
@@ -56,16 +56,13 @@ export default async function HomePage() {
           <div className="mx-auto max-w-[1800px] px-5">
             <div className="grid grid-cols-2 sm:grid-cols-4 sm:divide-x divide-white/10">
               {[
-                { num: "2,400+", label: "Properties with VR" },
-                { num: "180", label: "Partner agencies" },
-                { num: "68%", label: "Fewer wasted viewings" },
-                { num: "3.2×", label: "Faster to offer" },
-              ].map((s) => (
-                <div key={s.label} className="px-4 sm:px-5 py-3">
-                  <div className="text-[16px] sm:text-[20px] font-extrabold leading-none tracking-tight text-white">
-                    {s.num}
-                  </div>
-                  <div className="mt-0.5 text-[12px] text-white/75">{s.label}</div>
+                "Immersive 360° viewing",
+                "Desktop, mobile and compatible VR access",
+                "Agent-approved listings",
+                "Complete standard media packs for wider property marketing",
+              ].map((label) => (
+                <div key={label} className="px-4 sm:px-5 py-3">
+                  <div className="text-[13px] sm:text-[14px] font-semibold leading-snug text-white">{label}</div>
                 </div>
               ))}
             </div>
@@ -134,19 +131,15 @@ export default async function HomePage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
                 <div className="text-[26px] font-bold text-white drop-shadow">London</div>
-                <div className="mt-0.5 text-[12px] text-white/85">1,840 properties · 620 with VR</div>
-              </div>
-              <div className="absolute right-3 top-3 z-10 rounded-full border border-white/20 bg-black/55 px-2.5 py-1 text-[10.5px] font-semibold text-white backdrop-blur-sm">
-                620 VR tours
               </div>
             </Link>
 
             {/* Small tiles */}
             {[
-              { name: "Manchester", count: "340 with VR", img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80&auto=format&fit=crop" },
-              { name: "Bristol", count: "185 with VR", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&auto=format&fit=crop" },
-              { name: "Edinburgh", count: "210 with VR", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80&auto=format&fit=crop" },
-              { name: "Leeds", count: "160 with VR", img: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80&auto=format&fit=crop" },
+              { name: "Manchester", img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80&auto=format&fit=crop" },
+              { name: "Bristol", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80&auto=format&fit=crop" },
+              { name: "Edinburgh", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80&auto=format&fit=crop" },
+              { name: "Leeds", img: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&q=80&auto=format&fit=crop" },
             ].map((area) => (
               <Link key={area.name} href={`/browse?location=${area.name}`} className="group relative overflow-hidden rounded-2xl cursor-pointer">
                 <Image
@@ -158,7 +151,6 @@ export default async function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3.5 z-10">
                   <div className="text-[18px] font-bold text-white drop-shadow">{area.name}</div>
-                  <div className="mt-0.5 text-[11px] text-white/85">{area.count}</div>
                 </div>
               </Link>
             ))}
@@ -206,7 +198,7 @@ export default async function HomePage() {
                   Tour homes before you leave your sofa
                 </h2>
                 <p className="mb-5 text-[15px] leading-relaxed text-gray-500">
-                  Walk every room in immersive VR, then decide if it&apos;s worth a visit. No more surprises on arrival.
+                  Look around the property as the immersive 360° tour guides you from room to room. No more surprises on arrival.
                 </p>
               </div>
 
@@ -220,7 +212,7 @@ export default async function HomePage() {
                   {
                     n: "2",
                     title: "Take the VR tour",
-                    text: "Walk every room on desktop, mobile, or a headset. At your own pace, any time of day.",
+                    text: "Look around the property as the guided 360° tour moves from room to room, on desktop, mobile, or a headset.",
                   },
                   {
                     n: "3",
@@ -313,18 +305,15 @@ export default async function HomePage() {
             {/* Metrics */}
             <div className="flex flex-col gap-2.5">
               {[
-                { num: "68%", text: "Fewer unqualified viewings for partner agencies" },
-                { num: "3.2×", text: "Faster time-to-offer on VR-listed properties" },
-                { num: "180+", text: "Agency partners live on the platform today" },
-              ].map((m) => (
+                "Fewer unqualified viewings for partner agencies",
+                "Faster, better-informed buyer conversations",
+                "Growing network of agency partners",
+              ].map((text) => (
                 <div
-                  key={m.num}
+                  key={text}
                   className="flex items-center gap-5 rounded-xl border border-white/10 bg-white/[.07] px-6 py-5 transition-colors hover:border-blue-300/35"
                 >
-                  <div className="min-w-[70px] sm:min-w-[88px] text-[22px] sm:text-[30px] font-extrabold leading-none tracking-tight text-white">
-                    {m.num}
-                  </div>
-                  <div className="text-[13.5px] leading-snug text-white/75">{m.text}</div>
+                  <div className="text-[13.5px] leading-snug text-white/75">{text}</div>
                 </div>
               ))}
             </div>

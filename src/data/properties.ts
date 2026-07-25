@@ -29,7 +29,7 @@ export type Property = {
 
   tenure?: string;
   isReduced?: boolean;
-  listingType?: "sale" | "rent";
+  listingType?: "sale" | "rent" | "commercial";
 
   description: string;
   features: string[];
@@ -126,7 +126,10 @@ function mapDbProperty(row: DbProperty): Property {
   if (vrEnabled) tags.push("Immersive VR tour available");
   if (row.tenure) tags.push(row.tenure);
 
-  const listingType = row.listing_type === "rent" ? "rent" : "sale";
+  const listingType =
+    row.listing_type === "rent" || row.listing_type === "commercial"
+      ? row.listing_type
+      : "sale";
   const agencyName = row.agencies?.name ?? "Agent";
 
   return {

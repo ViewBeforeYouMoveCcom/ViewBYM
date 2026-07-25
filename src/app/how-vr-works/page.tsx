@@ -74,7 +74,7 @@ export default function HowVrWorksPage() {
               </CardContent>
             </Card>
 
-            {/* Floor plans in-tour */}
+            {/* Detailed floor plans */}
             <Card className="rounded-2xl border border-gray-200 bg-white transition-all hover:shadow-lg">
               <CardContent className="p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#08519A]">
@@ -87,8 +87,8 @@ export default function HowVrWorksPage() {
                     <circle cx="17" cy="7" r="1" fill="white"/>
                   </svg>
                 </div>
-                <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">Floor plans in-tour</h3>
-                <p className="text-[14px] leading-relaxed text-gray-500">Dimensions overlay as you walk each room so you know whether your furniture will actually fit.</p>
+                <h3 className="mb-1.5 text-[15px] font-bold text-gray-900">Detailed floor plans</h3>
+                <p className="text-[14px] leading-relaxed text-gray-500">Review the property layout and room dimensions alongside the immersive tour.</p>
               </CardContent>
             </Card>
 

@@ -14,6 +14,25 @@ import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { preparePhotoFile } from "@/lib/videoFrameToJpeg";
 
+async function geocodeAddress(address: string, city: string, postcode: string): Promise<{ lat: number; lng: number } | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return null;
+  const query = [address, city, postcode, "UK"].filter(Boolean).join(", ");
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`
+    );
+    const data = await res.json();
+    if (data.status === "OK" && data.results[0]) {
+      const { lat, lng } = data.results[0].geometry.location;
+      return { lat, lng };
+    }
+  } catch {
+    // silently ignore geocoding failures
+  }
+  return null;
+}
+
 type PropStatus = "draft" | "published" | "archived";
 
 interface Property {
@@ -26,7 +45,9 @@ interface Property {
   price: number | null;           // numeric(12,2) GBP
   bedrooms: number | null;
   bathrooms: number | null;
+  area_sqft: number | null;
   property_type: string;
+  listing_type: string;
   market_status: string;
   tenure: string | null;
   description: string | null;
@@ -115,13 +136,15 @@ export default function EditListingPage() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [featureInput, setFeatureInput] = useState("");
 
+  const isCommercial = form.listing_type === "commercial";
+
   useEffect(() => {
     async function load() {
       const { data: prop } = await supabaseClient
         .from("properties")
         .select(
           "id, title, address_line1, address_line2, city, postcode, price, " +
-          "bedrooms, bathrooms, property_type, market_status, tenure, description, features, status, agency_id"
+          "bedrooms, bathrooms, area_sqft, property_type, listing_type, market_status, tenure, description, features, status, agency_id"
         )
         .eq("id", id)
         .single();
@@ -190,17 +213,29 @@ export default function EditListingPage() {
         city: form.city ?? null,
         postcode: form.postcode ?? null,
         price: form.price ?? null,               // numeric(12,2) GBP
-        bedrooms: form.bedrooms ?? null,
-        bathrooms: form.bathrooms ?? null,
+        bedrooms: isCommercial ? null : form.bedrooms ?? null,
+        bathrooms: isCommercial ? null : form.bathrooms ?? null,
+        area_sqft: form.area_sqft ?? null,
         property_type: form.property_type,
+        listing_type: form.listing_type,
         market_status: form.market_status ?? "available",
         tenure: form.tenure ?? null,
         description: form.description ?? null,
         features: form.features ?? [],
       })
       .eq("id", id);
+
+    if (updateError) { setSaving(false); setError(updateError.message); return; }
+
+    const coords = await geocodeAddress(form.address_line1 ?? "", form.city ?? "", form.postcode ?? "");
+    if (coords) {
+      await supabaseClient
+        .from("properties")
+        .update({ latitude: coords.lat, longitude: coords.lng })
+        .eq("id", id);
+    }
+
     setSaving(false);
-    if (updateError) { setError(updateError.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -692,6 +727,25 @@ export default function EditListingPage() {
               />
             </FormField>
 
+            <FormField id="listing_type" label="Listing type">
+              <select
+                id="listing_type"
+                value={form.listing_type ?? "sale"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setField("listing_type", v);
+                  const nowCommercial = v === "commercial";
+                  if (nowCommercial && !isCommercial) setField("property_type", "office");
+                  if (!nowCommercial && isCommercial) setField("property_type", "apartment");
+                }}
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="sale">For sale</option>
+                <option value="rent">To let</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </FormField>
+
             <FormField id="market_status" label="Availability">
               <select
                 id="market_status"
@@ -727,29 +781,46 @@ export default function EditListingPage() {
                 onChange={(e) => setField("property_type", e.target.value)}
                 className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"].map((t) => (
+                {(isCommercial
+                  ? ["office", "retail", "industrial", "land", "hotel_leisure", "other"]
+                  : ["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"]
+                ).map((t) => (
                   <option key={t} value={t}>{t.replace("_", "-")}</option>
                 ))}
               </select>
             </FormField>
 
-            <FormField id="bedrooms" label="Bedrooms">
-              <Input
-                id="bedrooms"
-                type="number"
-                min="0"
-                value={form.bedrooms ?? ""}
-                onChange={(e) => setField("bedrooms", e.target.value ? parseInt(e.target.value) : null)}
-              />
-            </FormField>
+            {!isCommercial && (
+              <>
+                <FormField id="bedrooms" label="Bedrooms">
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    min="0"
+                    value={form.bedrooms ?? ""}
+                    onChange={(e) => setField("bedrooms", e.target.value ? parseInt(e.target.value) : null)}
+                  />
+                </FormField>
 
-            <FormField id="bathrooms" label="Bathrooms">
+                <FormField id="bathrooms" label="Bathrooms">
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    value={form.bathrooms ?? ""}
+                    onChange={(e) => setField("bathrooms", e.target.value ? parseInt(e.target.value) : null)}
+                  />
+                </FormField>
+              </>
+            )}
+
+            <FormField id="area_sqft" label="Square footage (sq ft)">
               <Input
-                id="bathrooms"
+                id="area_sqft"
                 type="number"
                 min="0"
-                value={form.bathrooms ?? ""}
-                onChange={(e) => setField("bathrooms", e.target.value ? parseInt(e.target.value) : null)}
+                value={form.area_sqft ?? ""}
+                onChange={(e) => setField("area_sqft", e.target.value ? parseInt(e.target.value) : null)}
               />
             </FormField>
 

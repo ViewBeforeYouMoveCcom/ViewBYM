@@ -14,6 +14,12 @@ const statusVariant: Record<string, "success" | "warning" | "error" | "default">
   "Let agreed": "warning",
 };
 
+const listingTypeLabel: Record<string, string> = {
+  sale: "For Sale",
+  rent: "To Let",
+  commercial: "Commercial",
+};
+
 interface PropertyCardProps {
   property: Property;
   compact?: boolean;
@@ -57,6 +63,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
             <Badge variant={statusVariant[property.status] ?? "default"}>
               {property.status}
             </Badge>
+            {property.listingType ? (
+              <Badge variant="outline">{listingTypeLabel[property.listingType]}</Badge>
+            ) : null}
             {property.featured ? <Badge variant="amber">Featured</Badge> : null}
           </div>
 
@@ -74,9 +83,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
 
           {/* Facts */}
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6B7280]">
-            <span>{property.beds} beds</span>
-            <span>{property.baths} baths</span>
-            <span>{property.areaSqFt} sq ft</span>
+            {property.beds > 0 && <span>{property.beds} beds</span>}
+            {property.baths > 0 && <span>{property.baths} baths</span>}
+            {property.areaSqFt > 0 && <span>{property.areaSqFt} sq ft</span>}
+            <span>{property.type}</span>
           </div>
 
           {/* Agent + CTA */}
@@ -149,6 +159,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
             <Badge variant={statusVariant[property.status] ?? "default"}>
               {property.status}
             </Badge>
+            {property.listingType ? (
+              <Badge variant="outline">{listingTypeLabel[property.listingType]}</Badge>
+            ) : null}
             {property.featured ? <Badge variant="amber">Featured</Badge> : null}
           </div>
 
@@ -175,9 +188,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
 
           {/* Facts */}
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#6B7280]">
-            <span>{property.beds} beds</span>
-            <span>{property.baths} baths</span>
-            <span>{property.areaSqFt} sq ft</span>
+            {property.beds > 0 && <span>{property.beds} beds</span>}
+            {property.baths > 0 && <span>{property.baths} baths</span>}
+            {property.areaSqFt > 0 && <span>{property.areaSqFt} sq ft</span>}
             <span>{property.type}</span>
             {property.tenure ? <span>{property.tenure}</span> : null}
           </div>

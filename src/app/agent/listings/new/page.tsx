@@ -172,6 +172,8 @@ export default function NewListingPage() {
   const [error, setError] = useState<string | null>(null);
   const [draftPropertyId, setDraftPropertyId] = useState<string | null>(null);
 
+  const isCommercial = form.listing_type === "commercial";
+
   // ── Mandatory field validation ───────────────────────────────────────────
   const isValid =
     form.title.trim() !== "" &&
@@ -179,7 +181,7 @@ export default function NewListingPage() {
     form.city.trim() !== "" &&
     form.postcode.trim() !== "" &&
     form.price.trim() !== "" &&
-    form.bedrooms.trim() !== "" &&
+    (isCommercial ? form.area_sqft.trim() !== "" : form.bedrooms.trim() !== "") &&
     photos.length > 0 &&
     vrFile !== null;
 
@@ -195,7 +197,9 @@ export default function NewListingPage() {
       !form.city.trim() && "city",
       !form.postcode.trim() && "postcode",
       !form.price.trim() && "price",
-      !form.bedrooms.trim() && "bedrooms",
+      form.listing_type === "commercial"
+        ? !form.area_sqft.trim() && "square footage"
+        : !form.bedrooms.trim() && "bedrooms",
     ].filter(Boolean) as string[];
   }
 
@@ -255,8 +259,8 @@ export default function NewListingPage() {
       price: priceNumeric,
       price_qualifier: form.price_qualifier || null,
       listing_type: form.listing_type,
-      bedrooms: form.bedrooms ? parseInt(form.bedrooms, 10) : null,
-      bathrooms: form.bathrooms ? parseInt(form.bathrooms, 10) : null,
+      bedrooms: isCommercial ? null : form.bedrooms ? parseInt(form.bedrooms, 10) : null,
+      bathrooms: isCommercial ? null : form.bathrooms ? parseInt(form.bathrooms, 10) : null,
       area_sqft: form.area_sqft ? parseInt(form.area_sqft, 10) : null,
       property_type: form.property_type,
       market_status: form.market_status,
@@ -542,7 +546,9 @@ export default function NewListingPage() {
     !form.city.trim() && "city",
     !form.postcode.trim() && "postcode",
     !form.price.trim() && "price",
-    !form.bedrooms.trim() && "bedrooms",
+    isCommercial
+      ? !form.area_sqft.trim() && "square footage"
+      : !form.bedrooms.trim() && "bedrooms",
     photos.length === 0 && "at least 1 photo",
     !vrFile && "VR 360° file",
   ].filter(Boolean) as string[];
@@ -586,32 +592,59 @@ export default function NewListingPage() {
             </Field>
             <Field label="Postcode" required><Input placeholder="E14 9UH" value={form.postcode} onChange={(e) => setField("postcode", e.target.value)} /></Field>
             <Field label="Listing type">
-              <Sel value={form.listing_type} onChange={(v) => setField("listing_type", v)}>
+              <Sel
+                value={form.listing_type}
+                onChange={(v) => {
+                  setField("listing_type", v);
+                  const nowCommercial = v === "commercial";
+                  const wasCommercial = isCommercial;
+                  if (nowCommercial && !wasCommercial) setField("property_type", "office");
+                  if (!nowCommercial && wasCommercial) setField("property_type", "apartment");
+                }}
+              >
                 <option value="sale">For sale</option>
                 <option value="rent">To let</option>
+                <option value="commercial">Commercial</option>
               </Sel>
             </Field>
             <Field label="Property type">
               <Sel value={form.property_type} onChange={(v) => setField("property_type", v)}>
-                <option value="apartment">Apartment</option>
-                <option value="house">House</option>
-                <option value="townhouse">Townhouse</option>
-                <option value="studio">Studio</option>
-                <option value="detached">Detached</option>
-                <option value="semi_detached">Semi-detached</option>
-                <option value="terraced">Terraced</option>
-                <option value="bungalow">Bungalow</option>
-                <option value="cottage">Cottage</option>
-                <option value="penthouse">Penthouse</option>
-                <option value="mews">Mews</option>
-                <option value="flat">Flat</option>
-                <option value="loft">Loft</option>
-                <option value="other">Other</option>
+                {isCommercial ? (
+                  <>
+                    <option value="office">Office</option>
+                    <option value="retail">Retail</option>
+                    <option value="industrial">Industrial / Warehouse</option>
+                    <option value="land">Land</option>
+                    <option value="hotel_leisure">Hotel &amp; Leisure</option>
+                    <option value="other">Other</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="apartment">Apartment</option>
+                    <option value="house">House</option>
+                    <option value="townhouse">Townhouse</option>
+                    <option value="studio">Studio</option>
+                    <option value="detached">Detached</option>
+                    <option value="semi_detached">Semi-detached</option>
+                    <option value="terraced">Terraced</option>
+                    <option value="bungalow">Bungalow</option>
+                    <option value="cottage">Cottage</option>
+                    <option value="penthouse">Penthouse</option>
+                    <option value="mews">Mews</option>
+                    <option value="flat">Flat</option>
+                    <option value="loft">Loft</option>
+                    <option value="other">Other</option>
+                  </>
+                )}
               </Sel>
             </Field>
-            <Field label="Bedrooms" required><Input type="number" min="0" placeholder="2" value={form.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} /></Field>
-            <Field label="Bathrooms"><Input type="number" min="0" placeholder="1" value={form.bathrooms} onChange={(e) => setField("bathrooms", e.target.value)} /></Field>
-            <Field label="Floor area (sq ft)"><Input type="number" min="0" placeholder="850" value={form.area_sqft} onChange={(e) => setField("area_sqft", e.target.value)} /></Field>
+            {!isCommercial && (
+              <>
+                <Field label="Bedrooms" required><Input type="number" min="0" placeholder="2" value={form.bedrooms} onChange={(e) => setField("bedrooms", e.target.value)} /></Field>
+                <Field label="Bathrooms"><Input type="number" min="0" placeholder="1" value={form.bathrooms} onChange={(e) => setField("bathrooms", e.target.value)} /></Field>
+              </>
+            )}
+            <Field label="Square footage (sq ft)" required={isCommercial}><Input type="number" min="0" placeholder="850" value={form.area_sqft} onChange={(e) => setField("area_sqft", e.target.value)} /></Field>
             <Field label="Tenure"><Input placeholder="Freehold / Leasehold" value={form.tenure} onChange={(e) => setField("tenure", e.target.value)} /></Field>
             <Field label={form.listing_type === "rent" ? "Monthly rent (£)" : "Price (£)"} required>
               <Input type="number" min="0" step="1000" placeholder={form.listing_type === "rent" ? "1800" : "350000"} value={form.price} onChange={(e) => setField("price", e.target.value)} />
