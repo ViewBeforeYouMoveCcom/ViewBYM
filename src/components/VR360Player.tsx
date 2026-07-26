@@ -13,9 +13,11 @@ interface Props {
   imageUrl?: string | null;
   className?: string;
   autoHideControls?: boolean;
+  /** Show a full-screen button in the transport bar; posts "vr-fullscreen-request" to the parent window on click (this player has no direct access to the DOM outside its iframe). */
+  showFullscreenButton?: boolean;
 }
 
-export default function VR360Player({ videoUrl, imageUrl, className = "", autoHideControls = false }: Props) {
+export default function VR360Player({ videoUrl, imageUrl, className = "", autoHideControls = false, showFullscreenButton = false }: Props) {
   if (!videoUrl && !imageUrl) return null;
 
   const escapeAttr = (value: string) =>
@@ -493,6 +495,12 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         </svg>
         <span style="font:700 11px/1 sans-serif;margin-left:2px">VR</span>
       </button>
+      ${showFullscreenButton ? `
+      <button id="fullscreenBtn" title="Full screen" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>` : ""}
     </div>
   </div>
   <script>
@@ -901,6 +909,19 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       }
 
       if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlay);
+
+      // Full-screen lives in the transport bar like any video player's, but
+      // this iframe has its own isolated WebGL/video canvas — putting THIS
+      // document into fullscreen forces a canvas resize that can drop the
+      // video texture and freeze the sphere on a single frame. So instead,
+      // ask the host page to open the dedicated full-viewport overlay, which
+      // mounts a fresh player instance at full size instead of resizing this one.
+      var fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', function() {
+          try { window.parent.postMessage({ type: 'vr-fullscreen-request' }, '*'); } catch(e) {}
+        });
+      }
 
 
 

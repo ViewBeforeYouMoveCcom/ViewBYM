@@ -1,5 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
+// Properties shown to prospective agents as a demonstration of the full
+// platform experience, rather than genuine for-sale listings. Flagged by ID
+// rather than a DB column so this doesn't need a schema migration.
+const DEMO_PROPERTY_IDS = new Set(["f96ab0fe-87c7-4347-a586-ec81cf62d774"]);
+
 export type PropertyStatus = "New" | "Under offer" | "Sold STC" | "Let agreed";
 
 export type Property = {
@@ -40,6 +45,8 @@ export type Property = {
   longitude?: number;
 
   isDbProperty?: boolean;
+  /** Shown to prospective agents as a demo of the full experience — not a genuine for-sale listing. */
+  isDemo?: boolean;
 
   agent: {
     name: string;
@@ -172,6 +179,7 @@ function mapDbProperty(row: DbProperty): Property {
     latitude: row.latitude ?? undefined,
     longitude: row.longitude ?? undefined,
     isDbProperty: true,
+    isDemo: DEMO_PROPERTY_IDS.has(row.id),
     agent: {
       name: agencyName,
       branch: agencyName,

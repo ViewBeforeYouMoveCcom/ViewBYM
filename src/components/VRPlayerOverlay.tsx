@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import VR360Player from "@/components/VR360Player";
 import { trackEvent } from "@/components/GoogleAnalytics";
@@ -12,7 +12,14 @@ interface Props {
   triggerLabel?: ReactNode;
 }
 
-export default function VRPlayerOverlay({ propertyId, onOpenChange, triggerClassName, triggerLabel }: Props) {
+export interface VRPlayerOverlayHandle {
+  open: () => void;
+}
+
+const VRPlayerOverlay = forwardRef<VRPlayerOverlayHandle, Props>(function VRPlayerOverlay(
+  { propertyId, onOpenChange, triggerClassName, triggerLabel },
+  ref
+) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
@@ -23,6 +30,8 @@ export default function VRPlayerOverlay({ propertyId, onOpenChange, triggerClass
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useImperativeHandle(ref, () => ({ open: handleOpen }));
 
   const resetHideTimer = useCallback(() => {
     setShowClose(true);
@@ -150,4 +159,6 @@ export default function VRPlayerOverlay({ propertyId, onOpenChange, triggerClass
       {createPortal(overlay, document.body)}
     </>
   );
-}
+});
+
+export default VRPlayerOverlay;

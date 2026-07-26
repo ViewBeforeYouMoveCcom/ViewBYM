@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import VR360Player from "@/components/VR360Player";
-import VRPlayerOverlay from "@/components/VRPlayerOverlay";
+import VRPlayerOverlay, { type VRPlayerOverlayHandle } from "@/components/VRPlayerOverlay";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Props {
@@ -20,6 +20,7 @@ export default function VRTourPanel({ propertyId, vrEnabled, videoUrl, hasGaller
   const [fetchError, setFetchError] = useState(false);
   const [vrOverlayOpen, setVrOverlayOpen] = useState(false);
   const [vrFailed, setVrFailed] = useState(false);
+  const overlayControlRef = useRef<VRPlayerOverlayHandle>(null);
 
   useEffect(() => {
     if (!vrEnabled) return;
@@ -37,6 +38,7 @@ export default function VRTourPanel({ propertyId, vrEnabled, videoUrl, hasGaller
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       if (e.data?.type === "vr-error") setVrFailed(true);
+      if (e.data?.type === "vr-fullscreen-request") overlayControlRef.current?.open();
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -107,19 +109,38 @@ export default function VRTourPanel({ propertyId, vrEnabled, videoUrl, hasGaller
           ) : vrOverlayOpen ? (
             <div className="flex h-[420px] items-center justify-center bg-gray-950 md:h-[540px]" />
           ) : (
-            <VR360Player videoUrl={signedUrl} className="h-[420px] w-full md:h-[540px]" />
+            <div className="relative">
+              <VR360Player videoUrl={signedUrl} className="h-[420px] w-full md:h-[540px]" showFullscreenButton />
+
+              {/* Clear 360° interaction indicator */}
+              <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-white backdrop-blur-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M3 12a9 4 0 0 0 18 0" />
+                </svg>
+                <span className="text-[11px] font-semibold">360°</span>
+              </div>
+            </div>
           )}
+
+          {/* No visible trigger here — opened via the "vr-fullscreen-request"
+              message from the player's own transport-bar button above. */}
+          <VRPlayerOverlay
+            ref={overlayControlRef}
+            propertyId={propertyId}
+            onOpenChange={setVrOverlayOpen}
+            triggerClassName="hidden"
+          />
         </div>
 
         {signedUrl && !vrFailed && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 flex-1">
-              <p className="text-sm font-medium text-gray-900">Tip</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Click and drag to look around in full 360°. Works on desktop, mobile, and VR headsets.
-              </p>
-            </div>
-            <VRPlayerOverlay propertyId={propertyId} onOpenChange={setVrOverlayOpen} />
+          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+            <p className="text-sm font-medium text-gray-900">How to look around</p>
+            <p className="mt-1 text-sm text-gray-600">
+              Look around as the tour plays. Drag with your mouse or swipe on your screen to
+              look left, right, up and down as the tour moves through the property. No headset is
+              required.
+            </p>
           </div>
         )}
       </CardContent>

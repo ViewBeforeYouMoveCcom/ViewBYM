@@ -44,6 +44,18 @@ export default async function PropertyDetailPage({
     <div className="min-h-screen bg-[#F9FAFB]">
       <TrackListingView id={property.id} />
 
+      {/* ── Demonstration property notice ───────────────────────── */}
+      {property.isDemo && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center sm:px-6">
+          <span className="mr-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-950">
+            Demonstration property
+          </span>
+          <span className="text-[13.5px] text-amber-900">
+            Demonstration property — not currently available for sale
+          </span>
+        </div>
+      )}
+
       {/* ── Hero gallery ─────────────────────────────────────────── */}
       <PropertyHero
         gallery={gallery}
