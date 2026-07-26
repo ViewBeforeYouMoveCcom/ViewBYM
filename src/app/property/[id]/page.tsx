@@ -222,7 +222,16 @@ export default async function PropertyDetailPage({
               {/* CTA card */}
               {property.vrEnabled && (
                 <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                  <VRPlayerOverlay propertyId={property.id} />
+                  <VRPlayerOverlay
+                    propertyId={property.id}
+                    triggerClassName="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#063d75]"
+                    triggerLabel={
+                      <span className="flex items-center gap-1.5">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
+                        View in VR
+                      </span>
+                    }
+                  />
                 </div>
               )}
 
@@ -307,7 +316,16 @@ export default async function PropertyDetailPage({
           )}
           {property.vrEnabled && (
             <div className="flex-1">
-              <VRPlayerOverlay propertyId={property.id} />
+              <VRPlayerOverlay
+                propertyId={property.id}
+                triggerClassName="flex w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#08519A] py-3 text-[13px] font-semibold text-white"
+                triggerLabel={
+                  <span className="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
+                    View in VR
+                  </span>
+                }
+              />
             </div>
           )}
           <SavePropertyButton
