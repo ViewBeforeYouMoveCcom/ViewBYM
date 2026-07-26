@@ -77,6 +77,9 @@ export default function AgentOnboardingPage() {
         <p className="mt-1 text-sm text-[#6B7280]">
           Create your agency profile to get started. Your account will be reviewed before you can publish listings.
         </p>
+        <p className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-[13px] leading-relaxed text-blue-800">
+          We are currently inviting a limited number of founder agencies to help test and refine the end-to-end service.
+        </p>
       </div>
 
       <Card className="rounded-xl border border-[#E5E7EB]">

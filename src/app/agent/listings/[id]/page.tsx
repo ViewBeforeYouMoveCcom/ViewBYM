@@ -72,7 +72,13 @@ interface LocalMediaItem {
   uploading: boolean; // True while processing/uploading
   error?: string; // Error message if upload/conversion failed
   originalFile?: File; // Keep original file for potential re-upload or info
+  room_title?: string | null;
 }
+
+const ROOM_TITLE_SUGGESTIONS = [
+  "Living room", "Kitchen", "Dining room", "Master bedroom", "Bedroom",
+  "Bathroom", "Hallway", "Garden", "Exterior", "Balcony", "Garage", "Office",
+];
 
 const statusVariant: Record<PropStatus, "default" | "success" | "warning" | "error" | "amber"> = {
   draft: "default",
@@ -156,13 +162,13 @@ export default function EditListingPage() {
 
       const { data: mediaData } = await supabaseClient
         .from("property_media")
-        .select("id, storage_path, public_url, sort_order")
+        .select("id, storage_path, public_url, sort_order, room_title")
         .eq("property_id", id)
         .eq("type", "photo")
         .order("sort_order", { ascending: true });
 
       const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
-      setPhotos(((mediaData ?? []) as MediaItem[]).filter((item) => !isVideoUrl(item.public_url)).map(item => ({
+      setPhotos(((mediaData ?? []) as (MediaItem & { room_title: string | null })[]).filter((item) => !isVideoUrl(item.public_url)).map(item => ({
           ...item,
           tempId: item.id, // Use DB ID as tempId for existing items
           uploading: false,
@@ -418,6 +424,18 @@ export default function EditListingPage() {
 
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function onRoomTitleChange(tempId: string, value: string) {
+    setPhotos((prev) => prev.map((p) => (p.tempId === tempId ? { ...p, room_title: value } : p)));
+  }
+
+  async function saveRoomTitle(photo: LocalMediaItem) {
+    if (!photo.id) return; // Not saved to the DB yet — the upload flow will carry the value along.
+    await supabaseClient
+      .from("property_media")
+      .update({ room_title: photo.room_title?.trim() || null })
+      .eq("id", photo.id);
   }
 
   async function deletePhoto(photo: LocalMediaItem) {
@@ -914,10 +932,13 @@ export default function EditListingPage() {
           {photos.length > 0 && (
             <>
               <p className="mb-2 text-xs text-[#6B7280]">Drag photos to reorder. First photo is the cover image.</p>
-              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="mb-4 grid grid-cols-2 items-start gap-3 sm:grid-cols-3 md:grid-cols-4">
+                <datalist id="room-title-suggestions">
+                  {ROOM_TITLE_SUGGESTIONS.map((r) => <option key={r} value={r} />)}
+                </datalist>
                 {photos.map((photo, idx) => (
+                  <div key={photo.tempId} className="flex flex-col gap-1.5">
                   <div
-                    key={photo.tempId}
                     draggable={!photo.uploading && !photo.error}
                     onDragStart={() => onPhotoDragStart(idx, photo.tempId)}
                     onDragOver={(e) => onPhotoDragOver(e, idx)}
@@ -973,6 +994,18 @@ export default function EditListingPage() {
                         </div>
                       </>
                     )}
+                  </div>
+                  {!photo.uploading && !photo.error && (
+                    <input
+                      type="text"
+                      list="room-title-suggestions"
+                      placeholder="Room (e.g. Kitchen)"
+                      value={photo.room_title ?? ""}
+                      onChange={(e) => onRoomTitleChange(photo.tempId, e.target.value)}
+                      onBlur={() => saveRoomTitle(photo)}
+                      className="h-8 w-full rounded-lg border border-[#E5E7EB] px-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
                   </div>
                 ))}
               </div>

@@ -30,7 +30,7 @@ export default function Footer() {
               heading: "Agents",
               links: [
                 { href: "/for-agents", label: "Overview" },
-                { href: "/agents/request-access", label: "Request access" },
+                { href: "/agents/request-access", label: "Join the Founder Pilot" },
                 { href: "/vendors/immersive-vr", label: "Vendor partners" },
               ],
             },

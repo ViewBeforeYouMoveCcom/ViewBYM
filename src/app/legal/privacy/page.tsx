@@ -27,7 +27,7 @@ const sections = [
   {
     id: "contact",
     title: "Contact",
-    body: "If you have questions about this privacy policy or how we handle your data, please contact us at privacy@vbym.co.uk. If you are not satisfied with our response, you have the right to lodge a complaint with the Information Commissioner's Office (ICO) at ico.org.uk.",
+    body: "If you have questions about this privacy policy or how we handle your data, please contact us at privacy@viewbeforeyoumove.com. If you are not satisfied with our response, you have the right to lodge a complaint with the Information Commissioner's Office (ICO) at ico.org.uk.",
   },
 ];
 

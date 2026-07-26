@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SavePropertyButton from "@/components/SavePropertyButton";
 import VRPlayerOverlay from "@/components/VRPlayerOverlay";
+import { IMAGE_BLUR_PLACEHOLDER, onPropertyImageError } from "@/lib/utils";
 
 interface SaveProp {
   id: string; title: string; location: string; price: string; beds: number; type: string;
@@ -62,7 +63,17 @@ export default function PropertyHero({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 max-w-[1200px] mx-auto w-full">
             {(showAllPhotosExpanded ? gallery : gallery.slice(0, 10)).map((src, i) => (
               <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                <Image
+                  src={src}
+                  alt={`Photo ${i + 1}`}
+                  fill
+                  sizes="(min-width: 640px) 50vw, 100vw"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={IMAGE_BLUR_PLACEHOLDER}
+                  onError={onPropertyImageError}
+                  className="object-cover"
+                />
                 <div className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white">
                   {i + 1} / {gallery.length}
                 </div>
@@ -99,6 +110,8 @@ export default function PropertyHero({
               src={videoUrl}
               controls
               autoPlay
+              preload="metadata"
+              poster={gallery[0]}
               className="w-full rounded-xl bg-black aspect-video"
             />
           </div>
@@ -136,6 +149,8 @@ export default function PropertyHero({
           src={gallery[current]}
           alt={title}
           fill
+          sizes="100vw"
+          onError={onPropertyImageError}
           className="object-cover opacity-90 transition-opacity duration-300"
           priority
         />
@@ -302,7 +317,7 @@ export default function PropertyHero({
                   : "border-transparent opacity-50 hover:opacity-80"
               }`}
             >
-              <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
+              <Image src={src} alt={`Photo ${i + 1}`} fill sizes="96px" loading="lazy" onError={onPropertyImageError} className="object-cover" />
             </button>
           ))}
           {gallery.length > 10 && (

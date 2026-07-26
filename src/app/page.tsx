@@ -283,8 +283,27 @@ export default async function HomePage() {
               <h2 className="mb-3.5 text-[clamp(24px,3vw,38px)] font-bold leading-tight tracking-tight text-white">
                 Fewer wasted viewings.<br />More committed buyers.
               </h2>
-              <p className="mb-7 text-[15px] leading-relaxed text-white/75">
-                When a buyer calls to book a viewing, they've already walked the property in VR. Every conversation starts warmer and closes faster.
+              <p className="mb-5 text-[15px] leading-relaxed text-white/75">
+                Give buyers a clearer understanding of the property before they request an in-person viewing. From one coordinated appointment, our managed media service can create an immersive 360° tour, MP4 walkthrough, property photographs, floor plan and draft property summary.
+              </p>
+              <ul className="mb-7 grid gap-2.5 sm:grid-cols-2">
+                {[
+                  "Immersive 360° tour",
+                  "MP4 walkthrough",
+                  "Processed property photography",
+                  "Floor plan and measurements",
+                  "Draft property description",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-[13.5px] text-white/90">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-blue-300">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mb-5 rounded-xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-[13px] leading-relaxed text-blue-100">
+                We are currently inviting a limited number of founder agencies to help test and refine the end-to-end service.
               </p>
               <div className="flex flex-wrap gap-2.5">
                 <Link
@@ -297,7 +316,7 @@ export default async function HomePage() {
                   href="/agents/request-access"
                   className="rounded-lg border border-white/25 px-5 py-2.5 text-[14px] font-semibold !text-white/85 transition-colors hover:border-white/45 hover:bg-white/10"
                 >
-                  Request access
+                  Join the Founder Pilot
                 </Link>
               </div>
             </div>

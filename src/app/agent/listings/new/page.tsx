@@ -83,7 +83,14 @@ interface MediaFile {
   tempId: string;
   url?: string;
   error?: string; // Added for error feedback
+  mediaId?: string; // property_media row id, set once the photo is saved to the DB
+  roomTitle?: string;
 }
+
+const ROOM_TITLE_SUGGESTIONS = [
+  "Living room", "Kitchen", "Dining room", "Master bedroom", "Bedroom",
+  "Bathroom", "Hallway", "Garden", "Exterior", "Balcony", "Garage", "Office",
+];
 
 interface UploadedFile {
   path: string;
@@ -362,22 +369,27 @@ export default function NewListingPage() {
           const upload = await uploadFile(file, `${currentAgencyId}/${propertyId}/photos/${Date.now()}-${startIndex + i}.${ext}`, `Photo ${startIndex + i + 1}`);
 
           // 5. Save to Database (this is the first time it's saved)
-          const { error: mediaError } = await supabaseClient.from("property_media").insert({
-            property_id: propertyId,
-            storage_path: upload.path,
-            public_url: upload.url,
-            sort_order: startIndex + i,
-            type: "photo",
-          });
+          const { data: mediaRow, error: mediaError } = await supabaseClient
+            .from("property_media")
+            .insert({
+              property_id: propertyId,
+              storage_path: upload.path,
+              public_url: upload.url,
+              sort_order: startIndex + i,
+              type: "photo",
+            })
+            .select("id")
+            .single();
           if (mediaError) throw new Error(`Photo save failed: ${mediaError.message}`);
 
           // 6. Update local state
-          setPhotos((current) => current.map((p) => 
-            p.tempId === tempId ? { 
-              ...p, 
+          setPhotos((current) => current.map((p) =>
+            p.tempId === tempId ? {
+              ...p,
               preview: jpegPreviewUrl,
-              uploading: false, 
+              uploading: false,
               url: upload.url,
+              mediaId: (mediaRow as { id: string } | null)?.id,
               error: undefined,
             } : p
           ));
@@ -402,11 +414,23 @@ export default function NewListingPage() {
   }
 
   function removePhoto(tempIdToRemove: string) {
-    setPhotos((p) => { 
+    setPhotos((p) => {
       const photoToRemove = p.find(photo => photo.tempId === tempIdToRemove);
-      if (photoToRemove) URL.revokeObjectURL(photoToRemove.preview); 
-      return p.filter((photo) => photo.tempId !== tempIdToRemove); 
+      if (photoToRemove) URL.revokeObjectURL(photoToRemove.preview);
+      return p.filter((photo) => photo.tempId !== tempIdToRemove);
     });
+  }
+
+  function onRoomTitleChange(tempId: string, value: string) {
+    setPhotos((current) => current.map((p) => (p.tempId === tempId ? { ...p, roomTitle: value } : p)));
+  }
+
+  async function saveRoomTitle(photo: MediaFile) {
+    if (!photo.mediaId) return; // Not saved to the DB yet — will be picked up once the row exists.
+    await supabaseClient
+      .from("property_media")
+      .update({ room_title: photo.roomTitle?.trim() || null })
+      .eq("id", photo.mediaId);
   }
 
   // ── Video handler ────────────────────────────────────────────────────────
@@ -717,28 +741,44 @@ export default function NewListingPage() {
             <input ref={photoRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm" multiple className="hidden" onChange={onPhotoChange} />
           </div>
           {photos.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-3 items-start gap-3 sm:grid-cols-4">
+              <datalist id="room-title-suggestions">
+                {ROOM_TITLE_SUGGESTIONS.map((r) => <option key={r} value={r} />)}
+              </datalist>
               {photos.map((photo, i) => (
-                <div key={photo.tempId} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E5E7EB] bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photo.preview} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-                  {i === 0 && <div className="absolute left-1.5 top-1.5 rounded-full bg-[#08519A] px-2 py-0.5 text-[10px] font-bold text-white">Cover</div>}
-                  {photo.uploading ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-blue-700">
-                      <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                      <span className="sr-only">Uploading...</span>
-                    </div>
-                  ) : photo.error ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-100/80 p-2 text-center text-red-700 text-xs">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p className="mt-1">Failed</p>
-                        <p className="line-clamp-2" title={photo.error}>{photo.error.split(':').pop()?.trim() || 'Error'}</p>
-                    </div>
-                  ) : (
-                    <button type="button" onClick={() => removePhoto(photo.tempId)}
-                      className="absolute right-1.5 top-1.5 hidden h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white group-hover:flex" aria-label="Remove">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                    </button>
+                <div key={photo.tempId} className="flex flex-col gap-1.5">
+                  <div className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-[#E5E7EB] bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo.preview} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                    {i === 0 && <div className="absolute left-1.5 top-1.5 rounded-full bg-[#08519A] px-2 py-0.5 text-[10px] font-bold text-white">Cover</div>}
+                    {photo.uploading ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-blue-700">
+                        <svg className="h-5 w-5 animate-spin text-blue-700" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                        <span className="sr-only">Uploading...</span>
+                      </div>
+                    ) : photo.error ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-100/80 p-2 text-center text-red-700 text-xs">
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <p className="mt-1">Failed</p>
+                          <p className="line-clamp-2" title={photo.error}>{photo.error.split(':').pop()?.trim() || 'Error'}</p>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => removePhoto(photo.tempId)}
+                        className="absolute right-1.5 top-1.5 hidden h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white group-hover:flex" aria-label="Remove">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </button>
+                    )}
+                  </div>
+                  {!photo.uploading && !photo.error && (
+                    <input
+                      type="text"
+                      list="room-title-suggestions"
+                      placeholder="Room (e.g. Kitchen)"
+                      value={photo.roomTitle ?? ""}
+                      onChange={(e) => onRoomTitleChange(photo.tempId, e.target.value)}
+                      onBlur={() => saveRoomTitle(photo)}
+                      className="h-8 w-full rounded-lg border border-[#E5E7EB] px-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   )}
                 </div>
               ))}

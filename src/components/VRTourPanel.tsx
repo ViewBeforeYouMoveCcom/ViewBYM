@@ -8,13 +8,18 @@ import { Card, CardContent } from "@/components/ui/card";
 interface Props {
   propertyId: string;
   vrEnabled: boolean;
+  /** Walkthrough MP4, used as a fallback if the 360° player fails to load. */
+  videoUrl?: string | null;
+  /** Whether the property has a photo gallery to fall back to. */
+  hasGallery?: boolean;
 }
 
-export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
+export default function VRTourPanel({ propertyId, vrEnabled, videoUrl, hasGallery }: Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [vrOverlayOpen, setVrOverlayOpen] = useState(false);
+  const [vrFailed, setVrFailed] = useState(false);
 
   useEffect(() => {
     if (!vrEnabled) return;
@@ -25,6 +30,17 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
       .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
   }, [propertyId, vrEnabled]);
+
+  // The 360° player runs in an isolated iframe (see VR360Player) and posts a
+  // "vr-error" message up when it hits a real playback failure (unsupported
+  // device, bad media, stuck load) — switch to the MP4/gallery fallback then.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === "vr-error") setVrFailed(true);
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   if (!vrEnabled) {
     return (
@@ -64,6 +80,30 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
                 </p>
               </div>
             </div>
+          ) : vrFailed ? (
+            <div className="flex h-[420px] flex-col items-center justify-center gap-3 bg-[#F9FAFB] p-6 text-center md:h-[540px]">
+              <p className="text-sm font-medium text-gray-900">360° tour couldn&apos;t load</p>
+              <p className="max-w-sm text-sm text-gray-600">
+                {videoUrl
+                  ? "We couldn't play the immersive tour on this device — here's the walkthrough video instead."
+                  : "We couldn't play the immersive tour on this device — take a look at the photo gallery instead."}
+              </p>
+              {videoUrl ? (
+                <video
+                  src={videoUrl}
+                  controls
+                  preload="metadata"
+                  className="mt-1 aspect-video w-full max-w-md rounded-xl bg-black"
+                />
+              ) : hasGallery ? (
+                <a
+                  href="#property-gallery"
+                  className="mt-1 rounded-[10px] bg-[#08519A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#063d75]"
+                >
+                  View photo gallery
+                </a>
+              ) : null}
+            </div>
           ) : vrOverlayOpen ? (
             <div className="flex h-[420px] items-center justify-center bg-gray-950 md:h-[540px]" />
           ) : (
@@ -71,7 +111,7 @@ export default function VRTourPanel({ propertyId, vrEnabled }: Props) {
           )}
         </div>
 
-        {signedUrl && (
+        {signedUrl && !vrFailed && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 flex-1">
               <p className="text-sm font-medium text-gray-900">Tip</p>

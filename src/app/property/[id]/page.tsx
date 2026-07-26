@@ -10,6 +10,7 @@ import PropertyHero from "@/components/PropertyHero";
 import PropertyLocationMap from "@/components/PropertyLocationMap";
 import PropertyStreetView from "@/components/PropertyStreetView";
 import TrackListingView from "@/components/TrackListingView";
+import WalkthroughVideo from "@/components/WalkthroughVideo";
 
 const STATUS_STYLES: Record<string, string> = {
   "New":          "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -117,7 +118,12 @@ export default async function PropertyDetailPage({
             {/* VR tour */}
             {property.vrEnabled && (
               <div id="vr-tour-section">
-                <VRTourPanel propertyId={property.id} vrEnabled={property.vrEnabled} />
+                <VRTourPanel
+                  propertyId={property.id}
+                  vrEnabled={property.vrEnabled}
+                  videoUrl={property.videoUrl}
+                  hasGallery={gallery.length > 0}
+                />
               </div>
             )}
 
@@ -125,19 +131,14 @@ export default async function PropertyDetailPage({
             {property.videoUrl && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
                 <h2 className="mb-4 text-[15px] font-bold text-gray-900">Walkthrough video</h2>
-                <video
-                  src={property.videoUrl}
-                  controls
-                  preload="metadata"
-                  className="aspect-video w-full rounded-xl bg-black"
-                />
+                <WalkthroughVideo src={property.videoUrl} poster={property.image} />
               </div>
             )}
 
             {/* Photos gallery */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <div id="property-gallery" className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <h2 className="mb-4 text-[15px] font-bold text-gray-900">Gallery</h2>
-              <PhotoGallery images={gallery} labels={property.imageLabels} title={property.title} />
+              <PhotoGallery images={gallery} labels={property.imageLabels} captions={property.imageCaptions} title={property.title} />
             </div>
 
             {/* Map + Street View */}

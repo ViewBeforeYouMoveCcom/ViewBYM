@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SavePropertyButton from "@/components/SavePropertyButton";
 import type { Property } from "@/data/properties";
+import { IMAGE_BLUR_PLACEHOLDER } from "@/lib/utils";
 
 const statusVariant: Record<string, "success" | "warning" | "error" | "default"> = {
   New: "success",
@@ -40,6 +41,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               src={property.image}
               alt={property.title}
               fill
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={IMAGE_BLUR_PLACEHOLDER}
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
@@ -117,6 +122,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               src={property.image}
               alt={property.title}
               fill
+              sizes="(min-width: 768px) 340px, 100vw"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={IMAGE_BLUR_PLACEHOLDER}
               className="object-cover"
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
@@ -135,8 +144,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
                     src={src}
                     alt={`${property.title} ${idx + 1}`}
                     fill
-                    className="object-cover"
-                        />
+                    sizes="25vw"
+                    loading="lazy"
+                          className="object-cover"
+                  />
                 </div>
               ))}
             </div>

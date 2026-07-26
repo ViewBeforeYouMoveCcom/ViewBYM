@@ -507,9 +507,16 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       }
 
       var unsupportedShown = false;
-      function showUnsupportedPopup(title, message) {
+      function reportLoadFailure() {
+        // Lets the host page (VRTourPanel) know the 360° experience itself
+        // failed — not just a headset-entry issue — so it can fall back to
+        // the MP4 walkthrough or photo gallery instead of a dead player.
+        try { window.parent.postMessage({ type: 'vr-error' }, '*'); } catch(e) {}
+      }
+      function showUnsupportedPopup(title, message, isLoadFailure) {
         if (unsupportedShown) return;
         unsupportedShown = true;
+        if (isLoadFailure !== false) reportLoadFailure();
         var errEl = document.createElement('div');
         errEl.style.cssText = [
           'position:fixed','inset:0','z-index:99999','background:#0d0d0d',
@@ -1112,14 +1119,16 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
               vrAttempt.catch(function() {
                 showUnsupportedPopup(
                   'VR Mode Not Available',
-                  'Turn on the WebXR emulator polyfill, reload the page, then try the VR button again.'
+                  'Turn on the WebXR emulator polyfill, reload the page, then try the VR button again.',
+                  false
                 );
               });
             }
           } else {
             showUnsupportedPopup(
               'VR Mode Not Available',
-              'This browser does not expose WebXR for the VR tour. Enable the WebXR emulator polyfill or test in a headset browser.'
+              'This browser does not expose WebXR for the VR tour. Enable the WebXR emulator polyfill or test in a headset browser.',
+              false
             );
           }
         });
