@@ -435,8 +435,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         </a-entity>
       </a-entity>
     </a-camera>
-    <a-entity id="leftHandController" oculus-touch-controls="hand: left" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: false"></a-entity>
-    <a-entity id="rightHandController" oculus-touch-controls="hand: right" cursor="rayOrigin: entity; fuse: false" raycaster="objects: .vr-btn; far: 10; showLine: false"></a-entity>
+    <a-entity id="leftHandController" laser-controls="hand: left" vr-btn-trigger raycaster="objects: .vr-btn; far: 10" line="color: #3b82f6; opacity: 0.85"></a-entity>
+    <a-entity id="rightHandController" laser-controls="hand: right" vr-btn-trigger raycaster="objects: .vr-btn; far: 10" line="color: #3b82f6; opacity: 0.85"></a-entity>
   </a-scene>
   <div id="controls">
     <div id="timeline">
@@ -505,6 +505,35 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
   </div>
   <script>
     (function(){
+      // ── Reliable trigger-click for VR hand controllers ─────────────
+      // The HUD buttons used to depend on A-Frame's built-in "cursor"
+      // component (paired with oculus-touch-controls) to turn a raycaster
+      // hit + trigger press into a synthetic "click" on the button. That
+      // chain works in the desktop WebXR emulator but was reported to not
+      // register a single button press on a real Quest 3 headset — likely
+      // a controller-input-mapping mismatch between oculus-touch-controls
+      // and current Quest firmware. This component skips that abstraction
+      // entirely: it listens to the controller's own low-level
+      // "triggerdown" event (emitted directly by A-Frame's tracked-controls
+      // from the WebXR input source, independent of the cursor component)
+      // and manually checks what the hand's raycaster is currently hitting.
+      if (window.AFRAME && !AFRAME.components['vr-btn-trigger']) {
+        AFRAME.registerComponent('vr-btn-trigger', {
+          init: function () {
+            this.onTriggerDown = this.onTriggerDown.bind(this);
+            this.el.addEventListener('triggerdown', this.onTriggerDown);
+          },
+          onTriggerDown: function () {
+            var raycasterComp = this.el.components.raycaster;
+            if (!raycasterComp || !raycasterComp.intersections.length) return;
+            var targetEl = raycasterComp.intersections[0].object.el;
+            if (targetEl && targetEl.classList.contains('vr-btn')) {
+              targetEl.emit('click', {}, false);
+            }
+          }
+        });
+      }
+
       // ── WebGL / VR support detection ──────────────────────────────
       function isWebGLSupported() {
         try {
@@ -1157,6 +1186,30 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
 
       var sceneForVrEvents = document.querySelector('a-scene');
       if (sceneForVrEvents) {
+        // Standalone Quest hardware renders the real headset framebuffer at
+        // full native per-eye resolution by default — the pixelRatio
+        // throttling in applyRenderQuality() above only affects the flat 2D
+        // canvas, never the actual XR session. Combined with simultaneous
+        // video decode, that's enough GPU load to drop frames, which shows
+        // up as the controller/laser visibly lagging behind hand movement.
+        // Fixed foveated rendering + a lower XR framebuffer scale is the
+        // standard fix — but framebufferScaleFactor only takes effect if
+        // it's set *before* the XR session is created, so this needs to run
+        // as early as possible, not from inside the enter-vr handler (by
+        // then the session's layer already exists at full resolution).
+        function primeXrPerformance() {
+          try {
+            var xrManager = sceneForVrEvents.renderer && sceneForVrEvents.renderer.xr;
+            if (!xrManager) return false;
+            if (typeof xrManager.setFoveation === 'function') xrManager.setFoveation(0.7);
+            if (typeof xrManager.setFramebufferScaleFactor === 'function') xrManager.setFramebufferScaleFactor(0.75);
+            return true;
+          } catch(e) { return false; }
+        }
+        if (!primeXrPerformance()) {
+          sceneForVrEvents.addEventListener('loaded', primeXrPerformance, { once: true });
+        }
+
         sceneForVrEvents.addEventListener('enter-vr', function() {
           inImmersiveVr = true;
           tryPlay();
@@ -1164,6 +1217,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           if (hls && selectedQuality === 'auto') {
             hls.nextLevel = 0;
           }
+          primeXrPerformance(); // harmless no-op if already primed; safety net otherwise
           showVrHud();
         });
         sceneForVrEvents.addEventListener('exit-vr', function() {
