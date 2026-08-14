@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.RESEND_API_KEY;
     if (apiKey && agentEmail) {
       const resend = new Resend(apiKey);
-      const from = process.env.RESEND_FROM_EMAIL ?? "VBYM <noreply@vbym.co.uk>";
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vbym.co.uk";
+      const from = process.env.RESEND_FROM_EMAIL ?? "View Before You Move <noreply@viewbeforeyoumove.com>";
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://viewbeforeyoumove.com";
       const adminEmail = process.env.ADMIN_EMAIL ?? "jt@universaltvmedia.com";
 
       await Promise.allSettled([
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
           
           to: buyerEmail,
-          subject: "Your enquiry has been received — VBYM",
+          subject: "Your enquiry has been received — View Before You Move",
           html: `
             <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
               <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">Enquiry received</h2>

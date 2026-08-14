@@ -14,6 +14,25 @@ import { Input } from "@/components/ui/input";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { preparePhotoFile } from "@/lib/videoFrameToJpeg";
 
+async function geocodeAddress(address: string, city: string, postcode: string): Promise<{ lat: number; lng: number } | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return null;
+  const query = [address, city, postcode, "UK"].filter(Boolean).join(", ");
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`
+    );
+    const data = await res.json();
+    if (data.status === "OK" && data.results[0]) {
+      const { lat, lng } = data.results[0].geometry.location;
+      return { lat, lng };
+    }
+  } catch {
+    // silently ignore geocoding failures
+  }
+  return null;
+}
+
 type PropStatus = "draft" | "published" | "archived";
 
 interface Property {
@@ -26,7 +45,9 @@ interface Property {
   price: number | null;           // numeric(12,2) GBP
   bedrooms: number | null;
   bathrooms: number | null;
+  area_sqft: number | null;
   property_type: string;
+  listing_type: string;
   market_status: string;
   tenure: string | null;
   description: string | null;
@@ -51,7 +72,13 @@ interface LocalMediaItem {
   uploading: boolean; // True while processing/uploading
   error?: string; // Error message if upload/conversion failed
   originalFile?: File; // Keep original file for potential re-upload or info
+  room_title?: string | null;
 }
+
+const ROOM_TITLE_SUGGESTIONS = [
+  "Living room", "Kitchen", "Dining room", "Master bedroom", "Bedroom",
+  "Bathroom", "Hallway", "Garden", "Exterior", "Balcony", "Garage", "Office",
+];
 
 const statusVariant: Record<PropStatus, "default" | "success" | "warning" | "error" | "amber"> = {
   draft: "default",
@@ -115,13 +142,15 @@ export default function EditListingPage() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [featureInput, setFeatureInput] = useState("");
 
+  const isCommercial = form.listing_type === "commercial";
+
   useEffect(() => {
     async function load() {
       const { data: prop } = await supabaseClient
         .from("properties")
         .select(
           "id, title, address_line1, address_line2, city, postcode, price, " +
-          "bedrooms, bathrooms, property_type, market_status, tenure, description, features, status, agency_id"
+          "bedrooms, bathrooms, area_sqft, property_type, listing_type, market_status, tenure, description, features, status, agency_id"
         )
         .eq("id", id)
         .single();
@@ -133,13 +162,13 @@ export default function EditListingPage() {
 
       const { data: mediaData } = await supabaseClient
         .from("property_media")
-        .select("id, storage_path, public_url, sort_order")
+        .select("id, storage_path, public_url, sort_order, room_title")
         .eq("property_id", id)
         .eq("type", "photo")
         .order("sort_order", { ascending: true });
 
       const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
-      setPhotos(((mediaData ?? []) as MediaItem[]).filter((item) => !isVideoUrl(item.public_url)).map(item => ({
+      setPhotos(((mediaData ?? []) as (MediaItem & { room_title: string | null })[]).filter((item) => !isVideoUrl(item.public_url)).map(item => ({
           ...item,
           tempId: item.id, // Use DB ID as tempId for existing items
           uploading: false,
@@ -190,17 +219,29 @@ export default function EditListingPage() {
         city: form.city ?? null,
         postcode: form.postcode ?? null,
         price: form.price ?? null,               // numeric(12,2) GBP
-        bedrooms: form.bedrooms ?? null,
-        bathrooms: form.bathrooms ?? null,
+        bedrooms: isCommercial ? null : form.bedrooms ?? null,
+        bathrooms: isCommercial ? null : form.bathrooms ?? null,
+        area_sqft: form.area_sqft ?? null,
         property_type: form.property_type,
+        listing_type: form.listing_type,
         market_status: form.market_status ?? "available",
         tenure: form.tenure ?? null,
         description: form.description ?? null,
         features: form.features ?? [],
       })
       .eq("id", id);
+
+    if (updateError) { setSaving(false); setError(updateError.message); return; }
+
+    const coords = await geocodeAddress(form.address_line1 ?? "", form.city ?? "", form.postcode ?? "");
+    if (coords) {
+      await supabaseClient
+        .from("properties")
+        .update({ latitude: coords.lat, longitude: coords.lng })
+        .eq("id", id);
+    }
+
     setSaving(false);
-    if (updateError) { setError(updateError.message); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -383,6 +424,18 @@ export default function EditListingPage() {
 
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function onRoomTitleChange(tempId: string, value: string) {
+    setPhotos((prev) => prev.map((p) => (p.tempId === tempId ? { ...p, room_title: value } : p)));
+  }
+
+  async function saveRoomTitle(photo: LocalMediaItem) {
+    if (!photo.id) return; // Not saved to the DB yet — the upload flow will carry the value along.
+    await supabaseClient
+      .from("property_media")
+      .update({ room_title: photo.room_title?.trim() || null })
+      .eq("id", photo.id);
   }
 
   async function deletePhoto(photo: LocalMediaItem) {
@@ -692,6 +745,25 @@ export default function EditListingPage() {
               />
             </FormField>
 
+            <FormField id="listing_type" label="Listing type">
+              <select
+                id="listing_type"
+                value={form.listing_type ?? "sale"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setField("listing_type", v);
+                  const nowCommercial = v === "commercial";
+                  if (nowCommercial && !isCommercial) setField("property_type", "office");
+                  if (!nowCommercial && isCommercial) setField("property_type", "apartment");
+                }}
+                className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="sale">For sale</option>
+                <option value="rent">To let</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </FormField>
+
             <FormField id="market_status" label="Availability">
               <select
                 id="market_status"
@@ -727,29 +799,46 @@ export default function EditListingPage() {
                 onChange={(e) => setField("property_type", e.target.value)}
                 className="h-11 w-full rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"].map((t) => (
+                {(isCommercial
+                  ? ["office", "retail", "industrial", "land", "hotel_leisure", "other"]
+                  : ["apartment","house","townhouse","studio","detached","semi_detached","terraced","bungalow","cottage","penthouse","loft","other"]
+                ).map((t) => (
                   <option key={t} value={t}>{t.replace("_", "-")}</option>
                 ))}
               </select>
             </FormField>
 
-            <FormField id="bedrooms" label="Bedrooms">
-              <Input
-                id="bedrooms"
-                type="number"
-                min="0"
-                value={form.bedrooms ?? ""}
-                onChange={(e) => setField("bedrooms", e.target.value ? parseInt(e.target.value) : null)}
-              />
-            </FormField>
+            {!isCommercial && (
+              <>
+                <FormField id="bedrooms" label="Bedrooms">
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    min="0"
+                    value={form.bedrooms ?? ""}
+                    onChange={(e) => setField("bedrooms", e.target.value ? parseInt(e.target.value) : null)}
+                  />
+                </FormField>
 
-            <FormField id="bathrooms" label="Bathrooms">
+                <FormField id="bathrooms" label="Bathrooms">
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    value={form.bathrooms ?? ""}
+                    onChange={(e) => setField("bathrooms", e.target.value ? parseInt(e.target.value) : null)}
+                  />
+                </FormField>
+              </>
+            )}
+
+            <FormField id="area_sqft" label="Square footage (sq ft)">
               <Input
-                id="bathrooms"
+                id="area_sqft"
                 type="number"
                 min="0"
-                value={form.bathrooms ?? ""}
-                onChange={(e) => setField("bathrooms", e.target.value ? parseInt(e.target.value) : null)}
+                value={form.area_sqft ?? ""}
+                onChange={(e) => setField("area_sqft", e.target.value ? parseInt(e.target.value) : null)}
               />
             </FormField>
 
@@ -843,10 +932,13 @@ export default function EditListingPage() {
           {photos.length > 0 && (
             <>
               <p className="mb-2 text-xs text-[#6B7280]">Drag photos to reorder. First photo is the cover image.</p>
-              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="mb-4 grid grid-cols-2 items-start gap-3 sm:grid-cols-3 md:grid-cols-4">
+                <datalist id="room-title-suggestions">
+                  {ROOM_TITLE_SUGGESTIONS.map((r) => <option key={r} value={r} />)}
+                </datalist>
                 {photos.map((photo, idx) => (
+                  <div key={photo.tempId} className="flex flex-col gap-1.5">
                   <div
-                    key={photo.tempId}
                     draggable={!photo.uploading && !photo.error}
                     onDragStart={() => onPhotoDragStart(idx, photo.tempId)}
                     onDragOver={(e) => onPhotoDragOver(e, idx)}
@@ -902,6 +994,18 @@ export default function EditListingPage() {
                         </div>
                       </>
                     )}
+                  </div>
+                  {!photo.uploading && !photo.error && (
+                    <input
+                      type="text"
+                      list="room-title-suggestions"
+                      placeholder="Room (e.g. Kitchen)"
+                      value={photo.room_title ?? ""}
+                      onChange={(e) => onRoomTitleChange(photo.tempId, e.target.value)}
+                      onBlur={() => saveRoomTitle(photo)}
+                      className="h-8 w-full rounded-lg border border-[#E5E7EB] px-2 text-[12px] text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
                   </div>
                 ))}
               </div>

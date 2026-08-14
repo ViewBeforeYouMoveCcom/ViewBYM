@@ -20,7 +20,7 @@ export async function sendEmail({
   html: string;
 }) {
   await transporter.sendMail({
-    from: `"ViewBeforeYouMove" <${process.env.SMTP_FROM}>`,
+    from: `"View Before You Move" <${process.env.SMTP_FROM}>`,
     to: Array.isArray(to) ? to.join(", ") : to,
     subject,
     html,

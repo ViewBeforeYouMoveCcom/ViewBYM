@@ -17,7 +17,7 @@ const sections = [
   {
     id: "contact",
     title: "Contact",
-    body: "If you have questions about our use of cookies or wish to update your preferences, please contact us at privacy@vbym.co.uk. This cookie policy was last updated on February 9, 2026.",
+    body: "If you have questions about our use of cookies or wish to update your preferences, please contact us at privacy@viewbeforeyoumove.com. This cookie policy was last updated on February 9, 2026.",
   },
 ];
 

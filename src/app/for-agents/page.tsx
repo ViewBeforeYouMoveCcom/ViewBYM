@@ -13,8 +13,12 @@ export default function ForAgentsPage() {
           <h1 className="mb-4 max-w-[640px] text-[clamp(32px,4.5vw,56px)] font-extrabold leading-[1.1] tracking-tight text-white">
             Fewer wasted viewings. More committed buyers.
           </h1>
-          <p className="mb-7 max-w-[500px] text-[16px] leading-relaxed text-white/75">
+          <p className="mb-5 max-w-[500px] text-[16px] leading-relaxed text-white/75">
             When buyers have already walked your property in VR, every viewing request is warmer and every offer comes faster.
+          </p>
+
+          <p className="mb-7 max-w-[500px] rounded-xl border border-blue-400/30 bg-blue-500/10 px-4 py-3 text-[13px] leading-relaxed text-blue-100">
+            We are currently inviting a limited number of founder agencies to help test and refine the end-to-end service.
           </p>
 
           <div className="flex flex-wrap gap-3">
@@ -22,7 +26,7 @@ export default function ForAgentsPage() {
               href="/agents/request-access"
               className="rounded-lg bg-white px-6 py-3 text-[15px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
             >
-              Request access
+              Join the Founder Pilot
             </Link>
             <Link
               href="/contact"
@@ -67,6 +71,83 @@ export default function ForAgentsPage() {
         </div>
       </section>
 
+      {/* Pricing tiers */}
+      <section className="bg-white py-14 sm:py-20">
+        <div className="mx-auto max-w-[1800px] px-5">
+          <div className="mb-10 text-center">
+            <p className="mb-2 text-[12px] font-bold uppercase tracking-[.15em] text-[#08519A]">
+              Pricing
+            </p>
+            <h2 className="mb-3 text-[clamp(22px,3vw,34px)] font-extrabold tracking-tight text-[#08519A]">
+              Two ways to list
+            </h2>
+            <p className="mx-auto max-w-[540px] text-[15px] leading-relaxed text-gray-500">
+              Bring your own media for free, or let our team handle the entire shoot for you.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Free tier */}
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-7 sm:p-8">
+              <p className="mb-1 text-[12px] font-bold uppercase tracking-[.1em] text-gray-500">
+                Free
+              </p>
+              <h3 className="mb-3 text-[20px] font-bold text-gray-900">Free listing layer</h3>
+              <p className="mb-5 text-[14px] leading-relaxed text-gray-600">
+                For agencies that already have their own property media.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "Qualifying existing agency stock",
+                  "Existing media supplied or imported",
+                  "No media pack included unless ordered",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-[14px] text-gray-700">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Paid tier */}
+            <div className="relative rounded-2xl border-2 border-[#08519A] bg-white p-7 shadow-lg shadow-[#08519A]/10 sm:p-8">
+              <span className="absolute -top-3 left-7 rounded-full bg-[#08519A] px-3 py-1 text-[11px] font-bold text-white">
+                Enhanced media
+              </span>
+              <p className="mb-1 text-[12px] font-bold uppercase tracking-[.1em] text-[#08519A]">
+                Paid
+              </p>
+              <h3 className="mb-3 text-[20px] font-bold text-gray-900">Enhanced-media layer</h3>
+              <p className="mb-5 text-[14px] leading-relaxed text-gray-600">
+                Our managed media team handles the entire shoot for you, from booking to draft.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "Appointment booking",
+                  "Media collection",
+                  "Immersive 360° tour",
+                  "MP4 walkthrough",
+                  "Photos",
+                  "Floor plan",
+                  "Draft property description",
+                  "Agent approval before publication",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-[14px] text-gray-700">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#08519A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="relative bg-gradient-to-b from-white to-gray-50/80 py-14 sm:py-20">
         <div className="mx-auto max-w-[1800px] px-5">
@@ -82,10 +163,7 @@ export default function ForAgentsPage() {
             </p>
           </div>
 
-          {/* Connecting line (desktop only) */}
           <div className="relative">
-            <div className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-[52px] hidden h-[2px] bg-gradient-to-r from-[#08519A]/10 via-[#08519A]/30 to-[#08519A]/10 md:block" />
-
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
               {[
                 {
@@ -139,21 +217,170 @@ export default function ForAgentsPage() {
                     </svg>
                   ),
                 },
-              ].map((s) => (
-                <div
-                  key={s.step}
-                  className="group relative flex flex-col items-center rounded-2xl bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  {/* Icon container */}
-                  <div className="relative z-10 mb-5 flex h-[56px] w-[56px] items-center justify-center rounded-2xl bg-[#08519A] shadow-lg shadow-[#08519A]/25 transition-transform duration-300 group-hover:scale-110">
-                    {s.icon}
+              ].map((s, i, arr) => (
+                <div key={s.step} className="relative">
+                  <div className="group relative flex h-full flex-col items-center overflow-hidden rounded-2xl border border-gray-100 bg-white p-7 text-center shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#08519A]/20 hover:shadow-[0_20px_40px_-15px_rgba(8,81,154,0.25)]">
+                    {/* Icon */}
+                    <div className="relative z-10 mb-5 flex h-[64px] w-[64px] items-center justify-center rounded-2xl bg-gradient-to-br from-[#0B63BC] to-[#08519A] shadow-lg shadow-[#08519A]/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                      {s.icon}
+                    </div>
+
+                    <span className="relative z-10 mb-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#08519A]/10 text-[11px] font-bold text-[#08519A]">
+                      {s.step}
+                    </span>
+                    <p className="relative z-10 mb-2 text-[16px] font-bold text-gray-900">{s.title}</p>
+                    <p className="relative z-10 text-[13.5px] leading-relaxed text-gray-500">{s.text}</p>
                   </div>
-                  {/* Step badge */}
-                  <span className="mb-3 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#08519A]/10 text-[11px] font-bold text-[#08519A]">
-                    {s.step}
-                  </span>
-                  <p className="mb-2 text-[16px] font-bold text-gray-900">{s.title}</p>
-                  <p className="text-[13.5px] leading-relaxed text-gray-500">{s.text}</p>
+
+                  {/* Connector arrow (desktop only, between cards) */}
+                  {i < arr.length - 1 && (
+                    <div className="pointer-events-none absolute -right-[27px] top-1/2 z-10 hidden -translate-y-1/2 md:block">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#08519A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced-media workflow */}
+      <section className="bg-gray-50 py-14 sm:py-20">
+        <div className="mx-auto max-w-[1800px] px-5">
+          <div className="mb-14 text-center">
+            <p className="mb-2 text-[12px] font-bold uppercase tracking-[.15em] text-[#08519A]">
+              Enhanced-media workflow
+            </p>
+            <h2 className="mb-3 text-[clamp(22px,3vw,34px)] font-extrabold tracking-tight text-[#08519A]">
+              How the managed service works
+            </h2>
+            <p className="mx-auto max-w-[540px] text-[15px] leading-relaxed text-gray-500">
+              From ordering to publication, handled end-to-end by our team.
+            </p>
+          </div>
+
+          <div className="relative mx-auto max-w-[760px]">
+            {/* Connecting line */}
+            <div className="absolute left-[27px] top-2 bottom-2 w-[2px] bg-gradient-to-b from-[#08519A]/25 via-[#08519A]/25 to-transparent sm:left-[31px]" />
+
+            <div className="space-y-3">
+              {[
+                {
+                  title: "Order",
+                  text: "You request the enhanced-media package for a listing.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      <rect x="9" y="3" width="6" height="4" rx="1" stroke="white" strokeWidth="1.8"/>
+                      <path d="M8 12h8M8 16h5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Book appointment",
+                  text: "We schedule a convenient time to visit the property.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="5" width="18" height="16" rx="2" stroke="white" strokeWidth="1.8"/>
+                      <path d="M3 10h18M8 3v4M16 3v4" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                      <circle cx="12" cy="15" r="2" stroke="white" strokeWidth="1.6"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Collect media",
+                  text: "Our team captures 360° footage, walkthrough video, and photos on site.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="6" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8"/>
+                      <circle cx="12" cy="13" r="3.5" stroke="white" strokeWidth="1.8"/>
+                      <path d="M8 6l1.5-2.5h5L16 6" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Upload",
+                  text: "Raw footage is securely uploaded to our processing pipeline.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 16V8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M8 11l4-4 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20 16.7A4.5 4.5 0 0017.5 8h-1.13A7 7 0 104 14.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Process",
+                  text: "Media is edited, colour-corrected, and prepared for the listing.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="1.8"/>
+                      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.14.31.4.55.7.7a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Create draft",
+                  text: "A draft listing is assembled with all media and a written description.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+                      <polyline points="14 2 14 8 20 8" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+                      <path d="M9 15l1.5-.4L15 10.1a1.2 1.2 0 000-1.7l-.4-.4a1.2 1.2 0 00-1.7 0L8.4 12.5 8 14z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Agent approval",
+                  text: "You review the draft before anything goes live.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2l7 3v6c0 5-3.4 8.4-7 10-3.6-1.6-7-5-7-10V5z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+                      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Publish",
+                  text: "Once approved, the listing goes live on VBYM automatically.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="9" stroke="white" strokeWidth="1.8"/>
+                      <path d="M2 12h20" stroke="white" strokeWidth="1.5"/>
+                      <path d="M12 3a15.3 15.3 0 014 9 15.3 15.3 0 01-4 9 15.3 15.3 0 01-4-9 15.3 15.3 0 014-9z" stroke="white" strokeWidth="1.5"/>
+                    </svg>
+                  ),
+                },
+                {
+                  title: "Return standard media assets",
+                  text: "We hand back your photos, floor plan, and other standard assets to use anywhere.",
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 8l-9-5-9 5 9 5 9-5z" stroke="white" strokeWidth="1.7" strokeLinejoin="round"/>
+                      <path d="M3 8v8l9 5 9-5V8" stroke="white" strokeWidth="1.7" strokeLinejoin="round"/>
+                      <path d="M12 13v8" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                },
+              ].map((s, i) => (
+                <div key={s.title} className="group relative flex items-start gap-4 sm:gap-5">
+                  {/* Icon node */}
+                  <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#08519A] shadow-md shadow-[#08519A]/20 transition-transform duration-300 group-hover:scale-105 sm:h-16 sm:w-16">
+                    {s.icon}
+                    <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-50 bg-white text-[11px] font-extrabold text-[#08519A] shadow-sm">
+                      {i + 1}
+                    </span>
+                  </div>
+                  {/* Text card */}
+                  <div className="flex-1 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                    <p className="text-[15px] font-bold text-gray-900">{s.title}</p>
+                    <p className="mt-1 text-[13.5px] leading-relaxed text-gray-500">{s.text}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -243,7 +470,7 @@ export default function ForAgentsPage() {
                   href="/agents/request-access"
                   className="inline-flex rounded-lg bg-white px-5 py-2.5 text-[14px] font-bold text-[#1A3A6C] transition-colors hover:bg-blue-50"
                 >
-                  Request access
+                  Join the Founder Pilot
                 </Link>
                 <Link
                   href="/contact"
@@ -253,6 +480,24 @@ export default function ForAgentsPage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Media rights */}
+      <section className="border-t border-gray-200 bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-[1800px] px-5">
+          <div className="mx-auto max-w-[820px] rounded-2xl border border-gray-200 bg-gray-50 p-7 sm:p-9">
+            <p className="mb-2 text-[12px] font-bold uppercase tracking-[.15em] text-[#08519A]">
+              Media rights
+            </p>
+            <h2 className="mb-4 text-[20px] font-bold text-gray-900">Who owns what</h2>
+            <p className="mb-4 text-[14px] leading-relaxed text-gray-600">
+              View Before You Move retains legal ownership of all media it creates. Following full payment, the estate agent receives a perpetual, unrestricted licence to use the approved standard media-pack assets across property portals, its website, social media, brochures and other property-marketing channels. The complete immersive 360° experience and raw source material remain controlled by View Before You Move.
+            </p>
+            <p className="text-[13px] leading-relaxed text-gray-500">
+              <span className="font-semibold text-gray-700">Standard licensed assets</span> = processed photographs, MP4 walkthrough, standard floor plan, approved property description.
+            </p>
           </div>
         </div>
       </section>

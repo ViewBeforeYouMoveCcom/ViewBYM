@@ -1,5 +1,5 @@
 ---
-name: vbym-database
+name: vbym-database-skill
 description: >
   Direct read/write access to the View Before You Move (VBYM) Supabase database.
   Use this skill aggressively whenever Kabeer says anything involving the VBYM database —

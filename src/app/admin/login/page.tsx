@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
               <input
                 id="email"
                 type="email"
-                placeholder="admin@vbym.co.uk"
+                placeholder="admin@viewbeforeyoumove.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"

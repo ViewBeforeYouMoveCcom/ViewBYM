@@ -65,8 +65,11 @@ export default function RequestAccessPage() {
           <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
             Request agent access.
           </h1>
-          <p className="mb-5 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
+          <p className="mb-4 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
             Share your details and we&apos;ll contact you with onboarding steps. Access is managed to keep tour quality and presentation consistent.
+          </p>
+          <p className="mb-5 max-w-[520px] rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13.5px] leading-relaxed text-blue-800">
+            We are currently inviting a limited number of founder agencies to help test and refine the end-to-end service.
           </p>
           <Link
             href="/for-agents"

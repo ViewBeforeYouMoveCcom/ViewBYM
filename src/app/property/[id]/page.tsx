@@ -10,6 +10,7 @@ import PropertyHero from "@/components/PropertyHero";
 import PropertyLocationMap from "@/components/PropertyLocationMap";
 import PropertyStreetView from "@/components/PropertyStreetView";
 import TrackListingView from "@/components/TrackListingView";
+import WalkthroughVideo from "@/components/WalkthroughVideo";
 
 const STATUS_STYLES: Record<string, string> = {
   "New":          "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -37,15 +38,23 @@ export default async function PropertyDetailPage({
   const gallery = property.images?.length ? property.images : [property.image];
   const isDbProperty = property.isDbProperty === true;
   const statusStyle = STATUS_STYLES[property.status] ?? "bg-gray-100 text-gray-600 border-gray-200";
-  const mapQuery = encodeURIComponent([property.address, property.city].filter(Boolean).join(", "));
   const keyFeatures = normaliseFeatures(property.features);
-  const streetViewUrl = property.latitude && property.longitude 
-    ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${property.latitude},${property.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       <TrackListingView id={property.id} />
+
+      {/* ── Demonstration property notice ───────────────────────── */}
+      {property.isDemo && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center sm:px-6">
+          <span className="mr-2 inline-flex items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-950">
+            Demonstration property
+          </span>
+          <span className="text-[13.5px] text-amber-900">
+            Demonstration property — not currently available for sale
+          </span>
+        </div>
+      )}
 
       {/* ── Hero gallery ─────────────────────────────────────────── */}
       <PropertyHero
@@ -121,7 +130,12 @@ export default async function PropertyDetailPage({
             {/* VR tour */}
             {property.vrEnabled && (
               <div id="vr-tour-section">
-                <VRTourPanel propertyId={property.id} vrEnabled={property.vrEnabled} />
+                <VRTourPanel
+                  propertyId={property.id}
+                  vrEnabled={property.vrEnabled}
+                  videoUrl={property.videoUrl}
+                  hasGallery={gallery.length > 0}
+                />
               </div>
             )}
 
@@ -129,68 +143,14 @@ export default async function PropertyDetailPage({
             {property.videoUrl && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
                 <h2 className="mb-4 text-[15px] font-bold text-gray-900">Walkthrough video</h2>
-                <video
-                  src={property.videoUrl}
-                  controls
-                  preload="metadata"
-                  className="aspect-video w-full rounded-xl bg-black"
-                />
+                <WalkthroughVideo src={property.videoUrl} poster={property.image} />
               </div>
             )}
 
             {/* Photos gallery */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <div id="property-gallery" className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <h2 className="mb-4 text-[15px] font-bold text-gray-900">Gallery</h2>
-
-              {/* Gallery view buttons */}
-              <div className="mb-4 flex flex-wrap gap-2">
-                <button className="flex items-center gap-1.5 rounded-lg bg-[#08519A] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#063d75]">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
-                  </svg>
-                  All images ({gallery.length})
-                </button>
-
-                {property.floorplanUrl && (
-                  <a
-                    href={property.floorplanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                  >
-                    Floor plan
-                  </a>
-                )}
-
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                >
-                  Map
-                </a>
-
-                <a
-                  href={streetViewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-[#F9FAFB]"
-                >
-                  Street View
-                </a>
-
-                {property.vrEnabled && (
-                  <a
-                    href="#vr-tour-section"
-                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700 transition-colors hover:bg-blue-100"
-                  >
-                    Immersive VR Tour
-                  </a>
-                )}
-              </div>
-
-              <PhotoGallery images={gallery} labels={property.imageLabels} title={property.title} />
+              <PhotoGallery images={gallery} labels={property.imageLabels} captions={property.imageCaptions} title={property.title} />
             </div>
 
             {/* Map + Street View */}
@@ -262,7 +222,16 @@ export default async function PropertyDetailPage({
               {/* CTA card */}
               {property.vrEnabled && (
                 <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-                  <VRPlayerOverlay propertyId={property.id} />
+                  <VRPlayerOverlay
+                    propertyId={property.id}
+                    triggerClassName="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#063d75]"
+                    triggerLabel={
+                      <span className="flex items-center gap-1.5">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
+                        View in VR
+                      </span>
+                    }
+                  />
                 </div>
               )}
 
@@ -347,7 +316,16 @@ export default async function PropertyDetailPage({
           )}
           {property.vrEnabled && (
             <div className="flex-1">
-              <VRPlayerOverlay propertyId={property.id} />
+              <VRPlayerOverlay
+                propertyId={property.id}
+                triggerClassName="flex w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#08519A] py-3 text-[13px] font-semibold text-white"
+                triggerLabel={
+                  <span className="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
+                    View in VR
+                  </span>
+                }
+              />
             </div>
           )}
           <SavePropertyButton

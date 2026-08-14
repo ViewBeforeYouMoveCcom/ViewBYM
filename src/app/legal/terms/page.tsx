@@ -339,6 +339,15 @@ export default function TermsPage() {
                 <SubSection id="6.4.2">
                   We may remove any Agent Content or user content that we reasonably believe breaches these Terms or is otherwise inappropriate.
                 </SubSection>
+                <p className="mb-2 mt-4 text-[14px] font-semibold text-gray-800">6.5 Standard Media-Pack Licence (Summary)</p>
+                <div className="mb-2 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                  <p className="text-[14px] leading-relaxed text-gray-700">
+                    View Before You Move retains legal ownership of all media it creates. Following full payment, the estate agent receives a perpetual, unrestricted licence to use the approved standard media-pack assets across property portals, its website, social media, brochures and other property-marketing channels. The complete immersive 360° experience and raw source material remain controlled by View Before You Move.
+                  </p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
+                    <span className="font-semibold text-gray-800">Standard licensed assets</span> = processed photographs, MP4 walkthrough, standard floor plan, approved property description.
+                  </p>
+                </div>
               </div>
 
               <Divider />

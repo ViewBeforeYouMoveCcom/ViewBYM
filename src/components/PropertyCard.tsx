@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SavePropertyButton from "@/components/SavePropertyButton";
 import type { Property } from "@/data/properties";
+import { IMAGE_BLUR_PLACEHOLDER } from "@/lib/utils";
 
 const statusVariant: Record<string, "success" | "warning" | "error" | "default"> = {
   New: "success",
   "Under offer": "warning",
   "Sold STC": "error",
   "Let agreed": "warning",
+};
+
+const listingTypeLabel: Record<string, string> = {
+  sale: "For Sale",
+  rent: "To Let",
+  commercial: "Commercial",
 };
 
 interface PropertyCardProps {
@@ -34,6 +41,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               src={property.image}
               alt={property.title}
               fill
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={IMAGE_BLUR_PLACEHOLDER}
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
@@ -57,6 +68,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
             <Badge variant={statusVariant[property.status] ?? "default"}>
               {property.status}
             </Badge>
+            {property.listingType ? (
+              <Badge variant="outline">{listingTypeLabel[property.listingType]}</Badge>
+            ) : null}
             {property.featured ? <Badge variant="amber">Featured</Badge> : null}
           </div>
 
@@ -74,9 +88,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
 
           {/* Facts */}
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6B7280]">
-            <span>{property.beds} beds</span>
-            <span>{property.baths} baths</span>
-            <span>{property.areaSqFt} sq ft</span>
+            {property.beds > 0 && <span>{property.beds} beds</span>}
+            {property.baths > 0 && <span>{property.baths} baths</span>}
+            {property.areaSqFt > 0 && <span>{property.areaSqFt} sq ft</span>}
+            <span>{property.type}</span>
           </div>
 
           {/* Agent + CTA */}
@@ -107,6 +122,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
               src={property.image}
               alt={property.title}
               fill
+              sizes="(min-width: 768px) 340px, 100vw"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={IMAGE_BLUR_PLACEHOLDER}
               className="object-cover"
             />
             <div className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
@@ -125,8 +144,10 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
                     src={src}
                     alt={`${property.title} ${idx + 1}`}
                     fill
-                    className="object-cover"
-                        />
+                    sizes="25vw"
+                    loading="lazy"
+                          className="object-cover"
+                  />
                 </div>
               ))}
             </div>
@@ -149,6 +170,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
             <Badge variant={statusVariant[property.status] ?? "default"}>
               {property.status}
             </Badge>
+            {property.listingType ? (
+              <Badge variant="outline">{listingTypeLabel[property.listingType]}</Badge>
+            ) : null}
             {property.featured ? <Badge variant="amber">Featured</Badge> : null}
           </div>
 
@@ -175,9 +199,9 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
 
           {/* Facts */}
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#6B7280]">
-            <span>{property.beds} beds</span>
-            <span>{property.baths} baths</span>
-            <span>{property.areaSqFt} sq ft</span>
+            {property.beds > 0 && <span>{property.beds} beds</span>}
+            {property.baths > 0 && <span>{property.baths} baths</span>}
+            {property.areaSqFt > 0 && <span>{property.areaSqFt} sq ft</span>}
             <span>{property.type}</span>
             {property.tenure ? <span>{property.tenure}</span> : null}
           </div>

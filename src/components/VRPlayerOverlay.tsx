@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import VR360Player from "@/components/VR360Player";
 import { trackEvent } from "@/components/GoogleAnalytics";
@@ -8,9 +8,18 @@ import { trackEvent } from "@/components/GoogleAnalytics";
 interface Props {
   propertyId: string;
   onOpenChange?: (open: boolean) => void;
+  triggerClassName?: string;
+  triggerLabel?: ReactNode;
 }
 
-export default function VRPlayerOverlay({ propertyId, onOpenChange }: Props) {
+export interface VRPlayerOverlayHandle {
+  open: () => void;
+}
+
+const VRPlayerOverlay = forwardRef<VRPlayerOverlayHandle, Props>(function VRPlayerOverlay(
+  { propertyId, onOpenChange, triggerClassName, triggerLabel },
+  ref
+) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
@@ -21,6 +30,8 @@ export default function VRPlayerOverlay({ propertyId, onOpenChange }: Props) {
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useImperativeHandle(ref, () => ({ open: handleOpen }));
 
   const resetHideTimer = useCallback(() => {
     setShowClose(true);
@@ -98,9 +109,9 @@ export default function VRPlayerOverlay({ propertyId, onOpenChange }: Props) {
   const trigger = (
     <button
       onClick={handleOpen}
-      className="h-11 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold text-white hover:bg-[#063d75]"
+      className={triggerClassName ?? "h-11 rounded-[10px] bg-[#08519A] px-4 text-sm font-semibold text-white hover:bg-[#063d75]"}
     >
-      Launch immersive VR tour
+      {triggerLabel ?? "Launch immersive VR tour"}
     </button>
   );
 
@@ -148,4 +159,6 @@ export default function VRPlayerOverlay({ propertyId, onOpenChange }: Props) {
       {createPortal(overlay, document.body)}
     </>
   );
-}
+});
+
+export default VRPlayerOverlay;

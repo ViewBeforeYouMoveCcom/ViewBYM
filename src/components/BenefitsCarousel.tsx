@@ -35,9 +35,9 @@ const benefits: Benefit[] = [
     ),
   },
   {
-    title: "Floor plans in-tour",
+    title: "Detailed floor plans",
     description:
-      "Accurate dimensions overlay as you walk each room — so you know if your furniture fits before you visit.",
+      "Review the property layout and room dimensions alongside the immersive tour.",
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 3v18h18" /><path d="M3 21h8V11h10" /><path d="M11 11V7h10v14" />

@@ -1,5 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
+// Properties shown to prospective agents as a demonstration of the full
+// platform experience, rather than genuine for-sale listings. Flagged by ID
+// rather than a DB column so this doesn't need a schema migration.
+const DEMO_PROPERTY_IDS = new Set(["f96ab0fe-87c7-4347-a586-ec81cf62d774"]);
+
 export type PropertyStatus = "New" | "Under offer" | "Sold STC" | "Let agreed";
 
 export type Property = {
@@ -22,6 +27,7 @@ export type Property = {
   image: string;
   images?: string[];
   imageLabels?: string[];
+  imageCaptions?: string[];
   videoUrl?: string;
   floorplanUrl?: string;
   snippet?: string;
@@ -29,7 +35,7 @@ export type Property = {
 
   tenure?: string;
   isReduced?: boolean;
-  listingType?: "sale" | "rent";
+  listingType?: "sale" | "rent" | "commercial";
 
   description: string;
   features: string[];
@@ -39,6 +45,8 @@ export type Property = {
   longitude?: number;
 
   isDbProperty?: boolean;
+  /** Shown to prospective agents as a demo of the full experience — not a genuine for-sale listing. */
+  isDemo?: boolean;
 
   agent: {
     name: string;
@@ -79,17 +87,25 @@ type DbProperty = {
     phone: string | null;
     email: string | null;
   } | null;
-  property_media: Array<{ public_url: string; sort_order: number; type: string }> | null;
+  property_media: Array<{
+    public_url: string;
+    sort_order: number;
+    type: string;
+    room_title: string | null;
+    caption: string | null;
+  }> | null;
   property_vr: Array<{ is_enabled: boolean }> | { is_enabled: boolean } | null;
 };
 
 function mapDbProperty(row: DbProperty): Property {
   const allMedia = (row.property_media ?? []).sort((a, b) => a.sort_order - b.sort_order);
   const isVideoUrl = (url: string) => /\.(mp4|mov|m4v|webm)(?:$|\?)/i.test(url);
-  const photos = allMedia
-    .filter((m) => (m.type === "photo" || m.type == null) && !isVideoUrl(m.public_url))
-    .map((m) => m.public_url)
-    .filter(Boolean);
+  const photoRows = allMedia.filter(
+    (m) => (m.type === "photo" || m.type == null) && !isVideoUrl(m.public_url) && Boolean(m.public_url)
+  );
+  const photos = photoRows.map((m) => m.public_url);
+  const photoLabels = photoRows.map((m) => m.room_title ?? "");
+  const photoCaptions = photoRows.map((m) => m.caption ?? "");
   const floorplanUrl = allMedia.find((m) => m.type === "floorplan")?.public_url ?? undefined;
   const videoUrl = allMedia.find((m) => isVideoUrl(m.public_url))?.public_url ?? undefined;
 
@@ -126,7 +142,10 @@ function mapDbProperty(row: DbProperty): Property {
   if (vrEnabled) tags.push("Immersive VR tour available");
   if (row.tenure) tags.push(row.tenure);
 
-  const listingType = row.listing_type === "rent" ? "rent" : "sale";
+  const listingType =
+    row.listing_type === "rent" || row.listing_type === "commercial"
+      ? row.listing_type
+      : "sale";
   const agencyName = row.agencies?.name ?? "Agent";
 
   return {
@@ -146,6 +165,8 @@ function mapDbProperty(row: DbProperty): Property {
     featured: row.featured ?? false,
     image: photos[0] ?? "/images/property-placeholder.svg",
     images: photos.length > 0 ? photos : ["/images/property-placeholder.svg"],
+    imageLabels: photoLabels,
+    imageCaptions: photoCaptions,
     videoUrl,
     floorplanUrl,
     snippet: row.description ? row.description.slice(0, 160) : undefined,
@@ -158,6 +179,7 @@ function mapDbProperty(row: DbProperty): Property {
     latitude: row.latitude ?? undefined,
     longitude: row.longitude ?? undefined,
     isDbProperty: true,
+    isDemo: DEMO_PROPERTY_IDS.has(row.id),
     agent: {
       name: agencyName,
       branch: agencyName,
@@ -173,7 +195,7 @@ const DB_SELECT = `
   property_type, tenure, listing_type, features, featured,
   description, market_status, status, latitude, longitude,
   agencies(name, website, phone, email),
-  property_media(public_url, sort_order, type),
+  property_media(public_url, sort_order, type, room_title, caption),
   property_vr(is_enabled)
 `;
 

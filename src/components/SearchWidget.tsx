@@ -122,7 +122,7 @@ export default function SearchWidget() {
             key={tab.id}
             type="button"
             onClick={() => handleTabClick(tab.id)}
-            className={`relative px-5 py-3 text-[13.5px] font-semibold tracking-wide transition-colors ${
+            className={`relative flex-1 px-1 py-3 text-center text-[11.5px] font-semibold leading-tight tracking-wide transition-colors sm:px-5 sm:text-[13.5px] ${
               activeTab === tab.id
                 ? "text-[#08519A]"
                 : "text-gray-500 hover:text-gray-800"
