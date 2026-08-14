@@ -166,7 +166,7 @@ export default function PropertyCard({ property, compact = false }: PropertyCard
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 pr-10">
-            {property.vrEnabled ? <Badge variant="blue">Immersive VR Enabled</Badge> : null}
+            {property.vrEnabled ? <Badge variant="blue">360° Tour</Badge> : null}
             <Badge variant={statusVariant[property.status] ?? "default"}>
               {property.status}
             </Badge>

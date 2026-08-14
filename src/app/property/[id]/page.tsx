@@ -217,7 +217,7 @@ export default async function PropertyDetailPage({
 
           {/* ── RIGHT rail (desktop sticky) ───────────────────────── */}
           <aside className="hidden lg:block">
-            <div className="sticky top-6 space-y-4">
+            <div className="sticky top-20 space-y-4">
 
               {/* CTA card */}
               {property.vrEnabled && (
@@ -228,7 +228,7 @@ export default async function PropertyDetailPage({
                     triggerLabel={
                       <span className="flex items-center gap-1.5">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
-                        View in VR
+                        Immersive VR Tour
                       </span>
                     }
                   />
@@ -322,7 +322,7 @@ export default async function PropertyDetailPage({
                 triggerLabel={
                   <span className="flex items-center gap-1.5">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="8.5" cy="12" r="2.5" strokeWidth="1.5"/><circle cx="15.5" cy="12" r="2.5" strokeWidth="1.5"/></svg>
-                    View in VR
+                    Immersive VR Tour
                   </span>
                 }
               />

@@ -45,8 +45,8 @@ export default function FiltersPanel() {
       </div>
       <div className="flex items-center justify-between rounded-[10px] border border-[#E5E7EB] bg-white px-3 py-3">
         <div>
-          <Label htmlFor="vr-only">Immersive VR only</Label>
-          <p className="text-xs text-[#6B7280]">Show Immersive VR-enabled listings</p>
+          <Label htmlFor="vr-only">VR listings only</Label>
+          <p className="text-xs text-[#6B7280]">Show listings with a 360° tour</p>
         </div>
         <Switch id="vr-only" defaultChecked />
       </div>

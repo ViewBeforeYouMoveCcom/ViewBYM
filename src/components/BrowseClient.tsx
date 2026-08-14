@@ -411,9 +411,9 @@ export default function BrowseClient({
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#E5E7EB] bg-white px-4 py-3">
                 <div>
-                  <p className="text-sm text-gray-900">Immersive VR only</p>
+                  <p className="text-sm text-gray-900">VR listings only</p>
                   <p className="text-xs text-[#6B7280]">
-                    Only show properties with an Immersive VR tour.
+                    Only show properties with a 360° tour.
                   </p>
                 </div>
                 <button
@@ -710,7 +710,7 @@ export default function BrowseClient({
                 <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
                   <p className="text-sm font-semibold text-gray-900">Tip</p>
                   <p className="mt-1 text-sm text-[#6B7280]">
-                    Open a listing and launch the Immersive VR tour to understand layout and flow before
+                    Open a listing and launch the 360° tour to understand layout and flow before
                     booking a viewing.
                   </p>
                 </div>
