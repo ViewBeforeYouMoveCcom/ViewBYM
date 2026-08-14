@@ -31,8 +31,8 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
     "antialias: false",
     "colorManagement: true",
     "physicallyCorrectLights: false",
-    "maxCanvasWidth: 1920",
-    "maxCanvasHeight: 1080",
+    "maxCanvasWidth: 3840",
+    "maxCanvasHeight: 2160",
     "logarithmicDepthBuffer: false",
     "alpha: false",
     "precision: mediump",
@@ -660,21 +660,28 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       }
 
       function renderProfileFor(height) {
-        if (!height || height >= 2160) return { pixelRatio: 1, width: 32, height: 32 };
-        if (height >= 1440) return { pixelRatio: 0.85, width: 28, height: 28 };
-        if (height >= 1080) return { pixelRatio: 0.72, width: 24, height: 24 };
-        if (height >= 720) return { pixelRatio: 0.58, width: 18, height: 18 };
-        return { pixelRatio: 0.42, width: 12, height: 12 };
+        // Sharpness on screen is controlled by pixelRatio (how many real
+        // device pixels the canvas draws to), not by the video's bitrate
+        // tier — throttling it below the device's own pixel ratio made every
+        // quality under 4K look soft/blurry regardless of how sharp the
+        // video itself was. Track the real device instead (capped at 2x,
+        // standard practice to avoid pointless GPU cost on very high-DPI
+        // screens with no visible sharpness gain).
+        var deviceRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+        var pixelRatio = Math.min(deviceRatio, 2);
+
+        // Sphere segment count only affects how round the 360° sphere shape
+        // itself is (geometry), not the video texture's sharpness — a light
+        // taper here is still fine for very low bitrates to save GPU.
+        if (!height || height >= 1080) return { pixelRatio: pixelRatio, width: 32, height: 32 };
+        if (height >= 720) return { pixelRatio: pixelRatio, width: 26, height: 26 };
+        return { pixelRatio: pixelRatio, width: 20, height: 20 };
       }
 
       function applyRenderQuality(height) {
         var profile = renderProfileFor(height);
         var sceneEl = document.querySelector('a-scene');
         var sphereEl = document.getElementById('videosphere');
-
-        if (inImmersiveVr && (!height || height > 1080)) {
-          profile = renderProfileFor(1080);
-        }
 
         if (sphereEl) {
           sphereEl.setAttribute('segments-width', String(profile.width));
@@ -1202,7 +1209,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
             var xrManager = sceneForVrEvents.renderer && sceneForVrEvents.renderer.xr;
             if (!xrManager) return false;
             if (typeof xrManager.setFoveation === 'function') xrManager.setFoveation(0.7);
-            if (typeof xrManager.setFramebufferScaleFactor === 'function') xrManager.setFramebufferScaleFactor(0.75);
+            if (typeof xrManager.setFramebufferScaleFactor === 'function') xrManager.setFramebufferScaleFactor(0.9);
             return true;
           } catch(e) { return false; }
         }
@@ -1213,10 +1220,11 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         sceneForVrEvents.addEventListener('enter-vr', function() {
           inImmersiveVr = true;
           tryPlay();
-          applyRenderQuality(selectedQuality === 'auto' ? 720 : Number(selectedQuality));
-          if (hls && selectedQuality === 'auto') {
-            hls.nextLevel = 0;
-          }
+          // Keep whatever quality was already playing instead of forcing a
+          // drop to 720p / the lowest HLS level on every headset entry —
+          // that forced downgrade was the direct cause of "much blurrier in
+          // the headset than on desktop" for the same video.
+          applyRenderQuality(selectedQuality === 'auto' ? lastKnownHeight : Number(selectedQuality));
           primeXrPerformance(); // harmless no-op if already primed; safety net otherwise
           showVrHud();
         });

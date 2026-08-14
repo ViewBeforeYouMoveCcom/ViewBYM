@@ -710,7 +710,7 @@ export default function BrowseClient({
                 <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
                   <p className="text-sm font-semibold text-gray-900">Tip</p>
                   <p className="mt-1 text-sm text-[#6B7280]">
-                    Open a listing and launch the Immersive VR tour to understand layout and flow before
+                    Open a listing and launch the 360° tour to understand layout and flow before
                     booking a viewing.
                   </p>
                 </div>
