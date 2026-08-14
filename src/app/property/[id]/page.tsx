@@ -217,7 +217,7 @@ export default async function PropertyDetailPage({
 
           {/* ── RIGHT rail (desktop sticky) ───────────────────────── */}
           <aside className="hidden lg:block">
-            <div className="sticky top-6 space-y-4">
+            <div className="sticky top-20 space-y-4">
 
               {/* CTA card */}
               {property.vrEnabled && (

@@ -411,9 +411,9 @@ export default function BrowseClient({
 
               <div className="flex items-center justify-between rounded-[10px] border border-[#E5E7EB] bg-white px-4 py-3">
                 <div>
-                  <p className="text-sm text-gray-900">Immersive VR only</p>
+                  <p className="text-sm text-gray-900">VR listings only</p>
                   <p className="text-xs text-[#6B7280]">
-                    Only show properties with an Immersive VR tour.
+                    Only show properties with a 360° tour.
                   </p>
                 </div>
                 <button
