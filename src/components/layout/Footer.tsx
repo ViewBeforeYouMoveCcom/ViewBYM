@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+
+import { clearCookieConsent } from "@/lib/cookieConsent";
 
 export default function Footer() {
   return (
@@ -32,6 +36,7 @@ export default function Footer() {
                 { href: "/for-agents", label: "Overview" },
                 { href: "/agents/request-access", label: "Join the Founder Pilot" },
                 { href: "/vendors/immersive-vr", label: "Vendor partners" },
+                { href: "/legal/agency-terms", label: "Agency Terms" },
               ],
             },
             {
@@ -84,6 +89,13 @@ export default function Footer() {
                 {l.label}
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={clearCookieConsent}
+              className="text-[12.5px] text-gray-400 transition-colors hover:text-gray-700"
+            >
+              Cookie Settings
+            </button>
           </div>
         </div>
       </div>

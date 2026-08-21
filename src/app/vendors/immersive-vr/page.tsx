@@ -122,7 +122,7 @@ export default function VendorPage() {
                   "Secure pets in a separate area during the session.",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <svg className="mt-0.5 shrink-0 text-blue-700" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <svg className="mt-0.5 shrink-0 text-[#08519A]" width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span className="text-[14px] leading-relaxed text-gray-600">{item}</span>
@@ -152,7 +152,7 @@ export default function VendorPage() {
                   "You retain the right to request full removal of the tour at any point.",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <svg className="mt-0.5 shrink-0 text-blue-700" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <svg className="mt-0.5 shrink-0 text-[#08519A]" width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span className="text-[14px] leading-relaxed text-gray-600">{item}</span>
@@ -179,7 +179,7 @@ export default function VendorPage() {
               { stat: "100%", label: "Review before publish", sub: "Nothing goes live without your agent confirming it." },
             ].map(({ stat, label, sub }) => (
               <div key={stat} className="rounded-2xl border border-gray-200 bg-white p-6">
-                <p className="text-[28px] font-extrabold tracking-tight text-blue-700">{stat}</p>
+                <p className="text-[28px] font-extrabold tracking-tight text-[#08519A]">{stat}</p>
                 <p className="mt-1 text-[14px] font-semibold text-gray-900">{label}</p>
                 <p className="mt-1 text-[13px] leading-relaxed text-gray-500">{sub}</p>
               </div>
