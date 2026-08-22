@@ -5,6 +5,7 @@ import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import HeaderNav from "@/components/layout/HeaderNav";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import CookieBanner from "@/components/CookieBanner";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
+        <CookieBanner />
       </body>
     </html>
   );

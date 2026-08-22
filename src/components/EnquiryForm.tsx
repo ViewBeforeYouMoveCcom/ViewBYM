@@ -235,6 +235,12 @@ export default function EnquiryForm({ propertyId, agencyId, agentEmail, property
       <p className="text-xs text-[#6B7280]">
         View Before You Move is not an estate agency. Enquiries go directly to the agent.
       </p>
+      <p className="text-xs text-[#6B7280]">
+        By sending this enquiry you agree to our{" "}
+        <Link href="/legal/privacy" className="underline hover:text-gray-700">
+          Privacy Notice
+        </Link>.
+      </p>
     </form>
   );
 }

@@ -44,13 +44,19 @@ export default function RequestAccessPage() {
         status: "new",
       });
 
-    setLoading(false);
-
     if (insertError) {
+      setLoading(false);
       setError(insertError.message || "Something went wrong. Please try again or contact us directly.");
       return;
     }
 
+    await supabaseClient.from("legal_acceptances").insert({
+      email: form.businessEmail.trim().toLowerCase(),
+      document: "agency_terms",
+      version: "1.0",
+    });
+
+    setLoading(false);
     setSuccess(true);
   }
 
@@ -59,7 +65,7 @@ export default function RequestAccessPage() {
       {/* Page hero */}
       <section className="border-b border-gray-200 bg-white py-10 sm:py-14">
         <div className="mx-auto max-w-[1800px] px-5">
-          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-blue-700">
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[.1em] text-[#08519A]">
             For agents
           </p>
           <h1 className="mb-3.5 text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.1] tracking-tight text-gray-900">
@@ -68,12 +74,12 @@ export default function RequestAccessPage() {
           <p className="mb-4 max-w-[520px] text-[15px] leading-relaxed text-gray-500">
             Share your details and we&apos;ll contact you with onboarding steps. Access is managed to keep tour quality and presentation consistent.
           </p>
-          <p className="mb-5 max-w-[520px] rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-[13.5px] leading-relaxed text-blue-800">
+          <p className="mb-5 max-w-[520px] rounded-xl border border-[#08519A]/15 bg-[#08519A]/5 px-4 py-3 text-[13.5px] leading-relaxed text-[#08519A]">
             We are currently inviting a limited number of founder agencies to help test and refine the end-to-end service.
           </p>
           <Link
             href="/for-agents"
-            className="text-[14px] text-blue-700 hover:underline"
+            className="text-[14px] text-[#08519A] hover:underline"
           >
             ← Back to agent overview
           </Link>
@@ -94,9 +100,9 @@ export default function RequestAccessPage() {
               </p>
 
               {success ? (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
-                  <p className="text-[15px] font-semibold text-blue-700">Request received</p>
-                  <p className="mt-1.5 text-[14px] leading-relaxed text-blue-700/80">
+                <div className="rounded-xl border border-[#08519A]/20 bg-[#08519A]/5 p-5">
+                  <p className="text-[15px] font-semibold text-[#08519A]">Request received</p>
+                  <p className="mt-1.5 text-[14px] leading-relaxed text-[#08519A]/80">
                     We&apos;ve received your details and will be in touch shortly with next steps.
                     In the meantime, you can{" "}
                     <Link href="/account/signup" className="underline">
@@ -186,7 +192,10 @@ export default function RequestAccessPage() {
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-[13px] text-gray-400">
-                      By submitting, you confirm these details are accurate.
+                      By submitting, you confirm these details are accurate and agree to our{" "}
+                      <Link href="/legal/agency-terms" className="underline hover:text-gray-600">
+                        Agency Terms of Business
+                      </Link>.
                     </p>
                     <button
                       type="submit"
@@ -227,7 +236,7 @@ export default function RequestAccessPage() {
                       key={step.num}
                       className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-[14px] font-bold text-blue-700">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#08519A]/10 text-[14px] font-bold text-[#08519A]">
                         {step.num}
                       </div>
                       <div>

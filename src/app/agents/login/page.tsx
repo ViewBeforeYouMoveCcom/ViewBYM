@@ -135,7 +135,7 @@ function AgentLoginForm() {
 
         <p className="text-center text-[11.5px] text-gray-400">
           By signing in you agree to our{" "}
-          <Link href="/legal/terms" className="underline hover:text-gray-600">
+          <Link href="/legal/agency-terms" className="underline hover:text-gray-600">
             Terms
           </Link>
           {" & "}

@@ -14,6 +14,13 @@ type Step = "form" | "otp";
 
 const RESEND_COOLDOWN = 60;
 
+async function recordLegalAcceptance(userId: string) {
+  await supabaseClient.from("legal_acceptances").insert([
+    { user_id: userId, document: "consumer_terms", version: "1.0" },
+    { user_id: userId, document: "privacy_notice", version: "1.0" },
+  ]);
+}
+
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -89,6 +96,7 @@ function SignupForm() {
 
     // Email confirmation disabled — already signed in
     if (data.session) {
+      await recordLegalAcceptance(data.session.user.id);
       router.push(redirectTo);
       router.refresh();
       return;
@@ -110,7 +118,7 @@ function SignupForm() {
     setError(null);
     setLoading(true);
 
-    const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+    const { data: verifyData, error: verifyError } = await supabaseClient.auth.verifyOtp({
       email: email.trim().toLowerCase(),
       token: otp.trim(),
       type: "signup",
@@ -121,6 +129,10 @@ function SignupForm() {
     if (verifyError) {
       setError("Invalid or expired code. Please check and try again.");
       return;
+    }
+
+    if (verifyData.user) {
+      await recordLegalAcceptance(verifyData.user.id);
     }
 
     router.push(redirectTo);

@@ -1,5 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import Script from "next/script";
+
+import { getCookieConsent, onCookieConsentChange } from "@/lib/cookieConsent";
 
 declare global {
   interface Window {
@@ -16,7 +19,15 @@ export function trackEvent(name: string, params?: Record<string, unknown>) {
 
 export default function GoogleAnalytics() {
   const id = process.env.NEXT_PUBLIC_GA_ID;
-  if (!id) return null;
+  const [consented, setConsented] = useState(false);
+
+  useEffect(() => {
+    setConsented(getCookieConsent() === "accepted");
+    return onCookieConsentChange((value) => setConsented(value === "accepted"));
+  }, []);
+
+  if (!id || !consented) return null;
+
   return (
     <>
       <Script
