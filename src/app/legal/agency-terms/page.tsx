@@ -61,57 +61,49 @@ function Ul({ items }: { items: React.ReactNode[] }) {
 
 function Table({ headers, rows }: { headers: string[]; rows: React.ReactNode[][] }) {
   return (
-    <div className="mb-3 overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full border-collapse text-[13.5px]">
-        <thead>
-          <tr className="bg-gray-50">
-            {headers.map((h, i) => (
-              <th key={i} className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-800">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((cells, i) => (
-            <tr key={i} className={i % 2 === 1 ? "bg-gray-50/50" : undefined}>
-              {cells.map((cell, j) => (
-                <td
-                  key={j}
-                  className={
-                    j === 0
-                      ? "border-b border-gray-100 px-3 py-2 align-top font-medium text-gray-700 whitespace-nowrap"
-                      : "border-b border-gray-100 px-3 py-2 align-top text-gray-600"
-                  }
-                >
-                  {cell}
-                </td>
-              ))}
-            </tr>
+    <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 text-[13.5px]">
+      <div className="hidden bg-gray-50 font-semibold text-gray-800 sm:flex sm:flex-row">
+        {headers.map((h, i) => (
+          <div key={i} className="min-w-0 flex-1 border-b border-gray-200 px-3 py-2">{h}</div>
+        ))}
+      </div>
+      {rows.map((cells, i) => (
+        <div
+          key={i}
+          className={`flex flex-col gap-2 p-3 sm:flex-row sm:gap-0 sm:p-0 ${i % 2 === 1 ? "bg-gray-50/50" : ""} ${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}
+        >
+          {cells.map((cell, j) => (
+            <div key={j} className="min-w-0 sm:flex-1 sm:px-3 sm:py-2">
+              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 sm:hidden">
+                {headers[j]}
+              </p>
+              <p className={j === 0 ? "align-top font-medium text-gray-700" : "align-top text-gray-600"}>
+                {cell}
+              </p>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ))}
     </div>
   );
 }
 
 function DefTable({ rows }: { rows: { term: React.ReactNode; meaning: React.ReactNode }[] }) {
   return (
-    <div className="mb-3 overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full border-collapse text-[13.5px]">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-800">Defined term</th>
-            <th className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-800">Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i} className={i % 2 === 1 ? "bg-gray-50/50" : undefined}>
-              <td className="border-b border-gray-100 px-3 py-2 align-top font-medium text-gray-700 whitespace-nowrap">{r.term}</td>
-              <td className="border-b border-gray-100 px-3 py-2 align-top text-gray-600">{r.meaning}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 text-[13.5px]">
+      <div className="flex flex-row bg-gray-50 font-semibold text-gray-800">
+        <div className="w-[38%] shrink-0 border-b border-gray-200 px-3 py-2">Defined term</div>
+        <div className="flex-1 border-b border-gray-200 px-3 py-2">Meaning</div>
+      </div>
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          className={`flex flex-row ${i % 2 === 1 ? "bg-gray-50/50" : ""} ${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}
+        >
+          <div className="w-[38%] shrink-0 px-3 py-2 align-top font-medium text-gray-700">{r.term}</div>
+          <div className="flex-1 px-3 py-2 align-top text-gray-600">{r.meaning}</div>
+        </div>
+      ))}
     </div>
   );
 }

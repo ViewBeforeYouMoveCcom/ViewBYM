@@ -42,39 +42,31 @@ function DataTable({
   rows: string[][];
 }) {
   return (
-    <div className="mb-3 overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full border-collapse text-[13.5px]">
-        <thead>
-          <tr className="bg-gray-50">
-            {headers.map((h, i) => (
-              <th
-                key={i}
-                className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-800"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((cells, i) => (
-            <tr key={i} className={i % 2 === 1 ? "bg-gray-50/50" : undefined}>
-              {cells.map((cell, j) => (
-                <td
-                  key={j}
-                  className={
-                    j === 0
-                      ? "border-b border-gray-100 px-3 py-2 align-top font-medium text-gray-700 whitespace-nowrap"
-                      : "border-b border-gray-100 px-3 py-2 align-top text-gray-600"
-                  }
-                >
-                  {cell}
-                </td>
-              ))}
-            </tr>
+    <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 text-[13.5px]">
+      <div className="hidden bg-gray-50 font-semibold text-gray-800 sm:flex sm:flex-row">
+        {headers.map((h, i) => (
+          <div key={i} className="min-w-0 flex-1 border-b border-gray-200 px-3 py-2">
+            {h}
+          </div>
+        ))}
+      </div>
+      {rows.map((cells, i) => (
+        <div
+          key={i}
+          className={`flex flex-col gap-2 p-3 sm:flex-row sm:gap-0 sm:p-0 ${i % 2 === 1 ? "bg-gray-50/50" : ""} ${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}
+        >
+          {cells.map((cell, j) => (
+            <div key={j} className="min-w-0 sm:flex-1 sm:px-3 sm:py-2">
+              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 sm:hidden">
+                {headers[j]}
+              </p>
+              <p className={j === 0 ? "align-top font-medium text-gray-700" : "align-top text-gray-600"}>
+                {cell}
+              </p>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ))}
     </div>
   );
 }

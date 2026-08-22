@@ -46,34 +46,29 @@ function Divider() {
 
 function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <div className="mb-3 overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full border-collapse text-[13.5px]">
-        <thead>
-          <tr className="bg-gray-50">
-            {headers.map((h, i) => (
-              <th key={i} className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-800">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((cells, i) => (
-            <tr key={i} className={i % 2 === 1 ? "bg-gray-50/50" : undefined}>
-              {cells.map((cell, j) => (
-                <td
-                  key={j}
-                  className={
-                    j === 0
-                      ? "border-b border-gray-100 px-3 py-2 align-top font-medium text-gray-700 whitespace-nowrap"
-                      : "border-b border-gray-100 px-3 py-2 align-top text-gray-600"
-                  }
-                >
-                  {cell ? cell : <span className="italic text-gray-400">{PLACEHOLDER}</span>}
-                </td>
-              ))}
-            </tr>
+    <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 text-[13.5px]">
+      <div className="hidden bg-gray-50 font-semibold text-gray-800 sm:flex sm:flex-row">
+        {headers.map((h, i) => (
+          <div key={i} className="min-w-0 flex-1 border-b border-gray-200 px-3 py-2">{h}</div>
+        ))}
+      </div>
+      {rows.map((cells, i) => (
+        <div
+          key={i}
+          className={`flex flex-col gap-2 p-3 sm:flex-row sm:gap-0 sm:p-0 ${i % 2 === 1 ? "bg-gray-50/50" : ""} ${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}
+        >
+          {cells.map((cell, j) => (
+            <div key={j} className="min-w-0 sm:flex-1 sm:px-3 sm:py-2">
+              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 sm:hidden">
+                {headers[j]}
+              </p>
+              <p className={j === 0 ? "align-top font-medium text-gray-700" : "align-top text-gray-600"}>
+                {cell ? cell : <span className="italic text-gray-400">{PLACEHOLDER}</span>}
+              </p>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ))}
     </div>
   );
 }
@@ -524,7 +519,7 @@ Website: www.vbym.co.uk.
                     ["Booking and checkout", "Active where needed for a requested transaction", "Only technologies necessary for the requested booking/checkout flow are active; the live register records what is set during the journey."],
                     ["Payment-provider security", "Active when online payments are enabled", "Payment-provider technologies are enabled only with the approved payment flow and are documented in the live register."],
                     ["Functional preferences", "Off unless assessed and configured", "Remain off unless assessed and configured under an applicable exception or valid user choice."],
-                    ["Analytics", "Not active", "No analytics script loads unless a later legal, privacy and consent configuration is approved."],
+                    ["Analytics", "Active where consent given", "Google Analytics loads only after a visitor accepts optional cookies via the preference banner; it does not load for visitors who reject or have not yet chosen."],
                     ["Session recording", "Not active", "Not active; requires separate assessment and transparent notice before introduction."],
                     ["Advertising and retargeting", "Not active", "Not active; requires prior consent and updated documentation before introduction."],
                     ["Behavioural profiling", "Not active", "Not active; requires a separate legal, privacy and product decision before introduction."],
