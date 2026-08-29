@@ -604,7 +604,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       if (!isWebGLSupported()) {
         showUnsupportedPopup(
           'VR Not Supported',
-          'Your device does not support the VR tour. Please try on a modern smartphone or a different browser.'
+          'Your browser does not support this VR tour format. Try a different browser.'
         );
         return;
       }
@@ -918,7 +918,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           // old Safari/Chrome rather than making you wait.
           showUnsupportedPopup(
             'VR Not Supported',
-            'Your browser does not support this VR tour format. Please try on a modern smartphone or a different browser.'
+            'Your browser does not support this VR tour format. Try a different browser.'
           );
           return;
         }

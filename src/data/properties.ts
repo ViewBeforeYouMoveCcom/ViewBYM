@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, createSupabasePublicClient } from "@/lib/supabase-server";
 
 // Properties shown to prospective agents as a demonstration of the full
 // platform experience, rather than genuine for-sale listings. Flagged by ID
@@ -224,7 +224,10 @@ function milesToKm(miles: number): number {
 /** Fetch all published properties from the database. */
 export const getProperties = async (): Promise<Property[]> => {
   try {
-    const supabase = await createSupabaseServerClient();
+    // Public data only (published listings) — the anon-key public client avoids
+    // reading the session cookie, which otherwise forces every page that
+    // calls this (like the homepage) out of static generation.
+    const supabase = createSupabasePublicClient();
     const { data, error } = await supabase
       .from("properties")
       .select(DB_SELECT)
@@ -281,7 +284,9 @@ export const getPropertiesFiltered = async (params: {
   radius?: string;
 }): Promise<Property[]> => {
   try {
-    const supabase = await createSupabaseServerClient();
+    // Same reasoning as getProperties() above — published listings only,
+    // no need for the cookie-reading auth client.
+    const supabase = createSupabasePublicClient();
 
     let query = supabase
       .from("properties")
