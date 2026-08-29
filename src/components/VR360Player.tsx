@@ -534,6 +534,32 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         });
       }
 
+      // laser-controls (used on the hand controllers above) auto-attaches
+      // A-Frame's own built-in "cursor" component alongside the manual
+      // vr-btn-trigger above. On some real headsets both end up firing a
+      // "click" for the same physical trigger press, registering every VR
+      // HUD button press twice. Rather than fight A-Frame's internal
+      // cursor lifecycle (attached async, per-controller), swallow any
+      // second "click" that lands on the same .vr-btn within one input
+      // event's worth of time — this only ever collapses true duplicates,
+      // never two genuinely separate presses.
+      (function () {
+        var lastVrBtnClickEl = null;
+        var lastVrBtnClickTime = 0;
+        document.addEventListener('click', function (e) {
+          var target = e.target;
+          if (!target || !target.classList || !target.classList.contains('vr-btn')) return;
+          var now = Date.now();
+          if (target === lastVrBtnClickEl && (now - lastVrBtnClickTime) < 400) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            return;
+          }
+          lastVrBtnClickEl = target;
+          lastVrBtnClickTime = now;
+        }, true);
+      })();
+
       // ── WebGL / VR support detection ──────────────────────────────
       function isWebGLSupported() {
         try {
@@ -600,7 +626,17 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       var sourceUrl = ${videoSrcJson};
       var hls = null;
       var qualityLevels = [];
-      var selectedQuality = 'auto';
+      var QUALITY_STORAGE_KEY = 'vbym-vr-quality';
+      function loadSavedQuality() {
+        try {
+          var saved = window.localStorage.getItem(QUALITY_STORAGE_KEY);
+          return saved || 'auto';
+        } catch(e) { return 'auto'; }
+      }
+      function saveQuality(value) {
+        try { window.localStorage.setItem(QUALITY_STORAGE_KEY, value); } catch(e) {}
+      }
+      var selectedQuality = loadSavedQuality();
       var lastKnownHeight = 0;
       var qualityBtn = document.getElementById('qualityBtn');
       var qualityMenu = document.getElementById('quality-menu');
@@ -703,6 +739,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
           btn.setAttribute('data-bound', 'true');
           btn.addEventListener('click', function() {
             selectedQuality = btn.getAttribute('data-quality') || 'auto';
+            saveQuality(selectedQuality);
             applyQualitySelection();
             qualityMenu.classList.remove('open');
             qualityBtn.classList.remove('active');
@@ -1370,6 +1407,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
         vrQualityMenu.querySelectorAll('.vr-quality-option').forEach(function(option) {
           option.addEventListener('click', function() {
             selectedQuality = option.getAttribute('data-vr-quality') || 'auto';
+            saveQuality(selectedQuality);
             applyQualitySelection();
             updateVrQualityLabel();
             updateVrQualityOptions();
@@ -1489,8 +1527,13 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
       // Backup safety net only — real incompatibility is already caught
       // immediately above (WebGL check, HLS-support check, video error
       // event). This just covers a genuinely stuck network (not a
-      // compatibility signal), so it's deliberately long — 3 minutes —
-      // to avoid misdiagnosing "slow" as "unsupported".
+      // compatibility signal). Was previously 3 minutes, then 10s — both
+      // left users waiting too long before seeing any message. 4s is close
+      // to the practical floor: a truly zero-delay check is impossible for
+      // a network-dependent failure (the browser has to actually attempt
+      // the request first), but any working connection gets at least a
+      // little data within 4s, so this fails fast without flagging normal
+      // loads as broken.
       setTimeout(function() {
         if (unsupportedShown) return;
         if (v.readyState === 0) {
@@ -1499,7 +1542,7 @@ export default function VR360Player({ videoUrl, imageUrl, className = "", autoHi
             'This VR tour is taking too long to load. Please check your connection and try again.'
           );
         }
-      }, 180000);
+      }, 4000);
       // ─────────────────────────────────────────────────────────────
     })();
   </script>
