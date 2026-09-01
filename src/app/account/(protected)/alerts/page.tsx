@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
-const ALERT_OPTIONS = [
+const ALERT_OPTIONS: { id: keyof AlertPreferences; label: string }[] = [
   { id: "new_properties", label: "New properties" },
   { id: "price_changes", label: "Price changes" },
   { id: "status_updates", label: "Status updates (under offer, let agreed, sold)" },

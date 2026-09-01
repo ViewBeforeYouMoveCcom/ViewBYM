@@ -39,3 +39,17 @@ export function createSupabaseServiceClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
+
+/**
+ * Plain anon-key client — no cookies, no session, subject to RLS.
+ * For reading data that's already public under RLS (e.g. published
+ * properties) without forcing the page out of static generation, which
+ * happens the moment a request touches cookies (as the auth-aware
+ * client above does).
+ */
+export function createSupabasePublicClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
